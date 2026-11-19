@@ -141,8 +141,7 @@ def validate(con, data_dir, start=None, end=None, hold=10, k=10, top_n=500, min_
             st["avg_picks"] = round(float(pf[name + "_n"].mean()), 1) if len(pf) else 0
             rep["strategies"]["%s/%s" % (name, tag)] = dict(
                 st, verdict="BASELINE" if name == "all" else verdict(st, base))
-        if use_stop:
-            pf.to_csv(os.path.join(out_dir, "cohorts-h%d.csv" % hold))
+        pf.to_csv(os.path.join(out_dir, "cohorts-h%d%s.csv" % (hold, "" if use_stop else "-close")))
     oos_df = df[df.date >= oos.date.min()] if len(oos) else df
     s, n = results_jump(oos_df, 20, cost)
     st = stats(s)

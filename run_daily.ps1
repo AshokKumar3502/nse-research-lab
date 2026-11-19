@@ -25,6 +25,21 @@ function Invoke-Step([string]$name, [string[]]$pyArgs) {
     return $LASTEXITCODE
 }
 
+function Publish-Site {
+    # rebuild docs/ from the latest picks and reports, then push only docs/ to GitHub Pages
+    Invoke-Step "site build" @("-m", "site_build") | Out-Null
+    "`n=== publish site  $(Get-Date -Format 'HH:mm:ss') ===" | Out-File -Append -Encoding utf8 $log
+    git -C $here add docs *>> $log
+    git -C $here diff --cached --quiet
+    if ($LASTEXITCODE -ne 0) {
+        git -C $here commit -m ("Site update: {0} {1}" -f $Phase, (Get-Date -Format "yyyy-MM-dd HH:mm")) *>> $log
+        git -C $here push origin main *>> $log
+        "push exit $LASTEXITCODE" | Out-File -Append -Encoding utf8 $log
+    } else {
+        "site unchanged" | Out-File -Append -Encoding utf8 $log
+    }
+}
+
 if ((Get-Date).DayOfWeek -in @("Saturday", "Sunday") -and $Phase -ne "monthly") {
     "weekend: nothing to do" | Out-File -Append -Encoding utf8 $log
     exit 0
@@ -34,6 +49,7 @@ switch ($Phase) {
     "morning" {
         Invoke-Step "intraday live" @("-m", "intraday", "live") | Out-Null
         Invoke-Step "monitor" @("-m", "monitor", "run") | Out-Null
+        Publish-Site
     }
     "evening" {
         $rc = Invoke-Step "lab nightly (sync, checks, test, paper)" @("-m", "lab", "nightly", "--fetch")
@@ -41,6 +57,7 @@ switch ($Phase) {
         Invoke-Step "minute bars" @("-m", "warehouse", "minute", "--universe", "fo", "--since", $since) | Out-Null
         if ($rc -eq 0) { Invoke-Step "swing scan" @("-m", "swing", "scan") | Out-Null }
         Invoke-Step "monitor" @("-m", "monitor", "run") | Out-Null
+        Publish-Site
     }
     "monthly" {
         Invoke-Step "results filings (every universe stock)" @("-m", "warehouse", "results") | Out-Null
@@ -50,5 +67,6 @@ switch ($Phase) {
         Invoke-Step "lab refresh" @("-m", "lab", "refresh") | Out-Null
         Invoke-Step "lab test" @("-m", "lab", "test", "--force") | Out-Null
         Invoke-Step "monitor" @("-m", "monitor", "run") | Out-Null
+        Publish-Site
     }
 }

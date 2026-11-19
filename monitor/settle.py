@@ -61,7 +61,7 @@ def swing(con):
                 continue
             entry = bars[0][1]
             stop = entry * (1 + p["stop_pct"] / 100.0)     # the plan's stop distance from the entry
-            out = next((min(b[1], stop) for b in bars if b[2] <= stop), None)
+            out = next((min(b[1], stop) for b in bars if b[2] <= stop), None) if p.get("use_stop", True) else None
             if out is None:
                 if len(bars) < hold:
                     continue                                # still open

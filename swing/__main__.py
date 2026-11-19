@@ -81,9 +81,9 @@ def main(argv=None):
         doc = scan.run(con, a.hold, a.k, a.capital)
         print("%s  %s  regime exposure %.0f%%" % (doc["session"], doc["status"], doc["regime"]["exposure"] * 100))
         for p_ in doc["picks"]:
-            print("%-12s %-32s score %6.2f  close %10.2f  stop %10.2f (%5.1f%%)  %5d sh  Rs %s" % (
+            print("%-12s %-32s score %6.2f  close %10.2f  ref stop %10.2f (%5.1f%%)  %4d sh per Rs 1 lakh" % (
                 p_["symbol"], p_["industry"][:32], p_["score_pct"], p_["ref_close"], p_["stop"], p_["stop_pct"],
-                p_["shares"], format(p_["value"], ",")))
+                p_["shares_per_lakh"]))
         print("rules today:", doc["rules_today"])
         return 0
     if a.cmd == "industries":

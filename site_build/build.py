@@ -93,6 +93,90 @@ def table(head, rows, cls=""):
         "".join("<tr>%s</tr>" % "".join("<td>%s</td>" % c for c in r) for r in rows)))
 
 
+def _latest(prefix):
+    d = os.path.join(config.DATA, "picks")
+    if not os.path.isdir(d):
+        return None
+    fs = sorted(f for f in os.listdir(d) if f.startswith(prefix) and f.endswith(".json"))
+    return _j(d, fs[-1]) if fs else None
+
+
+def rs(v):
+    if v is None:
+        return "–"
+    n = int(round(v))
+    return ("−₹" if n < 0 else "₹") + format(abs(n), ",")
+
+
+def picks_html():
+    sw, it = _latest("swing-"), _latest("intraday-")
+    live_p = os.path.join(config.DATA, "monitor", "live.parquet")
+    live = pd.read_parquet(live_p) if os.path.exists(live_p) else pd.DataFrame()
+    parts = []
+    nse_ind = {}
+    ip = os.path.join(config.SETS, "industries", "all.parquet")
+    if os.path.exists(ip):
+        t = pd.read_parquet(ip)
+        nse_ind = dict(zip(t.symbol, t.industry))
+    if sw:
+        rows = [[i + 1, "<b>%s</b>" % e(p["symbol"]), e(nse_ind.get(p["symbol"], p["industry"])), "%.2f" % p["score_pct"], rs(p["ref_close"]),
+                 p.get("shares_per_lakh", "–"), rs(p.get("value_per_lakh")), "%s (%+.1f%%)" % (rs(p["stop"]), p["stop_pct"])]
+                for i, p in enumerate(sw.get("picks", []))]
+        reg = sw.get("regime", {})
+        parts.append("""<h3>Swing · buy at the open after %s, hold 10 sessions %s</h3>
+<p class="muted">%s Market: NIFTY %s its 200-day average, %s%% of stocks above their 50-day; exposure %d%%.
+Sizes are per ₹1 lakh of capital, split equally across the list. The backtest passed and its review found no
+bias; the live paper record below starts with these picks, so treat them as unproven until it builds up.
+*Reference stop only: the tested rule has no stop.</p>%s""" % (
+            e(sw["session"]), pill(e(sw["status"]) if sw["status"].startswith(("KILLED", "HALTED")) else
+                                   "PAPER ONLY" if sw["status"].startswith("PAPER") else "BACKTEST PASSED"),
+            e(sw.get("tested_rule", "")), "above" if reg.get("nifty_above_ma200") else "below",
+            reg.get("breadth_ma50_pct"), int(reg.get("exposure", 0) * 100),
+            table(["#", "Stock", "Industry", "Score", "Last close", "Shares / ₹1L", "Value", "Ref. stop*"], rows)
+            if rows else "<p><b>No swing picks today:</b> %s</p>" % e(sw.get("status"))))
+    if it:
+        le = it.get("leverage_effect", {})
+        lev = it.get("leverage", 5)
+        lo = le.get("long", {})
+        warn = ("<div class='warnbox'><b>Paper only: no proven edge.</b> In the 2022–2026 test the long picks averaged "
+                "%s a day after charges on the amount traded. At %dx leverage that is about <b>%s of capital a day</b> "
+                "(≈ %s per ₹1 lakh). Leverage multiplies losses as well as gains.</div>" % (
+                    pct(lo.get("backtest_pct_per_day_on_exposure"), 2), lev, pct(lo.get("pct_per_day_on_capital"), 2),
+                    rs((lo.get("pct_per_day_on_capital") or 0) / 100 * 100000)))
+        settled = {}
+        if len(live):
+            for r in live[(live.date == it["day"]) & live.strategy.str.startswith("intraday_")].itertuples():
+                settled[(r.strategy.split("_")[1], r.sym)] = r.net
+        tabs = ""
+        for side in ("long", "short"):
+            rows = [["<b>%s</b>" % e(p["symbol"]), rs(p["ref_price"]), rs(p["stop"]), p.get("shares_per_lakh", "–"),
+                     rs(p.get("exposure_per_lakh")), rs(p.get("risk_to_stop_rs_per_lakh")),
+                     pct(settled[(side, p["symbol"])] * 100) if (side, p["symbol"]) in settled else "open"]
+                    for p in it.get(side, [])]
+            if rows:
+                tabs += "<h4>%s</h4>%s" % ("Buy (long)" if side == "long" else "Sell short", table(
+                    ["Stock", "9:30 price", "Stop", "Shares / ₹1L at %dx" % lev, "Exposure", "Loss at stop", "Result"], rows))
+            elif it.get("blocked", {}).get(side):
+                tabs += "<p><b>%s:</b> %s</p>" % (side, e(it["blocked"][side]))
+        parts.append("""<h3>Intraday · %s, decided at %s (made %s) %s</h3>%s
+<p class="muted">Entry at the 9:30 price, stop at the other side of the 9:15–9:30 range, square off by 15:10.%s
+One day's results say nothing about the method; the multi-year test above does.</p>%s""" % (
+            e(it["day"]), e(it.get("decision_time")), e(it.get("made_at")), pill("PAPER ONLY"), warn,
+            " These picks were computed after the close from the 9:15–9:30 candles only; from the next session they are"
+            " made live at 9:31." if (it.get("made_at") or "00")[:2] >= "15" else "", tabs))
+    track = ""
+    if len(live):
+        g = live.groupby("strategy").net.agg(["count", "mean"]).reset_index()
+        rows = [[e(r.strategy), r["count"], pct(r["mean"] * 100)] for _, r in g.iterrows()]
+        track = "<h3>Track record of published picks</h3><p class='muted'>Settled on real NSE prices after charges.</p>%s" % (
+            table(["Strategy", "Closed picks", "Average net"], rows))
+    else:
+        track = "<p class='muted'>Track record: no published pick has closed yet; results appear here as they settle.</p>"
+    if not parts:
+        return ""
+    return '<section id="picks"><h2>Today\'s picks</h2>%s%s</section>' % ("".join(parts), track)
+
+
 def build():
     con = db.connect(read_only=True)
     intr = _j(M, "intraday", "report-0930.json")
@@ -237,7 +321,7 @@ warehouse. Raw data is not published here.</p>%s<h3>Quality checks %s</h3>%s</se
         table(["Check", "Status", "Detail"], qrows))
 
     doc = TEMPLATE.format(css=CSS, built=e(built), last=e(last), cards=card_html, swing=swing_html, intraday=intr_html,
-                          lab=lab_html, data=data_html)
+                          lab=lab_html, data=data_html, picks=picks_html())
     os.makedirs(DOCS, exist_ok=True)
     with open(os.path.join(DOCS, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(doc)
@@ -277,6 +361,8 @@ svg polyline{fill:none;stroke-width:2}svg .l1{stroke:var(--l1)}svg .l2{stroke:va
 .bar{display:grid;grid-template-columns:40px 1fr 70px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
 .track{position:relative;height:12px;background:linear-gradient(var(--line),var(--line)) 50% 0/1px 100% no-repeat}
 .fill{position:absolute;top:2px;height:8px;border-radius:2px}.fill.pos{background:var(--pos)}.fill.neg{background:var(--neg)}
+.warnbox{background:color-mix(in srgb,var(--bad) 10%,var(--card));border:1px solid var(--bad);border-radius:10px;
+padding:10px 14px;margin:10px 0;font-size:14px;max-width:75ch}h4{font-size:14px;margin:16px 0 4px}
 .bv{text-align:right;font-variant-numeric:tabular-nums}footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
 """
 
@@ -288,8 +374,10 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <p class="lede">Intraday and swing ideas for Indian stocks, tested on 10 years of NSE data after Zerodha charges, out of
 sample, and reviewed for bias. Failures are shown as plainly as successes.</p>
 <p class="muted">Built {built} · data through {last}</p>
-<nav><a href="#swing">Swing</a><a href="#intraday">Intraday</a><a href="#lab">Research lab</a><a href="#data">Data</a>
+<nav><a href="#picks"><b>Today's picks</b></a><a href="#swing">Swing</a><a href="#intraday">Intraday</a><a href="#lab">Research lab</a><a href="#data">Data</a>
 <a href="results.json">results.json</a></nav></header>
+{picks}
+<h2 style="margin-top:44px">How each method tested</h2>
 <div class="cards">{cards}</div>
 {swing}{intraday}{lab}{data}
 <footer>For education and research only. Not investment advice; the author is not a SEBI-registered adviser.

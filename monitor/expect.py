@@ -31,7 +31,9 @@ def load():
         for side, col in (("long", "model_long_stop"), ("short", "model_short_stop")):
             if col in d:
                 out["intraday_" + side] = _from_series(d[col])
-    p = os.path.join(config.DATA, "models", "swing", "cohorts-h10.csv")
+    p = os.path.join(config.DATA, "models", "swing", "cohorts-h10-close.csv")   # the tested rule (no stop)
+    if not os.path.exists(p):
+        p = os.path.join(config.DATA, "models", "swing", "cohorts-h10.csv")
     if os.path.exists(p):
         d = pd.read_csv(p)
         if "model_top" in d:

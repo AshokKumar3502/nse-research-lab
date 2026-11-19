@@ -24,6 +24,8 @@ from warehouse.loaders import minute
 from . import features, model
 
 INTRADAY_URL = "https://api.upstox.com/v3/historical-candle/intraday/%s/minutes/1"
+PER_CAPITAL = 100000.0   # sizes per Rs 1 lakh of capital
+LEVERAGE = 5.0           # Zerodha MIS intraday leverage; multiplies gains AND losses on capital
 
 
 def fetch_today(keys, day, workers=6):
@@ -77,11 +79,19 @@ def score(con, t="09:30", k=5, day=None, log=print):
 
     def pack(rows, side):
         v = strat.get("model_%s_stop" % side, {})
-        return [{"symbol": r.symbol, "side": side, "score": round(float(r.pred) * 100, 3),
-                 "ref_price": round(float(r.w_close), 2),
-                 "stop": round(float(r.w_low if side == "long" else r.w_high), 2),
-                 "flat_by": "15:10", "verdict": v.get("verdict", "UNKNOWN"),
-                 "backtest_mean_net_pct": v.get("mean_pct")} for r in rows.itertuples()]
+        out = []
+        per = PER_CAPITAL * LEVERAGE / max(k, 1)          # exposure per pick for Rs 1 lakh at LEVERAGE x
+        for r in rows.itertuples():
+            ref = float(r.w_close)
+            stop = float(r.w_low if side == "long" else r.w_high)
+            qty = int(per // ref) if ref > 0 else 0
+            risk = qty * abs(ref - stop)
+            out.append({"symbol": r.symbol, "side": side, "score": round(float(r.pred) * 100, 3),
+                        "ref_price": round(ref, 2), "stop": round(stop, 2), "flat_by": "15:10",
+                        "shares_per_lakh": qty, "exposure_per_lakh": round(qty * ref),
+                        "risk_to_stop_rs_per_lakh": round(risk), "verdict": v.get("verdict", "UNKNOWN"),
+                        "backtest_mean_net_pct": v.get("mean_pct")})
+        return out
 
     longs = f.sort_values("pred", ascending=False).head(k)
     shorts = f.sort_values("pred", ascending=True).head(k)
@@ -90,7 +100,11 @@ def score(con, t="09:30", k=5, day=None, log=print):
            "status": "VALIDATED" if validated else "PAPER ONLY: the walk-forward test has not shown an edge",
            "model_report": {"from": rep.get("from"), "to": rep.get("to"), "best": rep.get("best")},
            "universe": len(f), "missing_keys": missing, "long": pack(longs, "long"), "short": pack(shorts, "short"),
-           "blocked": {}}
+           "blocked": {}, "per_capital": PER_CAPITAL, "leverage": LEVERAGE,
+           "leverage_effect": {side: {"backtest_pct_per_day_on_exposure": (strat.get("model_%s_stop" % side) or {}).get("mean_pct"),
+                                      "pct_per_day_on_capital": round(((strat.get("model_%s_stop" % side) or {}).get("mean_pct") or 0)
+                                                                      * LEVERAGE, 3)}
+                               for side in ("long", "short")}}
     from monitor import killswitch
     for side in ("long", "short"):
         why = killswitch.blocked("intraday_" + side)

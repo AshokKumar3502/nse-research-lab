@@ -18,6 +18,10 @@ from warehouse import config
 from . import features, model, portfolio
 
 
+TESTED = "model_top/close"
+PER_CAPITAL = 100000.0          # sizes are per Rs 1 lakh of capital (your own capital never goes on the site)
+
+
 def run(con, hold=10, k=10, capital=portfolio.CAPITAL, log=print):
     mdir = os.path.join(config.DATA, model.MODEL_DIR_NAME)
     mpath = os.path.join(mdir, "model-h%d.txt" % hold)
@@ -37,6 +41,7 @@ def run(con, hold=10, k=10, capital=portfolio.CAPITAL, log=print):
     slots = int(round(k * expo))
     held = {}
     plan = []
+    per = PER_CAPITAL / max(k, 1)            # equal weight: the tested set-up holds k names
     for r in day[day.pred > 0].sort_values("pred", ascending=False).itertuples():
         if len(plan) >= max(slots, 0):
             break
@@ -44,19 +49,19 @@ def run(con, hold=10, k=10, capital=portfolio.CAPITAL, log=print):
             continue
         held[r.industry] = held.get(r.industry, 0) + 1
         stop = r.adj_close * (1 - portfolio.STOP_ATR * r.atr_pct)
-        risk = max(r.adj_close - stop, r.adj_close * 0.01)
-        qty = int(min(portfolio.RISK_PER_TRADE * capital / risk, portfolio.MAX_WEIGHT * capital / r.adj_close))
+        qty = int(per // r.adj_close)
         plan.append({"symbol": r.sym_id, "industry": r.industry, "score_pct": round(float(r.pred) * 100, 2),
                      "ref_close": round(float(r.adj_close), 2), "stop": round(float(stop), 2),
-                     "stop_pct": round(-portfolio.STOP_ATR * float(r.atr_pct) * 100, 2), "shares": qty,
-                     "value": round(qty * float(r.adj_close)), "hold_sessions": hold,
-                     "ret_20_pct": round(float(r.ret_20) * 100, 1),
+                     "stop_pct": round(-portfolio.STOP_ATR * float(r.atr_pct) * 100, 2), "use_stop": False,
+                     "shares_per_lakh": qty, "value_per_lakh": round(qty * float(r.adj_close)),
+                     "hold_sessions": hold, "ret_20_pct": round(float(r.ret_20) * 100, 1),
                      "rs_industry_20_pct": round(float(r.rs_industry_20) * 100, 1) if pd.notna(r.rs_industry_20) else None})
     rules = {"sector_leaders": [x for x in model.picks(day.assign(pred=day.pred), "rule_sector_leaders", 5).sym_id],
              "results_jump": list(day[(day.days_since_result == 0) & (day.result_ret >= 0.04)
                                       & (day.result_turn_mult >= 2) & (day.result_close_loc >= 0.75)
                                       & (day.nifty_above_ma200 == 1)].sym_id)}
-    strat = rep["strategies"].get("model_top/stop", {})
+    # the tested rule that passed: top k, buy at the next open, sell at the close of the hold-th session
+    strat = rep["strategies"].get(TESTED, {})
     rv_path = os.path.join(mdir, "review-h%d.json" % hold)
     review = {}
     if os.path.exists(rv_path):
@@ -72,7 +77,11 @@ def run(con, hold=10, k=10, capital=portfolio.CAPITAL, log=print):
            "regime": {"nifty_above_ma200": bool(day.nifty_above_ma200.iloc[0] == 1),
                       "breadth_ma50_pct": round(float(day.breadth_ma50.iloc[0]) * 100, 1), "exposure": expo},
            "model_backtest": {k_: strat.get(k_) for k_ in ("mean_pct", "t", "win_days_pct", "verdict", "years")},
-           "capital": capital, "picks": plan, "rules_today": rules, "universe": int(len(day))}
+           "tested_rule": "Buy at the next open, sell at the close of the %dth session. The 2-ATR stop is "
+                          "shown for reference only: in the test it lowered results (%+.2f%% vs %+.2f%% a period)." % (
+                              hold, (rep["strategies"].get("model_top/stop") or {}).get("mean_pct") or 0,
+                              strat.get("mean_pct") or 0),
+           "per_capital": PER_CAPITAL, "picks": plan, "rules_today": rules, "universe": int(len(day))}
     from monitor import killswitch
     why = killswitch.blocked("swing_model")
     if why:
