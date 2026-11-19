@@ -54,6 +54,7 @@ switch ($Phase) {
     "morning" {
         Invoke-Step "intraday live" @("-m", "intraday", "live") | Out-Null
         Invoke-Step "monitor" @("-m", "monitor", "run") | Out-Null
+        Invoke-Step "paper trades" @("-m", "papertrade") | Out-Null
         Publish-Site
     }
     "evening" {
@@ -62,6 +63,7 @@ switch ($Phase) {
         Invoke-Step "minute bars" @("-m", "warehouse", "minute", "--universe", "fo", "--since", $since) | Out-Null
         if ($rc -eq 0) { Invoke-Step "swing scan" @("-m", "swing", "scan") | Out-Null }
         Invoke-Step "monitor" @("-m", "monitor", "run") | Out-Null
+        Invoke-Step "paper trades" @("-m", "papertrade") | Out-Null
         Publish-Site
     }
     "monthly" {

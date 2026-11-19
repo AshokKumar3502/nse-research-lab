@@ -174,7 +174,8 @@ One day's results say nothing about the method; the multi-year test above does.<
         track = "<p class='muted'>Track record: no published pick has closed yet; results appear here as they settle.</p>"
     if not parts:
         return ""
-    return '<section id="picks"><h2>Today\'s picks</h2>%s%s</section>' % ("".join(parts), track)
+    return ('<section id="picks"><h2>Today\'s picks</h2><p><a href="tracker.html"><b>Paper trades: every pick at '
+            '₹50,000, P&amp;L per stock per day →</b></a></p>%s%s</section>' % ("".join(parts), track))
 
 
 def build():
@@ -330,6 +331,8 @@ warehouse. Raw data is not published here.</p>%s<h3>Quality checks %s</h3>%s</se
                    "swing_portfolio": port, "lab": lab, "monitor": {k: (mon or {}).get(k) for k in ("built", "strategies")}},
                   fh, indent=1, default=str)
     open(os.path.join(DOCS, ".nojekyll"), "w").close()
+    from . import tracker
+    tracker.build(CSS)
     return os.path.join(DOCS, "index.html")
 
 
@@ -374,7 +377,7 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <p class="lede">Intraday and swing ideas for Indian stocks, tested on 10 years of NSE data after Zerodha charges, out of
 sample, and reviewed for bias. Failures are shown as plainly as successes.</p>
 <p class="muted">Built {built} · data through {last}</p>
-<nav><a href="#picks"><b>Today's picks</b></a><a href="#swing">Swing</a><a href="#intraday">Intraday</a><a href="#lab">Research lab</a><a href="#data">Data</a>
+<nav><a href="#picks"><b>Today's picks</b></a><a href="tracker.html"><b>Paper trades &amp; P&amp;L</b></a><a href="#swing">Swing</a><a href="#intraday">Intraday</a><a href="#lab">Research lab</a><a href="#data">Data</a>
 <a href="results.json">results.json</a></nav></header>
 {picks}
 <h2 style="margin-top:44px">How each method tested</h2>

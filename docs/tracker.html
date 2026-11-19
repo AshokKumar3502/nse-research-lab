@@ -1,0 +1,176 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Paper Trades</title>
+<meta name="description" content="Paper trades of every NSE Research Lab pick at Rs 50,000 a stock, P&L per stock per day.">
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1b1b19;--muted:#66655f;--line:#e2e0d8;--good:#1d7a4c;--warn:#9a5b00;--bad:#b3261e;
+--l1:#2457c5;--l2:#9a9a94;--pos:#2e8b57;--neg:#c0392b}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#121211;--card:#1c1c1a;--ink:#ecebe5;--muted:#a3a29b;
+--line:#31312d;--good:#5cc28c;--warn:#e3a24a;--bad:#f08a80;--l1:#7aa2ff;--l2:#6d6d68;--pos:#5cc28c;--neg:#f08a80}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;background:var(--bg);color:var(--ink);
+font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:28px 16px 64px}header h1{font-size:30px;margin:0 0 6px;letter-spacing:-.01em}
+.lede{color:var(--muted);margin:0 0 6px;max-width:70ch}nav{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0 24px;font-size:14px}
+nav a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card p{margin:8px 0 0;font-size:14px;color:var(--muted)}.ch{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.ch h3{margin:0;font-size:15px}.pill{font-size:11px;font-weight:700;letter-spacing:.03em;padding:2px 8px;border-radius:99px;
+border:1px solid currentColor;white-space:nowrap;text-transform:uppercase}.good{color:var(--good)}.warn{color:var(--warn)}
+.bad{color:var(--bad)}.muted{color:var(--muted)}section{margin-top:44px}h2{font-size:22px;margin:0 0 8px}
+h3{font-size:16px;margin:24px 0 8px}p{max-width:75ch}.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
+td{font-variant-numeric:tabular-nums}.chart{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+svg{width:100%;height:auto;display:block}svg .grid{stroke:var(--line)}svg .ax{fill:var(--muted);font-size:11px}
+svg polyline{fill:none;stroke-width:2}svg .l1{stroke:var(--l1)}svg .l2{stroke:var(--l2);stroke-dasharray:5 4}
+.legend{font-size:13px;color:var(--muted);display:flex;gap:14px;align-items:center;padding:4px 6px}
+.k{display:inline-block;width:18px;height:3px;margin-right:4px;vertical-align:middle}.k.l1{background:var(--l1)}.k.l2{background:var(--l2)}
+.bars{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.bar{display:grid;grid-template-columns:40px 1fr 70px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
+.track{position:relative;height:12px;background:linear-gradient(var(--line),var(--line)) 50% 0/1px 100% no-repeat}
+.fill{position:absolute;top:2px;height:8px;border-radius:2px}.fill.pos{background:var(--pos)}.fill.neg{background:var(--neg)}
+.warnbox{background:color-mix(in srgb,var(--bad) 10%,var(--card));border:1px solid var(--bad);border-radius:10px;
+padding:10px 14px;margin:10px 0;font-size:14px;max-width:75ch}h4{font-size:14px;margin:16px 0 4px}
+.bv{text-align:right;font-variant-numeric:tabular-nums}footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0 6px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .l{font-size:12px;color:var(--muted)}.kpi .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.up{color:var(--pos)}.dn{color:var(--neg)}
+.tabs{display:flex;gap:6px;margin:22px 0 6px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:14px;padding:7px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab{display:none}.tab.on{display:block}
+td.r,th.r{text-align:right;white-space:nowrap}tr.pos-row{cursor:pointer}tr.pos-row:hover td{background:color-mix(in srgb,var(--line) 40%,transparent)}
+tr.detail td{background:var(--bg);padding:6px 10px 12px}tr.detail table{font-size:13px}
+.tag{font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.daybox{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:12px 0;overflow:hidden}
+.dayhd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:600}
+.daybox table{border:0;border-radius:0}.prog{display:inline-block;width:60px;height:6px;background:var(--line);border-radius:3px;vertical-align:middle;margin-left:6px}
+.prog i{display:block;height:6px;border-radius:3px;background:var(--l1)}
+.empty{color:var(--muted);padding:12px 0}
+</style></head><body><main>
+<header><h1>Paper trades</h1>
+<p class="lede">Every pick the system publishes, traded on paper with ₹50,000 a stock: swing picks bought at the next
+open and held 10 sessions, intraday picks entered at 9:30 and squared off by 15:10, each with its suggested stop-loss.
+Real NSE prices, after Zerodha charges.</p>
+<p class="muted">Updated <span id="built"></span> · prices through <span id="last"></span> · <a href="index.html">← picks &amp; research</a></p></header>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" role="tablist">
+<button role="tab" aria-selected="true" data-t="swing">Swing</button>
+<button role="tab" aria-selected="false" data-t="intraday">Intraday</button>
+<button role="tab" aria-selected="false" data-t="days">Day by day</button></div>
+<section class="tab on" id="t-swing"></section>
+<section class="tab" id="t-intraday"></section>
+<section class="tab" id="t-days"></section>
+<footer>Paper trading only: nothing here places orders, and fills are at the quoted open / 9:30 / stop prices
+without extra slippage. Not investment advice; the author is not a SEBI-registered adviser.</footer>
+</main>
+<script>
+const D = {"built": "2026-11-19 23:18 IST", "stake": 50000.0, "last_session": "2026-11-19", "summary": {"swing": {"trades": 10, "closed": 0, "open": 0, "pending": 10, "realised": 0, "unrealised": 0, "invested_open": 0, "win_pct": null}, "intraday": {"trades": 10, "closed": 10, "open": 0, "pending": 0, "realised": 11284.0, "unrealised": 0, "invested_open": 0, "win_pct": 70.0}, "all": {"trades": 20, "closed": 10, "open": 0, "pending": 10, "realised": 11284.0, "unrealised": 0, "invested_open": 0, "win_pct": 70.0}}, "daily": [{"date": "2026-11-19", "swing": 0.0, "intraday": 11795.43, "charges": 511.43, "net": 11284.0, "cumulative": 11284.0}], "trades": [{"id": "S-2026-11-19-THERMAX", "kind": "swing", "side": "long", "symbol": "THERMAX", "industry": "Construction", "rank": 1, "signal_date": "2026-11-19", "hold": 10, "sl": 2461.77, "ref_close": 2726.9, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-KEC", "kind": "swing", "side": "long", "symbol": "KEC", "industry": "Construction", "rank": 2, "signal_date": "2026-11-19", "hold": 10, "sl": 277.36, "ref_close": 306.65, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-SSWL", "kind": "swing", "side": "long", "symbol": "SSWL", "industry": "Services", "rank": 3, "signal_date": "2026-11-19", "hold": 10, "sl": 491.19, "ref_close": 548.4, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-PIIND", "kind": "swing", "side": "long", "symbol": "PIIND", "industry": "Chemicals", "rank": 4, "signal_date": "2026-11-19", "hold": 10, "sl": 1476.17, "ref_close": 1630.0, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-DIACABS", "kind": "swing", "side": "long", "symbol": "DIACABS", "industry": "Fast Moving Consumer Goods", "rank": 5, "signal_date": "2026-11-19", "hold": 10, "sl": 332.11, "ref_close": 366.05, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-MARSONS", "kind": "swing", "side": "long", "symbol": "MARSONS", "industry": "Oil Gas & Consumable Fuels", "rank": 6, "signal_date": "2026-11-19", "hold": 10, "sl": 132.78, "ref_close": 154.83, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-RAYMOND", "kind": "swing", "side": "long", "symbol": "RAYMOND", "industry": "Realty", "rank": 7, "signal_date": "2026-11-19", "hold": 10, "sl": 1081.31, "ref_close": 1195.3, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-SYMBIOTEC", "kind": "swing", "side": "long", "symbol": "SYMBIOTEC", "industry": "UNKNOWN", "rank": 8, "signal_date": "2026-11-19", "hold": 10, "sl": 1428.37, "ref_close": 1604.8, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-POLICYBZR", "kind": "swing", "side": "long", "symbol": "POLICYBZR", "industry": "Financial Services", "rank": 9, "signal_date": "2026-11-19", "hold": 10, "sl": 915.47, "ref_close": 1015.0, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "S-2026-11-19-STYLEBAAZA", "kind": "swing", "side": "long", "symbol": "STYLEBAAZA", "industry": "Capital Goods", "rank": 10, "signal_date": "2026-11-19", "hold": 10, "sl": 472.02, "ref_close": 524.25, "status": "pending", "entry_date": null, "entry": null, "qty": 0, "exit_date": null, "exit": null, "exit_reason": null, "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": null}, {"id": "I-2026-11-19-L-POLICYBZR", "kind": "intraday", "side": "long", "symbol": "POLICYBZR", "rank": 1, "signal_date": "2026-11-19", "sl": 970.4, "status": "closed", "entry_date": "2026-11-19", "entry": 977.1, "qty": 51, "exit_date": "2026-11-19", "exit": 1015.1, "exit_reason": "squared off 15:10", "exit_time": "15:09", "gross": 1938.0, "charges": 52.84, "net": 1885.16, "marks": [{"date": "2026-11-19", "session": 1, "close": 1015.1, "mark": 1015.1, "day_pnl": 1938.0, "total_pnl": 1938.0}], "flag": null}, {"id": "I-2026-11-19-L-VOLTAS", "kind": "intraday", "side": "long", "symbol": "VOLTAS", "rank": 2, "signal_date": "2026-11-19", "sl": 1131.0, "status": "closed", "entry_date": "2026-11-19", "entry": 1174.3, "qty": 42, "exit_date": "2026-11-19", "exit": 1233.1, "exit_reason": "squared off 15:10", "exit_time": "15:09", "gross": 2469.6, "charges": 52.3, "net": 2417.3, "marks": [{"date": "2026-11-19", "session": 1, "close": 1233.1, "mark": 1233.1, "day_pnl": 2469.6, "total_pnl": 2469.6}], "flag": null}, {"id": "I-2026-11-19-L-PGEL", "kind": "intraday", "side": "long", "symbol": "PGEL", "rank": 3, "signal_date": "2026-11-19", "sl": 539.3, "status": "closed", "entry_date": "2026-11-19", "entry": 561.0, "qty": 89, "exit_date": "2026-11-19", "exit": 578.15, "exit_reason": "squared off 15:10", "exit_time": "15:09", "gross": 1526.35, "charges": 52.95, "net": 1473.4, "marks": [{"date": "2026-11-19", "session": 1, "close": 578.15, "mark": 578.15, "day_pnl": 1526.35, "total_pnl": 1526.35}], "flag": null}, {"id": "I-2026-11-19-L-IREDA", "kind": "intraday", "side": "long", "symbol": "IREDA", "rank": 4, "signal_date": "2026-11-19", "sl": 119.7, "status": "closed", "entry_date": "2026-11-19", "entry": 123.63, "qty": 404, "exit_date": "2026-11-19", "exit": 130.93, "exit_reason": "squared off 15:10", "exit_time": "15:09", "gross": 2949.2, "charges": 52.97, "net": 2896.23, "marks": [{"date": "2026-11-19", "session": 1, "close": 130.93, "mark": 130.93, "day_pnl": 2949.2, "total_pnl": 2949.2}], "flag": null}, {"id": "I-2026-11-19-L-COLPAL", "kind": "intraday", "side": "long", "symbol": "COLPAL", "rank": 5, "signal_date": "2026-11-19", "sl": 1683.3, "status": "closed", "entry_date": "2026-11-19", "entry": 1718.1, "qty": 29, "exit_date": "2026-11-19", "exit": 1768.6, "exit_reason": "squared off 15:10", "exit_time": "15:09", "gross": 1464.5, "charges": 52.84, "net": 1411.66, "marks": [{"date": "2026-11-19", "session": 1, "close": 1768.6, "mark": 1768.6, "day_pnl": 1464.5, "total_pnl": 1464.5}], "flag": null}, {"id": "I-2026-11-19-S-PAYTM", "kind": "intraday", "side": "short", "symbol": "PAYTM", "rank": 1, "signal_date": "2026-11-19", "sl": 1808.9, "status": "closed", "entry_date": "2026-11-19", "entry": 1770.4, "qty": 28, "exit_date": "2026-11-19", "exit": 1725.0, "exit_reason": "squared off 15:10", "exit_time": "15:09", "gross": 1271.2, "charges": 52.57, "net": 1218.63, "marks": [{"date": "2026-11-19", "session": 1, "close": 1725.0, "mark": 1725.0, "day_pnl": 1271.2, "total_pnl": 1271.2}], "flag": null}, {"id": "I-2026-11-19-S-INOXWIND", "kind": "intraday", "side": "short", "symbol": "INOXWIND", "rank": 2, "signal_date": "2026-11-19", "sl": 58.36, "status": "closed", "entry_date": "2026-11-19", "entry": 58.3, "qty": 857, "exit_date": "2026-11-19", "exit": 58.36, "exit_reason": "SL hit", "exit_time": "09:30", "gross": -51.42, "charges": 52.98, "net": -104.4, "marks": [{"date": "2026-11-19", "session": 1, "close": 58.36, "mark": 58.36, "day_pnl": -51.42, "total_pnl": -51.42}], "flag": null}, {"id": "I-2026-11-19-S-NAVINFLUOR", "kind": "intraday", "side": "short", "symbol": "NAVINFLUOR", "rank": 3, "signal_date": "2026-11-19", "sl": 10360.0, "status": "closed", "entry_date": "2026-11-19", "entry": 10310.0, "qty": 4, "exit_date": "2026-11-19", "exit": 10205.0, "exit_reason": "squared off 15:10", "exit_time": "15:09", "gross": 420.0, "charges": 43.73, "net": 376.27, "marks": [{"date": "2026-11-19", "session": 1, "close": 10205.0, "mark": 10205.0, "day_pnl": 420.0, "total_pnl": 420.0}], "flag": null}, {"id": "I-2026-11-19-S-POLYCAB", "kind": "intraday", "side": "short", "symbol": "POLYCAB", "rank": 4, "signal_date": "2026-11-19", "sl": 7335.0, "status": "closed", "entry_date": "2026-11-19", "entry": 7320.0, "qty": 6, "exit_date": "2026-11-19", "exit": 7335.0, "exit_reason": "SL hit", "exit_time": "09:30", "gross": -90.0, "charges": 46.58, "net": -136.58, "marks": [{"date": "2026-11-19", "session": 1, "close": 7335.0, "mark": 7335.0, "day_pnl": -90.0, "total_pnl": -90.0}], "flag": null}, {"id": "I-2026-11-19-S-PIIND", "kind": "intraday", "side": "short", "symbol": "PIIND", "rank": 5, "signal_date": "2026-11-19", "sl": 1627.4, "status": "closed", "entry_date": "2026-11-19", "entry": 1624.0, "qty": 30, "exit_date": "2026-11-19", "exit": 1627.4, "exit_reason": "SL hit", "exit_time": "09:31", "gross": -102.0, "charges": 51.67, "net": -153.67, "marks": [{"date": "2026-11-19", "session": 1, "close": 1627.4, "mark": 1627.4, "day_pnl": -102.0, "total_pnl": -102.0}], "flag": null}]};
+const inr = v => (v < 0 ? "−₹" : "₹") + Math.abs(Math.round(v)).toLocaleString("en-IN");
+const sgn = v => (v > 0 ? "+" : v < 0 ? "−" : "") + "₹" + Math.abs(Math.round(v)).toLocaleString("en-IN");
+const cls = v => v > 0 ? "up" : v < 0 ? "dn" : "";
+const px = v => v == null ? "–" : "₹" + Number(v).toLocaleString("en-IN", {maximumFractionDigits: 2});
+const pc = (a, b) => b ? ((a / b) * 100).toFixed(2) + "%" : "–";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fd = d => d ? new Date(d + "T00:00:00").toLocaleDateString("en-IN", {day: "numeric", month: "short"}) : "–";
+document.getElementById("built").textContent = D.built;
+document.getElementById("last").textContent = fd(D.last_session);
+
+// ---- KPIs
+const S = D.summary, last = D.daily.length ? D.daily[D.daily.length - 1] : null;
+const openCharges = D.trades.filter(t => t.status === "open").reduce((a, t) => a + t.charges, 0);
+const total = S.all.realised + S.all.unrealised - openCharges;
+const k = [
+  ["Total P&L", sgn(total), cls(total), "closed + open, after charges"],
+  ["Latest day", last ? sgn(last.net) : "–", last ? cls(last.net) : "", last ? fd(last.date) : "no trades yet"],
+  ["Swing open", S.swing.open + " stocks", "", S.swing.open ? "unrealised " + sgn(S.swing.unrealised) : (S.swing.pending ? S.swing.pending + " to buy at the next open" : "none")],
+  ["Swing closed", sgn(S.swing.realised), cls(S.swing.realised), S.swing.closed + " trades" + (S.swing.win_pct != null ? " · " + S.swing.win_pct + "% won" : "")],
+  ["Intraday", sgn(S.intraday.realised), cls(S.intraday.realised), S.intraday.closed + " trades" + (S.intraday.win_pct != null ? " · " + S.intraday.win_pct + "% won" : "")],
+];
+document.getElementById("kpis").innerHTML = k.map(([l, v, c, s]) =>
+  `<div class="kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div><div class="s">${esc(s)}</div></div>`).join("");
+
+// ---- tabs
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x.id === "t-" + b.dataset.t));
+  try { localStorage.setItem("tab", b.dataset.t); } catch (e) {}
+});
+try { const t = localStorage.getItem("tab"); if (t) document.querySelector(`[data-t="${t}"]`)?.click(); } catch (e) {}
+
+// ---- swing
+const sw = D.trades.filter(t => t.kind === "swing");
+const marks = t => `<table><thead><tr><th>Day</th><th>Date</th><th class="r">Close</th><th class="r">Day P&L</th><th class="r">Total P&L</th></tr></thead><tbody>${
+  t.marks.map(m => `<tr><td>${m.session}/${t.hold}</td><td>${fd(m.date)}</td><td class="r">${px(m.mark)}</td>
+  <td class="r ${cls(m.day_pnl)}">${sgn(m.day_pnl)}</td><td class="r ${cls(m.total_pnl)}">${sgn(m.total_pnl)}</td></tr>`).join("")}</tbody></table>`;
+function swingTable(rows, open) {
+  if (!rows.length) return `<p class="empty">None yet.</p>`;
+  const head = open
+    ? `<th>Stock</th><th>Bought</th><th class="r">Entry</th><th class="r">Qty</th><th class="r">SL</th><th class="r">Last</th><th>Day</th><th class="r">Today</th><th class="r">Total P&L</th>`
+    : `<th>Stock</th><th>Bought</th><th class="r">Entry</th><th class="r">Qty</th><th>Sold</th><th class="r">Exit</th><th>Why</th><th class="r">Net P&L</th>`;
+  const body = rows.map((t, i) => {
+    const m = t.marks[t.marks.length - 1] || {};
+    const cells = open
+      ? `<td><b>${esc(t.symbol)}</b><div class="muted" style="font-size:12px">${esc(t.industry || "")}</div></td><td>${fd(t.entry_date)}</td>
+         <td class="r">${px(t.entry)}</td><td class="r">${t.qty}</td><td class="r">${px(t.sl)}</td><td class="r">${px(m.mark)}</td>
+         <td>${m.session}/${t.hold}<span class="prog"><i style="width:${(m.session / t.hold * 100).toFixed(0)}%"></i></span></td>
+         <td class="r ${cls(m.day_pnl)}">${sgn(m.day_pnl)}</td>
+         <td class="r ${cls(t.gross)}"><b>${sgn(t.gross)}</b><div style="font-size:12px">${pc(t.gross, t.entry * t.qty)}</div></td>`
+      : `<td><b>${esc(t.symbol)}</b></td><td>${fd(t.entry_date)}</td><td class="r">${px(t.entry)}</td><td class="r">${t.qty}</td>
+         <td>${fd(t.exit_date)}</td><td class="r">${px(t.exit)}</td><td>${esc(t.exit_reason)}</td>
+         <td class="r ${cls(t.net)}"><b>${sgn(t.net)}</b><div style="font-size:12px">${pc(t.net, t.entry * t.qty)}</div></td>`;
+    return `<tr class="pos-row" data-i="${open ? "o" : "c"}${i}">${cells}</tr>
+            <tr class="detail" id="d-${open ? "o" : "c"}${i}" hidden><td colspan="9">${marks(t)}${t.flag ? `<p class="muted">${esc(t.flag)}</p>` : ""}</td></tr>`;
+  }).join("");
+  return `<div class="tw"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+const openS = sw.filter(t => t.status === "open").sort((a, b) => b.gross - a.gross);
+const closedS = sw.filter(t => t.status === "closed").sort((a, b) => (b.exit_date || "").localeCompare(a.exit_date || ""));
+const pend = sw.filter(t => t.status === "pending");
+document.getElementById("t-swing").innerHTML =
+  (pend.length ? `<h2>Buying at the next open</h2><p class="muted">₹50,000 each, at the next session's opening price.</p><p>${
+    pend.map(t => `<b>${esc(t.symbol)}</b> <span class="muted">SL ${px(t.sl)}</span>`).join(" · ")}</p>` : "") +
+  `<h2>Open swing positions</h2><p class="muted">Tap a stock for its day-by-day P&L. Each holds 10 sessions unless its SL is hit; P&L shown before sell-side charges.</p>${swingTable(openS, true)}` +
+  `<h2>Closed swing trades</h2>${swingTable(closedS, false)}`;
+document.querySelectorAll("tr.pos-row").forEach(r => r.onclick = () => {
+  const d = document.getElementById("d-" + r.dataset.i); d.hidden = !d.hidden; });
+
+// ---- intraday, one box per day
+const it = D.trades.filter(t => t.kind === "intraday");
+const days = [...new Set(it.map(t => t.signal_date))].sort().reverse();
+document.getElementById("t-intraday").innerHTML = `<p class="muted">The intraday method showed no edge after charges in the
+  2022–2026 test, so these are tracked to see how it does live, not as a recommendation.</p>` + (days.length ? days.map(d => {
+  const ts = it.filter(t => t.signal_date === d);
+  const net = ts.reduce((a, t) => a + t.net, 0);
+  const why = t => t.status === "pending" ? "waiting" : t.status === "open" ? "open" :
+    (t.exit_reason || "").startsWith("SL") ? "SL " + (t.exit_time || "") : "Close " + (t.exit_time || "15:09");
+  const rows = ts.map(t => `<tr><td><span class="tag ${t.side === "long" ? "up" : "dn"}">${t.side === "long" ? "BUY" : "SELL"}</span></td>
+    <td><b>${esc(t.symbol)}</b></td><td class="r ${cls(t.net)}"><b>${t.status === "pending" ? "–" : sgn(t.net)}</b></td>
+    <td class="r">${px(t.entry)}</td><td class="r">${px(t.exit)}</td><td style="white-space:nowrap">${esc(why(t))}</td>
+    <td class="r">${px(t.sl)}</td><td class="r">${t.qty}</td></tr>`).join("");
+  return `<div class="daybox"><div class="dayhd"><span>${fd(d)} · ${ts.length} trades</span><span class="${cls(net)}">${sgn(net)}</span></div>
+    <div class="tw" style="margin:0"><table><thead><tr><th></th><th>Stock</th><th class="r">Net P&L</th><th class="r">Entry 9:30</th>
+    <th class="r">Exit</th><th>Exit at</th><th class="r">SL</th><th class="r">Qty</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}).join("") : `<p class="empty">No intraday picks yet.</p>`);
+
+// ---- day by day: bars + table
+const dd = D.daily;
+let svg = "";
+if (dd.length) {
+  const W = 760, H = 200, P = 34, m = Math.max(...dd.map(r => Math.abs(r.net)), 1), slot = (W - 2 * P) / dd.length, bw = Math.min(40, slot - 4);
+  const y0 = H / 2;
+  svg = `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Net P&L per day">
+    <line x1="${P}" x2="${W - P}" y1="${y0}" y2="${y0}" class="grid"/>` + dd.map((r, i) => {
+      const x = P + i * slot + (slot - bw) / 2, h = Math.abs(r.net) / m * (H / 2 - 24);
+      return `<rect x="${x}" y="${r.net >= 0 ? y0 - h : y0}" width="${bw}" height="${Math.max(h, 1)}" rx="2" fill="${r.net >= 0 ? "var(--pos)" : "var(--neg)"}"><title>${fd(r.date)}: ${sgn(r.net)}</title></rect>
+      <text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle" class="ax">${fd(r.date)}</text>`; }).join("") + `</svg></div>`;
+}
+document.getElementById("t-days").innerHTML = `<h2>P&L by day</h2><p class="muted">Swing = the day's move in open positions (marked to the close);
+  intraday = that day's closed trades; charges are taken on the day a trade closes.</p>${svg}
+  <div class="tw"><table><thead><tr><th>Date</th><th class="r">Swing</th><th class="r">Intraday</th><th class="r">Charges</th><th class="r">Net</th><th class="r">Running total</th></tr></thead><tbody>${
+  dd.slice().reverse().map(r => `<tr><td>${fd(r.date)}</td><td class="r ${cls(r.swing)}">${sgn(r.swing)}</td><td class="r ${cls(r.intraday)}">${sgn(r.intraday)}</td>
+  <td class="r">${inr(-r.charges)}</td><td class="r ${cls(r.net)}"><b>${sgn(r.net)}</b></td><td class="r ${cls(r.cumulative)}">${sgn(r.cumulative)}</td></tr>`).join("")}</tbody></table></div>`;
+</script></body></html>
