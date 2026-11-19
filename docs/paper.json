@@ -1,5 +1,5 @@
 {
- "built": "2026-11-19 23:45 IST",
+ "built": "2026-11-20 00:05 IST",
  "stake": 50000.0,
  "last_session": "2026-11-19",
  "summary": {
@@ -18,7 +18,7 @@
    "closed": 10,
    "open": 0,
    "pending": 0,
-   "realised": 11284.0,
+   "realised": 11222.89,
    "unrealised": 0,
    "invested_open": 0,
    "win_pct": 70.0
@@ -28,7 +28,7 @@
    "closed": 10,
    "open": 0,
    "pending": 10,
-   "realised": 11284.0,
+   "realised": 11222.89,
    "unrealised": 0,
    "invested_open": 0,
    "win_pct": 70.0
@@ -38,10 +38,10 @@
   {
    "date": "2026-11-19",
    "swing": 0.0,
-   "intraday": 11795.43,
-   "charges": 511.43,
-   "net": 11284.0,
-   "cumulative": 11284.0
+   "intraday": 11734.42,
+   "charges": 511.53,
+   "net": 11222.89,
+   "cumulative": 11222.89
   }
  ],
  "trades": [
@@ -298,20 +298,20 @@
    "entry": 977.1,
    "qty": 51,
    "exit_date": "2026-11-19",
-   "exit": 1015.1,
+   "exit": 1015.6,
    "exit_reason": "squared off 15:10",
    "exit_time": "15:09",
-   "gross": 1938.0,
+   "gross": 1963.5,
    "charges": 52.84,
-   "net": 1885.16,
+   "net": 1910.66,
    "marks": [
     {
      "date": "2026-11-19",
      "session": 1,
-     "close": 1015.1,
-     "mark": 1015.1,
-     "day_pnl": 1938.0,
-     "total_pnl": 1938.0
+     "close": 1015.6,
+     "mark": 1015.6,
+     "day_pnl": 1963.5,
+     "total_pnl": 1963.5
     }
    ],
    "flag": null
@@ -326,23 +326,23 @@
    "sl": 1131.0,
    "status": "closed",
    "entry_date": "2026-11-19",
-   "entry": 1174.3,
+   "entry": 1175.7,
    "qty": 42,
    "exit_date": "2026-11-19",
-   "exit": 1233.1,
+   "exit": 1233.0,
    "exit_reason": "squared off 15:10",
    "exit_time": "15:09",
-   "gross": 2469.6,
-   "charges": 52.3,
-   "net": 2417.3,
+   "gross": 2406.6,
+   "charges": 52.36,
+   "net": 2354.24,
    "marks": [
     {
      "date": "2026-11-19",
      "session": 1,
-     "close": 1233.1,
-     "mark": 1233.1,
-     "day_pnl": 2469.6,
-     "total_pnl": 2469.6
+     "close": 1233.0,
+     "mark": 1233.0,
+     "day_pnl": 2406.6,
+     "total_pnl": 2406.6
     }
    ],
    "flag": null
@@ -388,23 +388,23 @@
    "sl": 119.7,
    "status": "closed",
    "entry_date": "2026-11-19",
-   "entry": 123.63,
+   "entry": 123.7,
    "qty": 404,
    "exit_date": "2026-11-19",
    "exit": 130.93,
    "exit_reason": "squared off 15:10",
    "exit_time": "15:09",
-   "gross": 2949.2,
-   "charges": 52.97,
-   "net": 2896.23,
+   "gross": 2920.92,
+   "charges": 53.0,
+   "net": 2867.92,
    "marks": [
     {
      "date": "2026-11-19",
      "session": 1,
      "close": 130.93,
      "mark": 130.93,
-     "day_pnl": 2949.2,
-     "total_pnl": 2949.2
+     "day_pnl": 2920.92,
+     "total_pnl": 2920.92
     }
    ],
    "flag": null
@@ -450,23 +450,23 @@
    "sl": 1808.9,
    "status": "closed",
    "entry_date": "2026-11-19",
-   "entry": 1770.4,
+   "entry": 1771.0,
    "qty": 28,
    "exit_date": "2026-11-19",
-   "exit": 1725.0,
+   "exit": 1725.2,
    "exit_reason": "squared off 15:10",
    "exit_time": "15:09",
-   "gross": 1271.2,
-   "charges": 52.57,
-   "net": 1218.63,
+   "gross": 1282.4,
+   "charges": 52.59,
+   "net": 1229.81,
    "marks": [
     {
      "date": "2026-11-19",
      "session": 1,
-     "close": 1725.0,
-     "mark": 1725.0,
-     "day_pnl": 1271.2,
-     "total_pnl": 1271.2
+     "close": 1725.2,
+     "mark": 1725.2,
+     "day_pnl": 1282.4,
+     "total_pnl": 1282.4
     }
    ],
    "flag": null
@@ -481,23 +481,23 @@
    "sl": 58.36,
    "status": "closed",
    "entry_date": "2026-11-19",
-   "entry": 58.3,
+   "entry": 58.31,
    "qty": 857,
    "exit_date": "2026-11-19",
    "exit": 58.36,
    "exit_reason": "SL hit",
    "exit_time": "09:30",
-   "gross": -51.42,
-   "charges": 52.98,
-   "net": -104.4,
+   "gross": -42.85,
+   "charges": 52.99,
+   "net": -95.84,
    "marks": [
     {
      "date": "2026-11-19",
      "session": 1,
      "close": 58.36,
      "mark": 58.36,
-     "day_pnl": -51.42,
-     "total_pnl": -51.42
+     "day_pnl": -42.85,
+     "total_pnl": -42.85
     }
    ],
    "flag": null
@@ -574,23 +574,23 @@
    "sl": 1627.4,
    "status": "closed",
    "entry_date": "2026-11-19",
-   "entry": 1624.0,
+   "entry": 1623.5,
    "qty": 30,
    "exit_date": "2026-11-19",
    "exit": 1627.4,
    "exit_reason": "SL hit",
-   "exit_time": "09:31",
-   "gross": -102.0,
-   "charges": 51.67,
-   "net": -153.67,
+   "exit_time": "09:30",
+   "gross": -117.0,
+   "charges": 51.65,
+   "net": -168.65,
    "marks": [
     {
      "date": "2026-11-19",
      "session": 1,
      "close": 1627.4,
      "mark": 1627.4,
-     "day_pnl": -102.0,
-     "total_pnl": -102.0
+     "day_pnl": -117.0,
+     "total_pnl": -117.0
     }
    ],
    "flag": null
