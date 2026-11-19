@@ -1,0 +1,4 @@
+{"id": "pullback_uptrend", "name": "Pullback to the 20-day in a strong uptrend", "author": "claude",
+ "hypothesis": "In stocks whose 50-day is well above the 200-day, a dip below the 20-day average that turns up (an up close) resumes the trend.",
+ "mode": "cohort", "filter": "ma50_over_ma200 > {trend} and dist_ma20 < -{dip} and dist_ma50 > 0 and ret_1 > 0 and not avoid",
+ "rank": "dist_ma20", "k": 10, "hold": 10, "stop_atr": 2, "params": {"trend": 0.05, "dip": 0.02}}

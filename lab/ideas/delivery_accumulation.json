@@ -1,0 +1,4 @@
+{"id": "delivery_accumulation", "name": "Delivery accumulation near the 52-week high", "author": "claude",
+ "hypothesis": "Rising delivery % (real buyers taking shares home) on rising turnover, within reach of the 52-week high in an uptrend, precedes breakouts.",
+ "mode": "cohort", "filter": "dist_hi252 > -{near} and deliv_5_vs_60 > {acc} and turn_ratio_5_60 > {vol} and ma50_over_ma200 > 0 and not avoid",
+ "rank": "-deliv_5_vs_60", "k": 10, "hold": 10, "stop_atr": null, "params": {"near": 0.1, "acc": 0.15, "vol": 1.2}}

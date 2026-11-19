@@ -1,0 +1,4 @@
+{"id": "oversold_bounce", "name": "Oversold bounce in long-term uptrends", "author": "claude",
+ "hypothesis": "A sharp 5-session drop in a stock still above its 200-day average, with a strong close today and VIX not extreme, mean-reverts within a week.",
+ "mode": "cohort", "filter": "ret_5 < -{drop} and dist_ma200 > 0 and close_loc_1 > 0.6 and vix < {vix_max}",
+ "rank": "ret_5", "k": 10, "hold": 5, "stop_atr": null, "params": {"drop": 0.08, "vix_max": 25}}

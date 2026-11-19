@@ -1,0 +1,4 @@
+{"id": "sector_leaders", "name": "Sector leaders (india-swing-desk rule)", "author": "pack",
+ "hypothesis": "Stocks ahead of an industry that is itself 2+ points ahead of NIFTY and strengthening keep outperforming for two weeks, while NIFTY is above its 200-day average.",
+ "mode": "cohort", "filter": "ind_rel_20 >= {ind_min} and ind_rel_chg_5 > 0 and rs_industry_20 > 0 and nifty_above_ma200 == 1 and not avoid",
+ "rank": "-rs_industry_20", "k": 5, "hold": 10, "stop_atr": null, "params": {"ind_min": 0.02}}

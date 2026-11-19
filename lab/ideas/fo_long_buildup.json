@@ -1,0 +1,4 @@
+{"id": "fo_long_buildup", "name": "Futures long buildup with price above the 50-day", "author": "claude",
+ "hypothesis": "Price and open interest rising together over 5 sessions (fresh longs) above the 50-day average, in a healthy market, continues for a week.",
+ "mode": "cohort", "filter": "fut_buildup_5d == 1 and oi_chg_5d > {oi_min} and ret_5 > 0 and dist_ma50 > 0 and nifty_above_ma200 == 1 and not avoid",
+ "rank": "-oi_chg_5d", "k": 10, "hold": 5, "stop_atr": null, "params": {"oi_min": 0.1}}

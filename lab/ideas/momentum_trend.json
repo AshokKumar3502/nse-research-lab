@@ -1,0 +1,4 @@
+{"id": "momentum_trend", "name": "Relative-strength momentum in uptrends", "author": "pack",
+ "hypothesis": "The strongest stocks vs NIFTY over 20 sessions, with the 50-day above the 200-day average, keep outperforming over the next 10 sessions.",
+ "mode": "cohort", "filter": "ma50_over_ma200 > 0 and rs_nifty_20 > {rs_min} and not avoid",
+ "rank": "-rs_nifty_20", "k": 10, "hold": 10, "stop_atr": null, "params": {"rs_min": 0.05}}
