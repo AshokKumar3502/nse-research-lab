@@ -1,0 +1,219 @@
+{
+ "created_at": "2026-11-19 21:00",
+ "decision_time": "09:30",
+ "k": 5,
+ "cost_round_trip_pct": 0.206,
+ "rows": 236632,
+ "sessions": 1204,
+ "from": "2022-01-03",
+ "to": "2026-11-19",
+ "oos_sessions": 957,
+ "strategies": {
+  "all_long": {
+   "days": 957,
+   "mean_pct": -0.2203,
+   "t": -9.35,
+   "win_days_pct": 39.1,
+   "sharpe": -4.78,
+   "max_drawdown_pct": -213.8,
+   "total_pct": -210.81,
+   "years": {
+    "2023": -0.202,
+    "2024": -0.245,
+    "2025": -0.22,
+    "2026": -0.214
+   },
+   "verdict": "BASELINE"
+  },
+  "model_long_close": {
+   "days": 957,
+   "mean_pct": -0.1766,
+   "t": -4.71,
+   "win_days_pct": 43.5,
+   "sharpe": -2.41,
+   "max_drawdown_pct": -175.17,
+   "total_pct": -169.0,
+   "years": {
+    "2023": -0.058,
+    "2024": -0.22,
+    "2025": -0.222,
+    "2026": -0.209
+   },
+   "verdict": "NO EDGE"
+  },
+  "model_long_stop": {
+   "days": 957,
+   "mean_pct": -0.1823,
+   "t": -7.46,
+   "win_days_pct": 33.2,
+   "sharpe": -3.82,
+   "max_drawdown_pct": -181.61,
+   "total_pct": -174.45,
+   "years": {
+    "2023": -0.15,
+    "2024": -0.218,
+    "2025": -0.182,
+    "2026": -0.179
+   },
+   "verdict": "NO EDGE"
+  },
+  "rule_orb_long": {
+   "days": 951,
+   "mean_pct": -0.1739,
+   "t": -5.08,
+   "win_days_pct": 39.7,
+   "sharpe": -2.6,
+   "max_drawdown_pct": -177.3,
+   "total_pct": -165.39,
+   "years": {
+    "2023": -0.179,
+    "2024": -0.211,
+    "2025": -0.147,
+    "2026": -0.157
+   },
+   "verdict": "NO EDGE"
+  },
+  "model_short_close": {
+   "days": 957,
+   "mean_pct": -0.0134,
+   "t": -0.3,
+   "win_days_pct": 48.2,
+   "sharpe": -0.15,
+   "max_drawdown_pct": -42.99,
+   "total_pct": -12.79,
+   "years": {
+    "2023": -0.068,
+    "2024": -0.029,
+    "2025": 0.09,
+    "2026": -0.052
+   },
+   "verdict": "NO EDGE"
+  },
+  "model_short_stop": {
+   "days": 957,
+   "mean_pct": -0.0584,
+   "t": -1.93,
+   "win_days_pct": 38.1,
+   "sharpe": -0.99,
+   "max_drawdown_pct": -65.21,
+   "total_pct": -55.92,
+   "years": {
+    "2023": -0.071,
+    "2024": -0.087,
+    "2025": -0.013,
+    "2026": -0.064
+   },
+   "verdict": "NO EDGE"
+  },
+  "rule_orb_short": {
+   "days": 948,
+   "mean_pct": -0.0553,
+   "t": -1.55,
+   "win_days_pct": 43.1,
+   "sharpe": -0.79,
+   "max_drawdown_pct": -83.2,
+   "total_pct": -52.45,
+   "years": {
+    "2023": -0.107,
+    "2024": -0.086,
+    "2025": -0.036,
+    "2026": 0.015
+   },
+   "verdict": "NO EDGE"
+  },
+  "model_long_short": {
+   "days": 957,
+   "mean_pct": -0.1204,
+   "t": -7.1,
+   "win_days_pct": 36.6,
+   "sharpe": -3.63,
+   "max_drawdown_pct": -120.33,
+   "total_pct": -115.18,
+   "years": {
+    "2023": -0.11,
+    "2024": -0.152,
+    "2025": -0.098,
+    "2026": -0.121
+   },
+   "verdict": "NO EDGE"
+  }
+ },
+ "deciles_excess_pct": {
+  "0": -0.0964,
+  "1": -0.0306,
+  "2": -0.0199,
+  "3": -0.0112,
+  "4": 0.0035,
+  "5": 0.0088,
+  "6": 0.0141,
+  "7": 0.0455,
+  "8": 0.0524,
+  "9": 0.0353
+ },
+ "importance_gain_pct": [
+  [
+   "gap",
+   6.6
+  ],
+  [
+   "nifty_ret_1d",
+   6.5
+  ],
+  [
+   "nifty_window_ret",
+   5.8
+  ],
+  [
+   "vix",
+   5.7
+  ],
+  [
+   "deliv_pct",
+   5.2
+  ],
+  [
+   "vix_chg",
+   5.0
+  ],
+  [
+   "atr_pct",
+   4.6
+  ],
+  [
+   "fut_ret_1d",
+   4.6
+  ],
+  [
+   "ret_window",
+   4.3
+  ],
+  [
+   "range_atr",
+   4.3
+  ],
+  [
+   "rvol",
+   4.2
+  ],
+  [
+   "oi_chg_pct",
+   4.2
+  ],
+  [
+   "ret_1d",
+   4.1
+  ],
+  [
+   "ret_20d",
+   3.8
+  ],
+  [
+   "close_loc",
+   3.8
+  ]
+ ],
+ "best": {
+  "strategy": "model_short_close",
+  "verdict": "NO EDGE"
+ }
+}

@@ -74,6 +74,10 @@ switch ($Phase) {
         Invoke-Step "lab refresh" @("-m", "lab", "refresh") | Out-Null
         Invoke-Step "lab test" @("-m", "lab", "test", "--force") | Out-Null
         Invoke-Step "monitor" @("-m", "monitor", "run") | Out-Null
+        # hand the new models to the GitHub runner (state/), then publish
+        git -C $here pull --rebase -X theirs *>> $log
+        Invoke-Step "export to state/" @("-m", "cloud", "export") | Out-Null
+        git -C $here add state *>> $log
         Publish-Site
     }
 }

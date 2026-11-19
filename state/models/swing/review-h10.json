@@ -1,0 +1,55 @@
+{
+ "survivorship_pct": 0.024,
+ "fills": {
+  "gap5_pct": 0.72,
+  "locked": 13,
+  "edge_without_pct": 0.858
+ },
+ "k": {
+  "3": 0.953,
+  "5": 0.885,
+  "10": 0.907,
+  "20": 0.761,
+  "50": 0.655
+ },
+ "offsets_pct": [
+  1.031,
+  1.047,
+  1.065,
+  1.313,
+  1.27,
+  0.567,
+  0.607,
+  0.352,
+  0.691,
+  1.12
+ ],
+ "mean_pct": 0.907,
+ "t_offset0": 2.3,
+ "years_pct": {
+  "2019": 0.52,
+  "2020": 1.759,
+  "2021": 2.067,
+  "2022": -0.029,
+  "2023": 1.598,
+  "2024": 0.624,
+  "2025": -0.595,
+  "2026": 1.382
+ },
+ "leak": {
+  "industry": {
+   "universe_missing_pct": 1.9,
+   "picks_missing_pct": 2.4,
+   "excess_missing_pct": -0.17,
+   "excess_present_pct": 0.003
+  },
+  "results": {
+   "universe_missing_pct": 1.9,
+   "picks_missing_pct": 2.9,
+   "excess_missing_pct": -0.291,
+   "excess_present_pct": 0.006
+  }
+ },
+ "problems": [],
+ "verdict": "KEEP"
+}

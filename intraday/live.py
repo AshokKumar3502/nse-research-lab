@@ -66,6 +66,9 @@ def score(con, t="09:30", k=5, day=None, log=print):
     today = fetch_today(keys, day)
     if today.empty:
         raise SystemExit("Upstox returned no candles for %s (holiday, or before 09:15?)" % day)
+    # keep today's candles so the paper trades can be entered right away (the evening sync replaces them)
+    from warehouse import store
+    store.upsert("minute_bars", today, ["date", "symbol", "ts"])
     con.register("today_df", today)
     con.execute("""CREATE OR REPLACE TEMP VIEW bars_live AS
                    SELECT * FROM minute_bars WHERE date >= DATE '%s' - INTERVAL 45 DAY AND date < DATE '%s'

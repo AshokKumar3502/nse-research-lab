@@ -188,7 +188,8 @@ def build():
     lab = _j(config.DATA, "lab", "leaderboard.json")
     mon = _j(config.DATA, "monitor", "status.json")
     q = _j(config.DATA, "quality.json")
-    summ = db.summary(con)
+    full = _j(config.ROOT, "state", "warehouse_summary.json")      # the laptop's 10-year warehouse
+    summ = full["tables"] if full else db.summary(con)
     built = datetime.datetime.now(config.IST).strftime("%d %b %Y, %H:%M IST")
     last = q.get("last_session") if q else None
 

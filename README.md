@@ -165,7 +165,26 @@ a rank, K, hold and optional stop. Filters are checked against a whitelist befor
   `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set.
 - **Old system for comparison**: the nse-picks-tracker scoreboard is shown beside the new numbers.
 
-### Schedule (Windows Task Scheduler)
+### In the cloud (GitHub Actions, no laptop)
+
+`.github/workflows/daily.yml` runs every trading day on GitHub's servers, free for this public repo:
+
+| IST | job | what |
+| --- | --- | --- |
+| 08:50 (backup 09:05) | morning | waits until **09:30:30**, intraday picks from the 9:15–9:30 candles, paper trades, site |
+| 18:45 (backup 19:45) | evening | today's NSE files, results filings, 1-minute candles, swing picks, paper trades, monitor, site |
+
+GitHub may start scheduled jobs late; starting early and waiting makes the morning picks land at 9:30
+regardless. Each phase runs once a day (`state/done/`). The runner keeps a slim warehouse (~18 months
+daily, ~3 months of 1-minute candles) in the repo's private Actions cache and rebuilds it from NSE and
+Upstox if the cache is lost. Durable state is in `state/`: models, picks, the kill switch, results
+history and point-in-time industries. Run a job by hand: Actions → Daily → Run workflow.
+
+The laptop is only needed once a month: `run_daily.ps1 -Phase monthly` retrains and re-validates the
+models on the full 10-year warehouse, then `python -m cloud export` refreshes `state/` and pushes it.
+Optional phone alerts: add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` as repository secrets.
+
+### Schedule on the laptop (Windows Task Scheduler)
 
 `run_daily.ps1 -Phase morning|evening|monthly` runs each day's steps and logs to `data\logs\`.
 To register it, run once in PowerShell with `<path to nse-warehouse>` replaced by the folder's full path:

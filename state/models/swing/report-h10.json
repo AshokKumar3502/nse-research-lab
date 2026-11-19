@@ -1,0 +1,322 @@
+{
+ "created_at": "2026-11-19 22:40",
+ "hold": 10,
+ "k": 10,
+ "universe_top_n": 500,
+ "cost_round_trip_pct": 0.438,
+ "from": "2017-01-02",
+ "to": "2026-11-17",
+ "oos_from": "2019-01-01",
+ "strategies": {
+  "model_top/stop": {
+   "days": 196,
+   "mean_pct": 0.6636,
+   "t": 1.58,
+   "win_days_pct": 51.0,
+   "sharpe": 1.79,
+   "max_drawdown_pct": -43.93,
+   "total_pct": 130.07,
+   "years": {
+    "2019": 0.218,
+    "2020": 2.242,
+    "2021": 1.642,
+    "2022": -0.355,
+    "2023": 0.797,
+    "2024": 0.822,
+    "2025": -0.557,
+    "2026": 0.483
+   },
+   "avg_picks": 10.0,
+   "verdict": "UNPROVEN"
+  },
+  "model_top_regime/stop": {
+   "days": 146,
+   "mean_pct": 0.7991,
+   "t": 1.84,
+   "win_days_pct": 52.7,
+   "sharpe": 2.4,
+   "max_drawdown_pct": -38.11,
+   "total_pct": 116.66,
+   "years": {
+    "2019": -0.068,
+    "2020": 3.209,
+    "2021": 1.642,
+    "2022": 0.037,
+    "2023": 0.86,
+    "2024": 0.459,
+    "2025": 0.48,
+    "2026": -2.734
+   },
+   "avg_picks": 7.4,
+   "verdict": "UNPROVEN"
+  },
+  "rule_sector_leaders/stop": {
+   "days": 121,
+   "mean_pct": -0.2261,
+   "t": -0.47,
+   "win_days_pct": 47.9,
+   "sharpe": -0.67,
+   "max_drawdown_pct": -52.87,
+   "total_pct": -27.36,
+   "years": {
+    "2019": -2.836,
+    "2020": 3.56,
+    "2021": -0.585,
+    "2022": -0.409,
+    "2023": 0.972,
+    "2024": -0.219,
+    "2025": -0.957,
+    "2026": -5.265
+   },
+   "avg_picks": 6.1,
+   "verdict": "NO EDGE"
+  },
+  "rule_momentum/stop": {
+   "days": 196,
+   "mean_pct": -0.3288,
+   "t": -0.8,
+   "win_days_pct": 46.4,
+   "sharpe": -0.9,
+   "max_drawdown_pct": -98.87,
+   "total_pct": -64.44,
+   "years": {
+    "2019": -1.164,
+    "2020": 1.108,
+    "2021": -1.238,
+    "2022": 0.308,
+    "2023": 0.668,
+    "2024": -0.845,
+    "2025": -1.433,
+    "2026": 0.051
+   },
+   "avg_picks": 10.0,
+   "verdict": "NO EDGE"
+  },
+  "all/stop": {
+   "days": 196,
+   "mean_pct": -0.2949,
+   "t": -1.06,
+   "win_days_pct": 48.0,
+   "sharpe": -1.2,
+   "max_drawdown_pct": -66.94,
+   "total_pct": -57.81,
+   "years": {
+    "2019": -0.768,
+    "2020": 0.455,
+    "2021": 0.578,
+    "2022": -0.816,
+    "2023": 0.546,
+    "2024": -0.209,
+    "2025": -1.314,
+    "2026": -0.867
+   },
+   "avg_picks": 488.6,
+   "verdict": "BASELINE"
+  },
+  "model_top/close": {
+   "days": 195,
+   "mean_pct": 1.0307,
+   "t": 2.3,
+   "win_days_pct": 57.4,
+   "sharpe": 2.6,
+   "max_drawdown_pct": -47.46,
+   "total_pct": 200.99,
+   "years": {
+    "2019": 0.051,
+    "2020": 2.203,
+    "2021": 2.208,
+    "2022": -0.254,
+    "2023": 1.75,
+    "2024": 1.409,
+    "2025": -0.385,
+    "2026": 1.342
+   },
+   "avg_picks": 10.0,
+   "verdict": "EDGE"
+  },
+  "model_top_regime/close": {
+   "days": 145,
+   "mean_pct": 1.1432,
+   "t": 2.5,
+   "win_days_pct": 57.9,
+   "sharpe": 3.28,
+   "max_drawdown_pct": -37.04,
+   "total_pct": 165.76,
+   "years": {
+    "2019": -0.348,
+    "2020": 3.465,
+    "2021": 2.208,
+    "2022": 0.204,
+    "2023": 1.734,
+    "2024": 1.071,
+    "2025": 0.034,
+    "2026": -1.548
+   },
+   "avg_picks": 7.4,
+   "verdict": "EDGE"
+  },
+  "rule_sector_leaders/close": {
+   "days": 121,
+   "mean_pct": 0.063,
+   "t": 0.12,
+   "win_days_pct": 50.4,
+   "sharpe": 0.18,
+   "max_drawdown_pct": -49.59,
+   "total_pct": 7.63,
+   "years": {
+    "2019": -3.458,
+    "2020": 3.647,
+    "2021": 0.292,
+    "2022": -0.485,
+    "2023": 1.598,
+    "2024": -0.004,
+    "2025": -0.691,
+    "2026": -5.465
+   },
+   "avg_picks": 6.1,
+   "verdict": "UNPROVEN"
+  },
+  "rule_momentum/close": {
+   "days": 195,
+   "mean_pct": 0.1054,
+   "t": 0.24,
+   "win_days_pct": 51.3,
+   "sharpe": 0.27,
+   "max_drawdown_pct": -71.99,
+   "total_pct": 20.55,
+   "years": {
+    "2019": -1.212,
+    "2020": 0.964,
+    "2021": -0.146,
+    "2022": 0.486,
+    "2023": 1.1,
+    "2024": -0.305,
+    "2025": -0.735,
+    "2026": 0.85
+   },
+   "avg_picks": 10.0,
+   "verdict": "UNPROVEN"
+  },
+  "all/close": {
+   "days": 195,
+   "mean_pct": -0.0885,
+   "t": -0.27,
+   "win_days_pct": 54.9,
+   "sharpe": -0.31,
+   "max_drawdown_pct": -66.48,
+   "total_pct": -17.25,
+   "years": {
+    "2019": -0.92,
+    "2020": -0.012,
+    "2021": 0.99,
+    "2022": -0.827,
+    "2023": 0.966,
+    "2024": 0.253,
+    "2025": -0.767,
+    "2026": -0.399
+   },
+   "avg_picks": 490.8,
+   "verdict": "BASELINE"
+  },
+  "rule_results_jump/h20": {
+   "days": 390,
+   "mean_pct": 2.1414,
+   "t": 3.7,
+   "win_days_pct": 60.5,
+   "sharpe": 2.96,
+   "max_drawdown_pct": -215.97,
+   "total_pct": 835.15,
+   "years": {
+    "2019": -2.091,
+    "2020": 0.346,
+    "2021": 3.311,
+    "2022": -0.795,
+    "2023": 5.252,
+    "2024": 3.404,
+    "2025": 2.291,
+    "2026": -1.522
+   },
+   "trades": 747,
+   "note": "per event day; trades can overlap, so t is optimistic",
+   "verdict": "UNPROVEN"
+  }
+ },
+ "deciles_excess_pct": {
+  "0": -0.982,
+  "1": -0.301,
+  "2": -0.188,
+  "3": -0.128,
+  "4": -0.02,
+  "5": 0.093,
+  "6": 0.239,
+  "7": 0.264,
+  "8": 0.397,
+  "9": 0.633
+ },
+ "importance_gain_pct": [
+  [
+   "dist_hi252",
+   6.7
+  ],
+  [
+   "vix",
+   6.4
+  ],
+  [
+   "days_since_result",
+   5.1
+  ],
+  [
+   "result_turn_mult",
+   5.1
+  ],
+  [
+   "breadth_ma50",
+   4.7
+  ],
+  [
+   "ma50_over_ma200",
+   4.6
+  ],
+  [
+   "result_ret",
+   4.3
+  ],
+  [
+   "ret_60",
+   4.2
+  ],
+  [
+   "ret_120",
+   4.0
+  ],
+  [
+   "vol_20",
+   3.9
+  ],
+  [
+   "ind_rel_20",
+   3.9
+  ],
+  [
+   "ret_5",
+   3.7
+  ],
+  [
+   "atr_pct",
+   3.4
+  ],
+  [
+   "nifty_ret_20",
+   3.4
+  ],
+  [
+   "deliv_5_vs_60",
+   3.2
+  ]
+ ],
+ "best": {
+  "strategy": "model_top_regime/close",
+  "verdict": "EDGE"
+ }
+}

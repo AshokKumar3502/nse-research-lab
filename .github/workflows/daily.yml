@@ -1,0 +1,95 @@
+# Runs the research lab every trading day on GitHub's servers (free for public repositories).
+#
+# Morning: starts at 08:50 IST (backup 09:05), waits until 09:30:30 IST, then makes the intraday picks
+#          from the 9:15-9:30 candles. GitHub may start a scheduled job late; starting early absorbs it.
+# Evening: 18:45 IST (backup 19:45): today's NSE files, swing picks, paper trades, monitor, website.
+#
+# Only one copy of each phase runs a day (state/done/<phase>-<date>). Data between runs lives in the
+# Actions cache (private to this repo); the website is deployed to GitHub Pages at the end.
+name: Daily
+
+on:
+  schedule:
+    - cron: "20 3 * * 1-5"    # 08:50 IST  morning
+    - cron: "35 3 * * 1-5"    # 09:05 IST  morning (backup)
+    - cron: "15 13 * * 1-5"   # 18:45 IST  evening
+    - cron: "15 14 * * 1-5"   # 19:45 IST  evening (backup)
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: "Which job"
+        type: choice
+        options: [evening, morning]
+        default: evening
+      force:
+        description: "Run even if already done today (and at weekends)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily-${{ inputs.phase || (contains(github.event.schedule, ' 3 ') && 'morning' || 'evening') }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      PHASE: ${{ inputs.phase || (contains(github.event.schedule, ' 3 ') && 'morning' || 'evening') }}
+      NSEWH_DATA: ${{ github.workspace }}/cloud-data
+      NSEWH_SOURCE: ${{ github.workspace }}/cloud-data/src
+      PYTHONIOENCODING: utf-8
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Restore the slim warehouse
+        uses: actions/cache/restore@v4
+        with:
+          path: cloud-data
+          key: wh-${{ github.run_id }}
+          restore-keys: wh-
+
+      - name: Run the ${{ env.PHASE }} job
+        run: python -m cloud "$PHASE" ${{ inputs.force && '--force' || '' }}
+
+      - name: Save the slim warehouse
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: cloud-data
+          key: wh-${{ github.run_id }}
+
+      - name: Commit picks, paper trades and the website
+        run: |
+          git config user.name "nse-research-lab bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state docs
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -m "Daily ${PHASE}: $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M IST')"
+          for i in 1 2 3; do git pull --rebase -X theirs && git push && break; sleep 5; done
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deploy
+        uses: actions/deploy-pages@v4

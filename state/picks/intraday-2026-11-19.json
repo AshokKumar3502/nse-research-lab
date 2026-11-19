@@ -1,0 +1,163 @@
+{
+ "day": "2026-11-19",
+ "decision_time": "09:30",
+ "made_at": "23:05:32 IST",
+ "status": "PAPER ONLY: the walk-forward test has not shown an edge",
+ "model_report": {
+  "from": "2022-01-03",
+  "to": "2026-11-19",
+  "best": {
+   "strategy": "model_short_close",
+   "verdict": "NO EDGE"
+  }
+ },
+ "universe": 218,
+ "missing_keys": [],
+ "long": [
+  {
+   "symbol": "POLICYBZR",
+   "side": "long",
+   "score": 0.578,
+   "ref_price": 977.5,
+   "stop": 970.4,
+   "flat_by": "15:10",
+   "shares_per_lakh": 102,
+   "exposure_per_lakh": 99705,
+   "risk_to_stop_rs_per_lakh": 724,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "VOLTAS",
+   "side": "long",
+   "score": 0.534,
+   "ref_price": 1175.7,
+   "stop": 1131.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 85,
+   "exposure_per_lakh": 99934,
+   "risk_to_stop_rs_per_lakh": 3800,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "PGEL",
+   "side": "long",
+   "score": 0.31,
+   "ref_price": 560.65,
+   "stop": 539.3,
+   "flat_by": "15:10",
+   "shares_per_lakh": 178,
+   "exposure_per_lakh": 99796,
+   "risk_to_stop_rs_per_lakh": 3800,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "IREDA",
+   "side": "long",
+   "score": 0.304,
+   "ref_price": 123.7,
+   "stop": 119.7,
+   "flat_by": "15:10",
+   "shares_per_lakh": 808,
+   "exposure_per_lakh": 99950,
+   "risk_to_stop_rs_per_lakh": 3232,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "COLPAL",
+   "side": "long",
+   "score": 0.162,
+   "ref_price": 1719.4,
+   "stop": 1683.3,
+   "flat_by": "15:10",
+   "shares_per_lakh": 58,
+   "exposure_per_lakh": 99725,
+   "risk_to_stop_rs_per_lakh": 2094,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  }
+ ],
+ "short": [
+  {
+   "symbol": "PAYTM",
+   "side": "short",
+   "score": -0.606,
+   "ref_price": 1771.4,
+   "stop": 1808.9,
+   "flat_by": "15:10",
+   "shares_per_lakh": 56,
+   "exposure_per_lakh": 99198,
+   "risk_to_stop_rs_per_lakh": 2100,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "INOXWIND",
+   "side": "short",
+   "score": -0.209,
+   "ref_price": 58.31,
+   "stop": 58.36,
+   "flat_by": "15:10",
+   "shares_per_lakh": 1714,
+   "exposure_per_lakh": 99943,
+   "risk_to_stop_rs_per_lakh": 86,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "NAVINFLUOR",
+   "side": "short",
+   "score": -0.171,
+   "ref_price": 10313.0,
+   "stop": 10360.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 9,
+   "exposure_per_lakh": 92817,
+   "risk_to_stop_rs_per_lakh": 423,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "POLYCAB",
+   "side": "short",
+   "score": -0.164,
+   "ref_price": 7320.0,
+   "stop": 7335.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 13,
+   "exposure_per_lakh": 95160,
+   "risk_to_stop_rs_per_lakh": 195,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "PIIND",
+   "side": "short",
+   "score": -0.138,
+   "ref_price": 1624.0,
+   "stop": 1627.4,
+   "flat_by": "15:10",
+   "shares_per_lakh": 61,
+   "exposure_per_lakh": 99064,
+   "risk_to_stop_rs_per_lakh": 207,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  }
+ ],
+ "blocked": {},
+ "per_capital": 100000.0,
+ "leverage": 5.0,
+ "leverage_effect": {
+  "long": {
+   "backtest_pct_per_day_on_exposure": -0.1823,
+   "pct_per_day_on_capital": -0.911
+  },
+  "short": {
+   "backtest_pct_per_day_on_exposure": -0.0584,
+   "pct_per_day_on_capital": -0.292
+  }
+ }
+}

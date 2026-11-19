@@ -1,0 +1,830 @@
+{
+ "trials": 7,
+ "fingerprints": [
+  "3d86cb6f9fe6",
+  "93e6a0f8dffc",
+  "71c47f62e9e6",
+  "85828a0efa31",
+  "8a0bafe75fda",
+  "d579025bb16b",
+  "33f356ac0323"
+ ],
+ "strategies": {
+  "delivery_accumulation": {
+   "stage": "rejected",
+   "spec": {
+    "id": "delivery_accumulation",
+    "name": "Delivery accumulation near the 52-week high",
+    "author": "claude",
+    "hypothesis": "Rising delivery % (real buyers taking shares home) on rising turnover, within reach of the 52-week high in an uptrend, precedes breakouts.",
+    "mode": "cohort",
+    "filter": "dist_hi252 > -{near} and deliv_5_vs_60 > {acc} and turn_ratio_5_60 > {vol} and ma50_over_ma200 > 0 and not avoid",
+    "rank": "-deliv_5_vs_60",
+    "k": 10,
+    "hold": 10,
+    "stop_atr": null,
+    "params": {
+     "near": 0.1,
+     "acc": 0.15,
+     "vol": 1.2
+    }
+   },
+   "fingerprint": "3d86cb6f9fe6",
+   "review": {
+    "verdict": "FAIL",
+    "periods": 196,
+    "trades": 744,
+    "mean_pct": 0.4011,
+    "t": 1.06,
+    "bt_max_dd": -0.6494,
+    "hurdle": 2.69,
+    "win_pct": 51.2,
+    "by_year_pct": {
+     "2017": 1.133,
+     "2018": -2.021,
+     "2019": 0.86,
+     "2020": 1.197,
+     "2021": 1.634,
+     "2022": 0.017,
+     "2023": 0.475,
+     "2024": -0.441,
+     "2025": 1.516,
+     "2026": 0.06
+    },
+    "checks": [
+     {
+      "check": "sample",
+      "pass": true,
+      "critical": true,
+      "detail": "196 periods, 744 trades"
+     },
+     {
+      "check": "profitable",
+      "pass": true,
+      "critical": true,
+      "detail": "mean 0.401% a period after 0.44% costs"
+     },
+     {
+      "check": "significance",
+      "pass": false,
+      "critical": true,
+      "detail": "t 1.06 vs hurdle 2.69 (7 ideas tried so far)"
+     },
+     {
+      "check": "halves",
+      "pass": true,
+      "critical": true,
+      "detail": "first half 0.374%, second half 0.428% (split 2022-03-03)"
+     },
+     {
+      "check": "years",
+      "pass": true,
+      "critical": true,
+      "detail": "8 of 10 years positive: 2017 +1.13%, 2018 -2.02%, 2019 +0.86%, 2020 +1.20%, 2021 +1.63%, 2022 +0.02%, 2023 +0.47%, 2024 -0.44%, 2025 +1.52%, 2026 +0.06%"
+     },
+     {
+      "check": "cost_x2",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.037% with double costs"
+     },
+     {
+      "check": "random",
+      "pass": true,
+      "critical": true,
+      "detail": "per trade 0.439% vs random -0.111% (p = 0.024)"
+     },
+     {
+      "check": "robust",
+      "pass": true,
+      "critical": true,
+      "detail": "26 of 26 param variants positive"
+     },
+     {
+      "check": "concentration",
+      "pass": false,
+      "critical": false,
+      "detail": "best 5% of trades = 230% of profit"
+     },
+     {
+      "check": "capacity",
+      "pass": true,
+      "critical": false,
+      "detail": "median pick turnover Rs 94.8 crore a day"
+     }
+    ],
+    "failed": [
+     "significance",
+     "cost_x2"
+    ]
+   },
+   "reviewed_at": "2026-11-19 22:42 IST",
+   "history": [
+    {
+     "at": "2026-11-19 21:15 IST",
+     "event": "rejected",
+     "detail": "failed: significance, cost_x2"
+    }
+   ]
+  },
+  "fo_long_buildup": {
+   "stage": "rejected",
+   "spec": {
+    "id": "fo_long_buildup",
+    "name": "Futures long buildup with price above the 50-day",
+    "author": "claude",
+    "hypothesis": "Price and open interest rising together over 5 sessions (fresh longs) above the 50-day average, in a healthy market, continues for a week.",
+    "mode": "cohort",
+    "filter": "fut_buildup_5d == 1 and oi_chg_5d > {oi_min} and ret_5 > 0 and dist_ma50 > 0 and nifty_above_ma200 == 1 and not avoid",
+    "rank": "-oi_chg_5d",
+    "k": 10,
+    "hold": 5,
+    "stop_atr": null,
+    "params": {
+     "oi_min": 0.1
+    }
+   },
+   "fingerprint": "93e6a0f8dffc",
+   "review": {
+    "verdict": "FAIL",
+    "periods": 299,
+    "trades": 2268,
+    "mean_pct": -0.5236,
+    "t": -3.09,
+    "bt_max_dd": -1.6517,
+    "hurdle": 2.69,
+    "win_pct": 42.3,
+    "by_year_pct": {
+     "2017": -0.379,
+     "2018": -0.999,
+     "2019": -0.607,
+     "2020": 0.712,
+     "2021": -0.859,
+     "2022": -1.423,
+     "2023": 0.193,
+     "2024": -0.765,
+     "2025": -0.506,
+     "2026": -1.232
+    },
+    "checks": [
+     {
+      "check": "sample",
+      "pass": true,
+      "critical": true,
+      "detail": "299 periods, 2268 trades"
+     },
+     {
+      "check": "profitable",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.524% a period after 0.44% costs"
+     },
+     {
+      "check": "significance",
+      "pass": false,
+      "critical": true,
+      "detail": "t -3.09 vs hurdle 2.69 (7 ideas tried so far)"
+     },
+     {
+      "check": "halves",
+      "pass": false,
+      "critical": true,
+      "detail": "first half -0.357%, second half -0.689% (split 2021-07-19)"
+     },
+     {
+      "check": "years",
+      "pass": false,
+      "critical": true,
+      "detail": "2 of 10 years positive: 2017 -0.38%, 2018 -1.00%, 2019 -0.61%, 2020 +0.71%, 2021 -0.86%, 2022 -1.42%, 2023 +0.19%, 2024 -0.77%, 2025 -0.51%, 2026 -1.23%"
+     },
+     {
+      "check": "cost_x2",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.961% with double costs"
+     },
+     {
+      "check": "random",
+      "pass": false,
+      "critical": true,
+      "detail": "per trade -0.528% vs random -0.495% (p = 0.634)"
+     },
+     {
+      "check": "robust",
+      "pass": false,
+      "critical": true,
+      "detail": "0 of 2 param variants positive"
+     },
+     {
+      "check": "capacity",
+      "pass": true,
+      "critical": false,
+      "detail": "median pick turnover Rs 149.2 crore a day"
+     }
+    ],
+    "failed": [
+     "profitable",
+     "significance",
+     "halves",
+     "years",
+     "cost_x2",
+     "random",
+     "robust"
+    ]
+   },
+   "reviewed_at": "2026-11-19 22:42 IST",
+   "history": [
+    {
+     "at": "2026-11-19 21:15 IST",
+     "event": "rejected",
+     "detail": "failed: profitable, significance, halves, years, cost_x2, random, robust"
+    }
+   ]
+  },
+  "momentum_trend": {
+   "stage": "rejected",
+   "spec": {
+    "id": "momentum_trend",
+    "name": "Relative-strength momentum in uptrends",
+    "author": "pack",
+    "hypothesis": "The strongest stocks vs NIFTY over 20 sessions, with the 50-day above the 200-day average, keep outperforming over the next 10 sessions.",
+    "mode": "cohort",
+    "filter": "ma50_over_ma200 > 0 and rs_nifty_20 > {rs_min} and not avoid",
+    "rank": "-rs_nifty_20",
+    "k": 10,
+    "hold": 10,
+    "stop_atr": null,
+    "params": {
+     "rs_min": 0.05
+    }
+   },
+   "fingerprint": "71c47f62e9e6",
+   "review": {
+    "verdict": "FAIL",
+    "periods": 228,
+    "trades": 2280,
+    "mean_pct": 0.0446,
+    "t": 0.12,
+    "bt_max_dd": -1.1005,
+    "hurdle": 2.69,
+    "win_pct": 45.9,
+    "by_year_pct": {
+     "2017": 1.277,
+     "2018": -1.772,
+     "2019": -0.675,
+     "2020": 1.013,
+     "2021": 0.685,
+     "2022": 0.018,
+     "2023": 0.653,
+     "2024": -0.571,
+     "2025": 0.311,
+     "2026": 0.306
+    },
+    "checks": [
+     {
+      "check": "sample",
+      "pass": true,
+      "critical": true,
+      "detail": "228 periods, 2280 trades"
+     },
+     {
+      "check": "profitable",
+      "pass": true,
+      "critical": true,
+      "detail": "mean 0.045% a period after 0.44% costs"
+     },
+     {
+      "check": "significance",
+      "pass": false,
+      "critical": true,
+      "detail": "t 0.12 vs hurdle 2.69 (7 ideas tried so far)"
+     },
+     {
+      "check": "halves",
+      "pass": false,
+      "critical": true,
+      "detail": "first half -0.106%, second half 0.195% (split 2022-04-01)"
+     },
+     {
+      "check": "years",
+      "pass": true,
+      "critical": true,
+      "detail": "7 of 10 years positive: 2017 +1.28%, 2018 -1.77%, 2019 -0.68%, 2020 +1.01%, 2021 +0.68%, 2022 +0.02%, 2023 +0.65%, 2024 -0.57%, 2025 +0.31%, 2026 +0.31%"
+     },
+     {
+      "check": "cost_x2",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.393% with double costs"
+     },
+     {
+      "check": "random",
+      "pass": false,
+      "critical": true,
+      "detail": "per trade 0.045% vs random -0.102% (p = 0.176)"
+     },
+     {
+      "check": "robust",
+      "pass": true,
+      "critical": true,
+      "detail": "2 of 2 param variants positive"
+     },
+     {
+      "check": "concentration",
+      "pass": false,
+      "critical": false,
+      "detail": "best 5% of trades = 3033% of profit"
+     },
+     {
+      "check": "capacity",
+      "pass": true,
+      "critical": false,
+      "detail": "median pick turnover Rs 56.8 crore a day"
+     }
+    ],
+    "failed": [
+     "significance",
+     "halves",
+     "cost_x2",
+     "random"
+    ]
+   },
+   "reviewed_at": "2026-11-19 22:42 IST",
+   "history": [
+    {
+     "at": "2026-11-19 21:15 IST",
+     "event": "rejected",
+     "detail": "failed: significance, halves, cost_x2, random"
+    }
+   ]
+  },
+  "oversold_bounce": {
+   "stage": "rejected",
+   "spec": {
+    "id": "oversold_bounce",
+    "name": "Oversold bounce in long-term uptrends",
+    "author": "claude",
+    "hypothesis": "A sharp 5-session drop in a stock still above its 200-day average, with a strong close today and VIX not extreme, mean-reverts within a week.",
+    "mode": "cohort",
+    "filter": "ret_5 < -{drop} and dist_ma200 > 0 and close_loc_1 > 0.6 and vix < {vix_max}",
+    "rank": "ret_5",
+    "k": 10,
+    "hold": 5,
+    "stop_atr": null,
+    "params": {
+     "drop": 0.08,
+     "vix_max": 25
+    }
+   },
+   "fingerprint": "85828a0efa31",
+   "review": {
+    "verdict": "FAIL",
+    "periods": 177,
+    "trades": 495,
+    "mean_pct": -0.5408,
+    "t": -1.27,
+    "bt_max_dd": -1.9549,
+    "hurdle": 2.69,
+    "win_pct": 47.9,
+    "by_year_pct": {
+     "2017": 8.134,
+     "2018": -2.273,
+     "2019": -1.521,
+     "2020": -3.243,
+     "2021": -0.445,
+     "2022": -2.485,
+     "2023": -0.863,
+     "2024": 0.172,
+     "2025": 1.788,
+     "2026": 0.56
+    },
+    "checks": [
+     {
+      "check": "sample",
+      "pass": true,
+      "critical": true,
+      "detail": "177 periods, 495 trades"
+     },
+     {
+      "check": "profitable",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.541% a period after 0.44% costs"
+     },
+     {
+      "check": "significance",
+      "pass": false,
+      "critical": true,
+      "detail": "t -1.27 vs hurdle 2.69 (7 ideas tried so far)"
+     },
+     {
+      "check": "halves",
+      "pass": false,
+      "critical": true,
+      "detail": "first half -1.327%, second half 0.237% (split 2022-10-18)"
+     },
+     {
+      "check": "years",
+      "pass": false,
+      "critical": true,
+      "detail": "4 of 10 years positive: 2017 +8.13%, 2018 -2.27%, 2019 -1.52%, 2020 -3.24%, 2021 -0.45%, 2022 -2.49%, 2023 -0.86%, 2024 +0.17%, 2025 +1.79%, 2026 +0.56%"
+     },
+     {
+      "check": "cost_x2",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.978% with double costs"
+     },
+     {
+      "check": "random",
+      "pass": false,
+      "critical": true,
+      "detail": "per trade -0.148% vs random -0.195% (p = 0.418)"
+     },
+     {
+      "check": "robust",
+      "pass": false,
+      "critical": true,
+      "detail": "1 of 8 param variants positive"
+     },
+     {
+      "check": "capacity",
+      "pass": true,
+      "critical": false,
+      "detail": "median pick turnover Rs 43.3 crore a day"
+     }
+    ],
+    "failed": [
+     "profitable",
+     "significance",
+     "halves",
+     "years",
+     "cost_x2",
+     "random",
+     "robust"
+    ]
+   },
+   "reviewed_at": "2026-11-19 22:42 IST",
+   "history": [
+    {
+     "at": "2026-11-19 21:15 IST",
+     "event": "rejected",
+     "detail": "failed: profitable, significance, halves, years, cost_x2, random, robust"
+    }
+   ]
+  },
+  "pullback_uptrend": {
+   "stage": "rejected",
+   "spec": {
+    "id": "pullback_uptrend",
+    "name": "Pullback to the 20-day in a strong uptrend",
+    "author": "claude",
+    "hypothesis": "In stocks whose 50-day is well above the 200-day, a dip below the 20-day average that turns up (an up close) resumes the trend.",
+    "mode": "cohort",
+    "filter": "ma50_over_ma200 > {trend} and dist_ma20 < -{dip} and dist_ma50 > 0 and ret_1 > 0 and not avoid",
+    "rank": "dist_ma20",
+    "k": 10,
+    "hold": 10,
+    "stop_atr": 2,
+    "params": {
+     "trend": 0.05,
+     "dip": 0.02
+    }
+   },
+   "fingerprint": "8a0bafe75fda",
+   "review": {
+    "verdict": "FAIL",
+    "periods": 176,
+    "trades": 831,
+    "mean_pct": -0.3015,
+    "t": -0.65,
+    "bt_max_dd": -0.8296,
+    "hurdle": 2.69,
+    "win_pct": 43.7,
+    "by_year_pct": {
+     "2017": 1.484,
+     "2018": -3.63,
+     "2019": 0.008,
+     "2020": 1.735,
+     "2021": -0.402,
+     "2022": -1.4,
+     "2023": 0.353,
+     "2024": -1.145,
+     "2025": 1.105,
+     "2026": -0.455
+    },
+    "checks": [
+     {
+      "check": "sample",
+      "pass": true,
+      "critical": true,
+      "detail": "176 periods, 831 trades"
+     },
+     {
+      "check": "profitable",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.301% a period after 0.44% costs"
+     },
+     {
+      "check": "significance",
+      "pass": false,
+      "critical": true,
+      "detail": "t -0.65 vs hurdle 2.69 (7 ideas tried so far)"
+     },
+     {
+      "check": "halves",
+      "pass": false,
+      "critical": true,
+      "detail": "first half -0.328%, second half -0.275% (split 2022-05-18)"
+     },
+     {
+      "check": "years",
+      "pass": false,
+      "critical": true,
+      "detail": "5 of 10 years positive: 2017 +1.48%, 2018 -3.63%, 2019 +0.01%, 2020 +1.74%, 2021 -0.40%, 2022 -1.40%, 2023 +0.35%, 2024 -1.15%, 2025 +1.10%, 2026 -0.46%"
+     },
+     {
+      "check": "cost_x2",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.739% with double costs"
+     },
+     {
+      "check": "random",
+      "pass": false,
+      "critical": true,
+      "detail": "per trade -0.592% vs random -0.612% (p = 0.480)"
+     },
+     {
+      "check": "robust",
+      "pass": false,
+      "critical": true,
+      "detail": "0 of 8 param variants positive"
+     },
+     {
+      "check": "capacity",
+      "pass": true,
+      "critical": false,
+      "detail": "median pick turnover Rs 32.2 crore a day"
+     }
+    ],
+    "failed": [
+     "profitable",
+     "significance",
+     "halves",
+     "years",
+     "cost_x2",
+     "random",
+     "robust"
+    ]
+   },
+   "reviewed_at": "2026-11-19 22:42 IST",
+   "history": [
+    {
+     "at": "2026-11-19 21:15 IST",
+     "event": "rejected",
+     "detail": "failed: profitable, significance, halves, years, cost_x2, random, robust"
+    }
+   ]
+  },
+  "results_jump": {
+   "stage": "research",
+   "spec": {
+    "id": "results_jump",
+    "name": "Results jump (india-results-drift rule)",
+    "author": "pack",
+    "hypothesis": "A 4%+ move on quarterly results on 2x turnover, closing near the high, keeps drifting up (post-earnings drift) while NIFTY is above its 200-day average.",
+    "mode": "event",
+    "filter": "days_since_result == 0 and result_ret >= {jump} and result_turn_mult >= {vol} and result_close_loc >= 0.75 and nifty_above_ma200 == 1",
+    "hold": 20,
+    "stop_atr": null,
+    "params": {
+     "jump": 0.04,
+     "vol": 2.0
+    },
+    "k": 10
+   },
+   "fingerprint": "d579025bb16b",
+   "review": {
+    "verdict": "PROMISING",
+    "periods": 438,
+    "trades": 798,
+    "mean_pct": 1.8767,
+    "t": 3.33,
+    "bt_max_dd": -3.6602,
+    "hurdle": 2.69,
+    "win_pct": 56.1,
+    "by_year_pct": {
+     "2017": 3.481,
+     "2018": -9.391,
+     "2019": -2.091,
+     "2020": 0.346,
+     "2021": 3.311,
+     "2022": -0.795,
+     "2023": 5.252,
+     "2024": 3.404,
+     "2025": 2.291,
+     "2026": -1.522
+    },
+    "checks": [
+     {
+      "check": "sample",
+      "pass": true,
+      "critical": true,
+      "detail": "438 periods, 798 trades"
+     },
+     {
+      "check": "profitable",
+      "pass": true,
+      "critical": true,
+      "detail": "mean 1.877% a period after 0.44% costs"
+     },
+     {
+      "check": "significance",
+      "pass": true,
+      "critical": true,
+      "detail": "t 3.33 vs hurdle 2.69 (7 ideas tried so far)"
+     },
+     {
+      "check": "halves",
+      "pass": true,
+      "critical": true,
+      "detail": "first half 0.312%, second half 3.441% (split 2022-08-16)"
+     },
+     {
+      "check": "years",
+      "pass": false,
+      "critical": true,
+      "detail": "6 of 10 years positive: 2017 +3.48%, 2018 -9.39%, 2019 -2.09%, 2020 +0.35%, 2021 +3.31%, 2022 -0.79%, 2023 +5.25%, 2024 +3.40%, 2025 +2.29%, 2026 -1.52%"
+     },
+     {
+      "check": "cost_x2",
+      "pass": true,
+      "critical": true,
+      "detail": "mean 1.439% with double costs"
+     },
+     {
+      "check": "random",
+      "pass": true,
+      "critical": true,
+      "detail": "per trade 2.022% vs random 0.736% (p = 0.000)"
+     },
+     {
+      "check": "robust",
+      "pass": true,
+      "critical": true,
+      "detail": "8 of 8 param variants positive"
+     },
+     {
+      "check": "concentration",
+      "pass": false,
+      "critical": false,
+      "detail": "best 5% of trades = 85% of profit"
+     },
+     {
+      "check": "capacity",
+      "pass": true,
+      "critical": false,
+      "detail": "median pick turnover Rs 404.4 crore a day"
+     }
+    ],
+    "failed": [
+     "years"
+    ]
+   },
+   "reviewed_at": "2026-11-19 22:42 IST",
+   "history": [
+    {
+     "at": "2026-11-19 21:15 IST",
+     "event": "promising",
+     "detail": "failed: years"
+    },
+    {
+     "at": "2026-11-19 21:16 IST",
+     "event": "promising",
+     "detail": "failed: years"
+    },
+    {
+     "at": "2026-11-19 22:42 IST",
+     "event": "promising",
+     "detail": "failed: years"
+    }
+   ]
+  },
+  "sector_leaders": {
+   "stage": "rejected",
+   "spec": {
+    "id": "sector_leaders",
+    "name": "Sector leaders (india-swing-desk rule)",
+    "author": "pack",
+    "hypothesis": "Stocks ahead of an industry that is itself 2+ points ahead of NIFTY and strengthening keep outperforming for two weeks, while NIFTY is above its 200-day average.",
+    "mode": "cohort",
+    "filter": "ind_rel_20 >= {ind_min} and ind_rel_chg_5 > 0 and rs_industry_20 > 0 and nifty_above_ma200 == 1 and not avoid",
+    "rank": "-rs_industry_20",
+    "k": 5,
+    "hold": 10,
+    "stop_atr": null,
+    "params": {
+     "ind_min": 0.02
+    }
+   },
+   "fingerprint": "33f356ac0323",
+   "review": {
+    "verdict": "FAIL",
+    "periods": 149,
+    "trades": 741,
+    "mean_pct": -0.3075,
+    "t": -0.68,
+    "bt_max_dd": -1.0971,
+    "hurdle": 2.69,
+    "win_pct": 46.4,
+    "by_year_pct": {
+     "2017": 2.014,
+     "2018": -3.418,
+     "2019": -2.023,
+     "2020": -0.892,
+     "2021": -0.265,
+     "2022": 0.083,
+     "2023": 1.859,
+     "2024": -1.054,
+     "2025": 0.732,
+     "2026": -5.753
+    },
+    "checks": [
+     {
+      "check": "sample",
+      "pass": true,
+      "critical": true,
+      "detail": "149 periods, 741 trades"
+     },
+     {
+      "check": "profitable",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.308% a period after 0.44% costs"
+     },
+     {
+      "check": "significance",
+      "pass": false,
+      "critical": true,
+      "detail": "t -0.68 vs hurdle 2.69 (7 ideas tried so far)"
+     },
+     {
+      "check": "halves",
+      "pass": false,
+      "critical": true,
+      "detail": "first half -0.788%, second half 0.167% (split 2022-01-04)"
+     },
+     {
+      "check": "years",
+      "pass": false,
+      "critical": true,
+      "detail": "4 of 10 years positive: 2017 +2.01%, 2018 -3.42%, 2019 -2.02%, 2020 -0.89%, 2021 -0.27%, 2022 +0.08%, 2023 +1.86%, 2024 -1.05%, 2025 +0.73%, 2026 -5.75%"
+     },
+     {
+      "check": "cost_x2",
+      "pass": false,
+      "critical": true,
+      "detail": "mean -0.745% with double costs"
+     },
+     {
+      "check": "random",
+      "pass": false,
+      "critical": true,
+      "detail": "per trade -0.311% vs random -0.051% (p = 0.840)"
+     },
+     {
+      "check": "robust",
+      "pass": false,
+      "critical": true,
+      "detail": "0 of 2 param variants positive"
+     },
+     {
+      "check": "capacity",
+      "pass": true,
+      "critical": false,
+      "detail": "median pick turnover Rs 65.5 crore a day"
+     }
+    ],
+    "failed": [
+     "profitable",
+     "significance",
+     "halves",
+     "years",
+     "cost_x2",
+     "random",
+     "robust"
+    ]
+   },
+   "reviewed_at": "2026-11-19 22:42 IST",
+   "history": [
+    {
+     "at": "2026-11-19 21:15 IST",
+     "event": "rejected",
+     "detail": "failed: significance, halves, years, cost_x2, random, robust"
+    }
+   ]
+  }
+ }
+}

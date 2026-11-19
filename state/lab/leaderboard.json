@@ -1,0 +1,188 @@
+{
+ "built": "2026-11-19 22:42 IST",
+ "trials": 7,
+ "rows": [
+  {
+   "id": "results_jump",
+   "name": "Results jump (india-results-drift rule)",
+   "author": "pack",
+   "stage": "research",
+   "verdict": "PROMISING",
+   "mean_pct": 1.8767,
+   "t": 3.33,
+   "hurdle": 2.69,
+   "periods": 438,
+   "trades": 798,
+   "failed": [
+    "years"
+   ],
+   "paper_n": 0,
+   "paper_mean_pct": null,
+   "paper_open": 0,
+   "hold": 20,
+   "hypothesis": "A 4%+ move on quarterly results on 2x turnover, closing near the high, keeps drifting up (post-earnings drift) while NIFTY is above its 200-day average."
+  },
+  {
+   "id": "delivery_accumulation",
+   "name": "Delivery accumulation near the 52-week high",
+   "author": "claude",
+   "stage": "rejected",
+   "verdict": "FAIL",
+   "mean_pct": 0.4011,
+   "t": 1.06,
+   "hurdle": 2.69,
+   "periods": 196,
+   "trades": 744,
+   "failed": [
+    "significance",
+    "cost_x2"
+   ],
+   "paper_n": 0,
+   "paper_mean_pct": null,
+   "paper_open": 0,
+   "hold": 10,
+   "hypothesis": "Rising delivery % (real buyers taking shares home) on rising turnover, within reach of the 52-week high in an uptrend, precedes breakouts."
+  },
+  {
+   "id": "momentum_trend",
+   "name": "Relative-strength momentum in uptrends",
+   "author": "pack",
+   "stage": "rejected",
+   "verdict": "FAIL",
+   "mean_pct": 0.0446,
+   "t": 0.12,
+   "hurdle": 2.69,
+   "periods": 228,
+   "trades": 2280,
+   "failed": [
+    "significance",
+    "halves",
+    "cost_x2",
+    "random"
+   ],
+   "paper_n": 0,
+   "paper_mean_pct": null,
+   "paper_open": 0,
+   "hold": 10,
+   "hypothesis": "The strongest stocks vs NIFTY over 20 sessions, with the 50-day above the 200-day average, keep outperforming over the next 10 sessions."
+  },
+  {
+   "id": "pullback_uptrend",
+   "name": "Pullback to the 20-day in a strong uptrend",
+   "author": "claude",
+   "stage": "rejected",
+   "verdict": "FAIL",
+   "mean_pct": -0.3015,
+   "t": -0.65,
+   "hurdle": 2.69,
+   "periods": 176,
+   "trades": 831,
+   "failed": [
+    "profitable",
+    "significance",
+    "halves",
+    "years",
+    "cost_x2",
+    "random",
+    "robust"
+   ],
+   "paper_n": 0,
+   "paper_mean_pct": null,
+   "paper_open": 0,
+   "hold": 10,
+   "hypothesis": "In stocks whose 50-day is well above the 200-day, a dip below the 20-day average that turns up (an up close) resumes the trend."
+  },
+  {
+   "id": "sector_leaders",
+   "name": "Sector leaders (india-swing-desk rule)",
+   "author": "pack",
+   "stage": "rejected",
+   "verdict": "FAIL",
+   "mean_pct": -0.3075,
+   "t": -0.68,
+   "hurdle": 2.69,
+   "periods": 149,
+   "trades": 741,
+   "failed": [
+    "profitable",
+    "significance",
+    "halves",
+    "years",
+    "cost_x2",
+    "random",
+    "robust"
+   ],
+   "paper_n": 0,
+   "paper_mean_pct": null,
+   "paper_open": 0,
+   "hold": 10,
+   "hypothesis": "Stocks ahead of an industry that is itself 2+ points ahead of NIFTY and strengthening keep outperforming for two weeks, while NIFTY is above its 200-day average."
+  },
+  {
+   "id": "oversold_bounce",
+   "name": "Oversold bounce in long-term uptrends",
+   "author": "claude",
+   "stage": "rejected",
+   "verdict": "FAIL",
+   "mean_pct": -0.5408,
+   "t": -1.27,
+   "hurdle": 2.69,
+   "periods": 177,
+   "trades": 495,
+   "failed": [
+    "profitable",
+    "significance",
+    "halves",
+    "years",
+    "cost_x2",
+    "random",
+    "robust"
+   ],
+   "paper_n": 0,
+   "paper_mean_pct": null,
+   "paper_open": 0,
+   "hold": 5,
+   "hypothesis": "A sharp 5-session drop in a stock still above its 200-day average, with a strong close today and VIX not extreme, mean-reverts within a week."
+  },
+  {
+   "id": "fo_long_buildup",
+   "name": "Futures long buildup with price above the 50-day",
+   "author": "claude",
+   "stage": "rejected",
+   "verdict": "FAIL",
+   "mean_pct": -0.5236,
+   "t": -3.09,
+   "hurdle": 2.69,
+   "periods": 299,
+   "trades": 2268,
+   "failed": [
+    "profitable",
+    "significance",
+    "halves",
+    "years",
+    "cost_x2",
+    "random",
+    "robust"
+   ],
+   "paper_n": 0,
+   "paper_mean_pct": null,
+   "paper_open": 0,
+   "hold": 5,
+   "hypothesis": "Price and open interest rising together over 5 sessions (fresh longs) above the 50-day average, in a healthy market, continues for a week."
+  }
+ ],
+ "models": {
+  "intraday 09:30": {
+   "strategy": "model_short_close",
+   "verdict": "NO EDGE"
+  },
+  "swing 10d": {
+   "strategy": "model_top_regime/close",
+   "verdict": "EDGE"
+  },
+  "swing 20d": {
+   "strategy": "model_top/close",
+   "verdict": "TOO LITTLE DATA"
+  }
+ }
+}
