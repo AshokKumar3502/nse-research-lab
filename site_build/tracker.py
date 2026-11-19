@@ -33,7 +33,7 @@ tr.detail td{background:var(--bg);padding:6px 10px 12px}tr.detail table{font-siz
 <p class="lede">Every pick the system publishes, traded on paper with ₹50,000 a stock: swing picks bought at the next
 open and held 10 sessions, intraday picks entered at 9:30 and squared off by 15:10, each with its suggested stop-loss.
 Real NSE prices, after Zerodha charges.</p>
-<p class="muted">Updated <span id="built"></span> · prices through <span id="last"></span> · <a href="index.html">← picks &amp; research</a></p></header>
+<p class="muted">Updated <span id="built"></span> · prices through <span id="last"></span> · <a href="index.html">← NSE Lab</a> · <a href="research.html">research</a></p></header>
 <div class="kpis" id="kpis"></div>
 <div class="tabs" role="tablist">
 <button role="tab" aria-selected="true" data-t="swing">Swing</button>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NSE Lab logo foreground (docs/logo.svg scaled into the adaptive icon's 66dp safe zone) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="2" android:strokeLineCap="round"
+        android:pathData="M39.1,52.9 L39.1,73.7 M54,45.6 L54,68.6 M68.9,36 L68.9,62.4" />
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M36.6,57.4 h5 a1.4,1.4 0 0 1 1.4,1.4 v9.6 a1.4,1.4 0 0 1 -1.4,1.4 h-5 a1.4,1.4 0 0 1 -1.4,-1.4 v-9.6 a1.4,1.4 0 0 1 1.4,-1.4 z M51.5,49.8 h5 a1.4,1.4 0 0 1 1.4,1.4 v11.8 a1.4,1.4 0 0 1 -1.4,1.4 h-5 a1.4,1.4 0 0 1 -1.4,-1.4 v-11.8 a1.4,1.4 0 0 1 1.4,-1.4 z M66.4,40.5 h5 a1.4,1.4 0 0 1 1.4,1.4 v14.6 a1.4,1.4 0 0 1 -1.4,1.4 h-5 a1.4,1.4 0 0 1 -1.4,-1.4 v-14.6 a1.4,1.4 0 0 1 1.4,-1.4 z" />
+    <path android:strokeColor="#FFFBBF24" android:strokeWidth="3.1" android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M31.5,74.8 L45.6,62.7 L57.6,67.5 L74.8,48.1 M67.5,47 L76.2,46.7 L75.6,55.4" />
+</vector>

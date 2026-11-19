@@ -325,16 +325,16 @@ warehouse. Raw data is not published here.</p>%s<h3>Quality checks %s</h3>%s</se
     doc = TEMPLATE.format(css=CSS, built=e(built), last=e(last), cards=card_html, swing=swing_html, intraday=intr_html,
                           lab=lab_html, data=data_html, picks=picks_html())
     os.makedirs(DOCS, exist_ok=True)
-    with open(os.path.join(DOCS, "index.html"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(DOCS, "research.html"), "w", encoding="utf-8") as fh:   # the app is index.html
         fh.write(doc)
     with open(os.path.join(DOCS, "results.json"), "w", encoding="utf-8") as fh:
         json.dump({"built": built, "last_session": last, "intraday": intr, "swing": sw, "swing_review": rv,
                    "swing_portfolio": port, "lab": lab, "monitor": {k: (mon or {}).get(k) for k in ("built", "strategies")}},
                   fh, indent=1, default=str)
     open(os.path.join(DOCS, ".nojekyll"), "w").close()
-    from . import tracker
+    from . import app, tracker
     tracker.build(CSS)
-    return os.path.join(DOCS, "index.html")
+    return app.build()
 
 
 CSS = """

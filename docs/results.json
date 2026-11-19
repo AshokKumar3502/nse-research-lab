@@ -1,5 +1,5 @@
 {
- "built": "20 Nov 2026, 00:05 IST",
+ "built": "20 Nov 2026, 00:14 IST",
  "last_session": "2026-11-19",
  "intraday": {
   "created_at": "2026-11-19 21:00",
@@ -828,13 +828,13 @@
   }
  },
  "monitor": {
-  "built": "2026-11-20 00:05 IST",
+  "built": "2026-11-19 23:06 IST",
   "strategies": [
    {
     "n": 1,
-    "live_mean_pct": 3.925,
+    "live_mean_pct": 3.953,
     "bt_mean_pct": -0.182,
-    "live_total_pct": 3.92,
+    "live_total_pct": 3.95,
     "live_win_pct": 100.0,
     "live_max_dd_pct": 0.0,
     "status": "WARMING UP",
@@ -846,9 +846,9 @@
    },
    {
     "n": 1,
-    "live_mean_pct": 0.409,
+    "live_mean_pct": 0.146,
     "bt_mean_pct": -0.058,
-    "live_total_pct": 0.41,
+    "live_total_pct": 0.15,
     "live_win_pct": 100.0,
     "live_max_dd_pct": 0.0,
     "status": "WARMING UP",

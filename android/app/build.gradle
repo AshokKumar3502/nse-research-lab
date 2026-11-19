@@ -1,0 +1,46 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.ashok.nselab'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.ashok.nselab'
+        minSdk 26
+        targetSdk 34
+        versionCode Integer.parseInt(System.getenv('GITHUB_RUN_NUMBER') ?: '1')
+        versionName("1." + (System.getenv('GITHUB_RUN_NUMBER') ?: '0'))
+    }
+
+    // a fixed key when the repository has the signing secrets; otherwise the build's own debug key
+    def hasKey = System.getenv('NSE_KEY_PASSWORD') != null && !System.getenv('NSE_KEY_PASSWORD').isEmpty()
+    if (hasKey) {
+        signingConfigs {
+            release {
+                storeFile file(System.getenv('NSE_KEYSTORE'))
+                storeType 'pkcs12'
+                storePassword System.getenv('NSE_KEY_PASSWORD')
+                keyAlias 'nsepicks'
+                keyPassword System.getenv('NSE_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig hasKey ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.work:work-runtime:2.9.1'
+}
