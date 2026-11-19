@@ -40,6 +40,11 @@ function Publish-Site {
     }
 }
 
+if ($Phase -eq "monthly" -and (Get-Date).Day -gt 7) {
+    "monthly: runs on the first Saturday of the month only" | Out-File -Append -Encoding utf8 $log
+    exit 0
+}
+
 if ((Get-Date).DayOfWeek -in @("Saturday", "Sunday") -and $Phase -ne "monthly") {
     "weekend: nothing to do" | Out-File -Append -Encoding utf8 $log
     exit 0
