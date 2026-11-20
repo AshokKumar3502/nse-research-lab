@@ -1,0 +1,54 @@
+# Live paper-trade P&L: every 10 minutes from about 9:32 to 15:20 IST on trading days, today's 1-minute
+# prices for every open or pending paper trade -> stop-loss checks and P&L -> docs/data/live.json, which the
+# app reads directly (no site rebuild). Started by the morning job; the 09:40 IST schedule is a backup.
+name: Live P&L
+
+on:
+  schedule:
+    - cron: "10 4 * * 1-5"    # 09:40 IST (backup start)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run at weekends too"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
+    env:
+      NSEWH_DATA: ${{ github.workspace }}/cloud-data
+      NSEWH_SOURCE: ${{ github.workspace }}/cloud-data/src
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Restore the slim warehouse
+        uses: actions/cache/restore@v4
+        with:
+          path: cloud-data
+          key: wh-${{ github.run_id }}
+          restore-keys: wh-
+
+      - name: Live prices every 10 minutes until 15:20 IST
+        run: |
+          git config user.name "nse-research-lab bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python -m cloud live ${{ inputs.force && '--force' || '' }}

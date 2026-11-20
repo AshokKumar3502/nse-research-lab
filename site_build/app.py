@@ -40,6 +40,12 @@ def updated_by():
                                          env.get("GITHUB_REPOSITORY", ""), env.get("GITHUB_RUN_ID", ""))
     else:
         who, url = "Laptop", None
+    base = {"at": now.strftime("%d %b %Y, %H:%M IST"), "ts": int(now.timestamp()), "by": who, "url": url}
+    if env.get("PHASE") == "live" and now.time() < datetime.time(15, 20):
+        base["by"] = "GitHub cloud · live prices every 10 min (run #%s)" % env.get("GITHUB_RUN_NUMBER", "?")
+        nxt = now + datetime.timedelta(minutes=10)
+        base["next"] = "Live prices around %s" % nxt.replace(minute=nxt.minute - nxt.minute % 10).strftime("%H:%M")
+        return base
     # the next scheduled update (weekdays: intraday picks at 9:30, swing picks after the 18:45 run)
     t = now
     for _ in range(8):
@@ -48,10 +54,9 @@ def updated_by():
                 slot = t.replace(hour=hh, minute=mm, second=0, microsecond=0)
                 if slot > now:
                     when = ("today" if slot.date() == now.date() else slot.strftime("%a %d %b"))
-                    return {"at": now.strftime("%d %b %Y, %H:%M IST"), "by": who, "url": url,
-                            "next": "%s around %s %s" % (label.capitalize(), slot.strftime("%H:%M"), when)}
+                    return dict(base, next="%s around %s %s" % (label.capitalize(), slot.strftime("%H:%M"), when))
         t = (t + datetime.timedelta(days=1)).replace(hour=0, minute=0)
-    return {"at": now.strftime("%d %b %Y, %H:%M IST"), "by": who, "url": url, "next": None}
+    return dict(base, next=None)
 
 
 def collect():
@@ -207,8 +212,12 @@ footer{margin-top:36px;font-size:12.5px;color:var(--muted);border-top:1px solid 
 .upd{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:14px;
 padding:10px 14px;margin:4px 0 12px;font-size:13.5px;box-shadow:var(--shadow)}.upd .dot{margin-top:7px;flex:none}.upd a{color:var(--brand)}
 .upd .muted{font-size:12.5px}
+.lastupd{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);
+font-size:12.5px;color:var(--muted);padding:7px 16px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lastupd b{color:var(--text)}.lastupd .dot{display:inline-block;margin-right:6px;vertical-align:middle}
 .bnav{display:none}
 @media (max-width:760px){nav.tabs{display:none}
+ .lastupd{bottom:calc(58px + env(safe-area-inset-bottom));font-size:11.5px}main{padding-bottom:130px}
  .bnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
  .bnav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;padding:4px}
  .bnav button svg{width:22px;height:22px}.bnav button[aria-current=page]{color:var(--brand)}
@@ -228,9 +237,10 @@ padding:10px 14px;margin:4px 0 12px;font-size:13.5px;box-shadow:var(--shadow)}.u
 investment advice, and the author is not a SEBI-registered adviser. Nothing here places orders.
 <a href="research.html">How each method was tested →</a> · <a href="tracker.html">Classic tracker</a></footer>
 </main>
+<div class="lastupd" id="lastupd" role="status"></div>
 <nav class="bnav" aria-label="Sections"></nav>
 <script>
-const D = __DATA__;
+let D = __DATA__;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const inr = v => v == null ? "–" : "₹" + Number(v).toLocaleString("en-IN", {maximumFractionDigits: 2});
@@ -247,8 +257,7 @@ const I = {
  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
  auto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>'};
-const U = D.updated || {at: D.built, by: "", next: null};
-$("#upd").textContent = "Updated " + U.at;
+let U = D.updated || {at: D.built, by: "", next: null};
 
 // ---------- theme: system -> light -> dark
 const themes = ["system", "light", "dark"];
@@ -276,6 +285,10 @@ function show(v) {
 document.querySelectorAll("[data-v]").forEach(b => b.onclick = () => show(b.dataset.v));
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 
+function renderAll() {
+U = D.updated || {at: D.built, by: "", next: null};
+$("#upd").textContent = "Updated " + U.at;
+$("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.at)}</b> · ${esc(U.by)}`;
 // ---------- TODAY
 (function () {
   const r = D.regime || {}, sw = D.swing_today || [], it = D.intraday_today;
@@ -315,7 +328,7 @@ window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 })();
 
 // ---------- PORTFOLIO
-const T = D.trades || [], S = D.summary || {};
+T = D.trades || []; S = D.summary || {};
 (function () {
   const open = T.filter(t => t.kind === "swing" && t.status === "open").sort((a, b) => b.gross - a.gross);
   const last = (D.daily || []).slice(-1)[0];
@@ -415,5 +428,24 @@ const T = D.trades || [], S = D.summary || {};
     <p><a href="research.html" style="color:var(--brand)">Full research results →</a></p>`;
   $("#v-stats").innerHTML = h;
 })();
+}
+let T = [], S = {};
+renderAll();
 show(location.hash.slice(1) || "today");
+
+// ---------- live prices: GitHub refreshes data/live.json every 10 minutes in market hours
+const LIVE = "https://raw.githubusercontent.com/AshokKumar3502/nse-research-lab/main/docs/data/live.json";
+async function pullLive() {
+  try {
+    const r = await fetch(LIVE + "?t=" + Date.now(), {cache: "no-store"});
+    if (!r.ok) return;
+    const L = await r.json();
+    if ((L.updated || {}).ts > ((D.updated || {}).ts || 0)) {
+      const keep = location.hash.slice(1) || "today", y = window.scrollY;
+      D = L; renderAll(); show(keep); window.scrollTo(0, y);
+    }
+  } catch (e) { /* offline: keep what is shown */ }
+}
+pullLive(); setInterval(pullLive, 3 * 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pullLive(); });
 </script></body></html>"""

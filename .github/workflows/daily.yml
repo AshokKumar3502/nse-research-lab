@@ -30,6 +30,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: daily-${{ inputs.phase || (contains(github.event.schedule, ' 3 ') && 'morning' || 'evening') }}
@@ -86,6 +87,12 @@ jobs:
           if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
           git commit -m "Daily ${PHASE}: $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M IST')"
           for i in 1 2 3; do git pull --rebase -X theirs && git push && break; sleep 5; done
+
+      - name: Start the live P&L job for the rest of the day
+        if: env.PHASE == 'morning'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run live.yml --ref main || echo "could not start live.yml (its 09:40 schedule is the backup)"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

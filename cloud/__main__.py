@@ -239,6 +239,77 @@ def morning():
     open(done_marker("morning"), "w").close()
 
 
+def _git_push(paths, message):
+    """Commit and push a few files from inside a GitHub job (no-op on the laptop)."""
+    import subprocess
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return
+    run = lambda *a: subprocess.run(["git", "-C", REPO] + list(a), capture_output=True, text=True)
+    run("add", *paths)
+    if run("diff", "--cached", "--quiet").returncode == 0:
+        return
+    run("commit", "-m", message)
+    for _ in range(3):
+        if run("pull", "--rebase", "-X", "theirs").returncode == 0 and run("push").returncode == 0:
+            return
+        time.sleep(5)
+    log("git push failed (will retry next cycle)")
+
+
+def live(every_min=10, until=(15, 20)):
+    """Every 10 minutes in market hours: today's 1-minute prices for every open or pending paper trade ->
+    paper book (SL checks, P&L) -> docs/data/live.json, which the app reads without a site rebuild."""
+    from intraday.live import fetch_today
+    from papertrade.book import update as paper_update
+    from site_build.app import collect
+    from warehouse.loaders import minute
+    os.environ["PHASE"] = "live"
+    prepare()
+    if not store.month_files("eq_daily"):
+        log("no warehouse in the cache: run the evening job first")
+        return
+    stop = datetime.time(*until)
+
+    def cycle():
+        today = config.today_ist()
+        book = {}
+        p = os.path.join(REPO, "docs", "paper.json")
+        if os.path.exists(p):
+            with open(p, encoding="utf-8") as fh:
+                book = json.load(fh)
+        syms = {t["symbol"] for t in book.get("trades", []) if t["status"] in ("open", "pending")}
+        for f in glob.glob(os.path.join(config.DATA, "picks", "intraday-%s.json" % today)):
+            with open(f, encoding="utf-8") as fh:
+                d = json.load(fh)
+            syms |= {x["symbol"] for side in ("long", "short") for x in d.get(side, [])}
+        keys, _m = minute.resolve_keys(sorted(syms), lambda m: None)
+        bars = fetch_today(keys, today)
+        if not bars.empty:
+            store.upsert("minute_bars", bars, ["date", "symbol", "ts"])
+        paper_update(db.connect(read_only=True), log=log)
+        data = collect()
+        with open(os.path.join(REPO, "docs", "data", "live.json"), "w", encoding="utf-8") as fh:
+            json.dump(data, fh, default=str)
+        log("live: %d stocks priced, %s" % (len(syms), data["updated"]["at"]))
+        _git_push(["docs/data/live.json", "docs/paper.json", "state/picks"],
+                  "Live P&L %s" % datetime.datetime.now(config.IST).strftime("%Y-%m-%d %H:%M IST"))
+
+    if datetime.datetime.now(config.IST).time() > stop:
+        log("after %s: no live updates today (the evening job settles the day)" % stop.strftime("%H:%M"))
+        return
+    while True:
+        _step("live prices", cycle)
+        now = datetime.datetime.now(config.IST)
+        if now.time() >= stop:
+            log("live updates done for today (the evening job settles the day)")
+            break
+        nxt = now + datetime.timedelta(minutes=every_min)
+        nxt = nxt.replace(minute=nxt.minute - nxt.minute % every_min, second=5, microsecond=0)
+        if nxt.time() > stop:
+            nxt = now.replace(hour=stop.hour, minute=stop.minute, second=5, microsecond=0)
+        time.sleep(max(1.0, (nxt - datetime.datetime.now(config.IST)).total_seconds()))
+
+
 def evening():
     from monitor.__main__ import run as monitor_run
     from papertrade.book import update as paper_update
@@ -276,6 +347,12 @@ def main(argv):
             if os.path.exists(m):
                 os.remove(m)
         (morning if cmd == "morning" else evening)()
+        return 0
+    if cmd == "live":
+        if datetime.datetime.now(config.IST).weekday() >= 5 and not force:
+            log("weekend: nothing to do")
+            return 0
+        live()
         return 0
     if cmd == "export":
         export()

@@ -46,6 +46,22 @@ def _fee(kind, notional):
     return round(f * notional, 2)
 
 
+def live_day(con, symbol, session, bars, hold):
+    """Today's bar from the 1-minute candles while NSE's end-of-day file is not out yet (marked live):
+    open = the 9:15 open, high/low so far, close = the latest price. [] when not needed or not available."""
+    today = config.today_ist()
+    if len(bars) >= hold or today <= session or (bars and bars[-1][0] >= today) or today.weekday() >= 5:
+        return []
+    try:
+        r = con.execute("""SELECT arg_min(open, ts), max(high), min(low), arg_max(close, ts), count(*) FROM minute_bars
+                           WHERE symbol = ? AND date = ? AND ts::TIME >= TIME '09:15'""", [symbol, today]).fetchone()
+    except Exception:     # noqa: BLE001 - no minute data in this warehouse
+        return []
+    if not r or not r[4]:
+        return []
+    return [(today, r[0], r[1], r[2], r[3], bars[-1][5] if bars else 1.0)]
+
+
 def swing_trades(con):
     trades = []
     for path in sorted(glob.glob(os.path.join(PICKS, "swing-*.json"))):
@@ -56,6 +72,7 @@ def swing_trades(con):
             bars = con.execute("""SELECT date, open, high, low, close, adj_factor FROM eq_daily
                                   WHERE sym_id = ? AND date > ? ORDER BY date LIMIT ?""",
                                [p["symbol"], session, hold]).fetchall()
+            bars = bars + live_day(con, p["symbol"], session, bars, hold)
             t = {"id": "S-%s-%s" % (session, p["symbol"]), "kind": "swing", "side": "long", "symbol": p["symbol"],
                  "industry": p.get("industry"), "rank": rank, "signal_date": str(session), "hold": hold,
                  "sl": float(p["stop"]), "ref_close": float(p["ref_close"]), "status": "pending",
