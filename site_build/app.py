@@ -28,6 +28,32 @@ def _latest(prefix):
     return _j(os.path.join(d, fs[-1])) if fs else None
 
 
+def updated_by():
+    """Who built this page and when the next update is due (shown at the top of the app)."""
+    now = datetime.datetime.now(config.IST)
+    env = os.environ
+    if env.get("GITHUB_ACTIONS") == "true":
+        phase = env.get("PHASE", "")
+        how = "scheduled" if env.get("GITHUB_EVENT_NAME") == "schedule" else "started by hand"
+        who = "GitHub cloud · %s run #%s (%s)" % (phase or "daily", env.get("GITHUB_RUN_NUMBER", "?"), how)
+        url = "%s/%s/actions/runs/%s" % (env.get("GITHUB_SERVER_URL", "https://github.com"),
+                                         env.get("GITHUB_REPOSITORY", ""), env.get("GITHUB_RUN_ID", ""))
+    else:
+        who, url = "Laptop", None
+    # the next scheduled update (weekdays: intraday picks at 9:30, swing picks after the 18:45 run)
+    t = now
+    for _ in range(8):
+        if t.weekday() < 5:
+            for hh, mm, label in ((9, 31, "intraday picks"), (18, 55, "swing picks and P&L")):
+                slot = t.replace(hour=hh, minute=mm, second=0, microsecond=0)
+                if slot > now:
+                    when = ("today" if slot.date() == now.date() else slot.strftime("%a %d %b"))
+                    return {"at": now.strftime("%d %b %Y, %H:%M IST"), "by": who, "url": url,
+                            "next": "%s around %s %s" % (label.capitalize(), slot.strftime("%H:%M"), when)}
+        t = (t + datetime.timedelta(days=1)).replace(hour=0, minute=0)
+    return {"at": now.strftime("%d %b %Y, %H:%M IST"), "by": who, "url": url, "next": None}
+
+
 def collect():
     book = _j(os.path.join(DOCS, "paper.json")) or {"trades": [], "daily": [], "summary": {}}
     sw, it = _latest("swing-"), _latest("intraday-")
@@ -71,6 +97,7 @@ def collect():
         verdicts["intraday"] = {"verdict": "NO EDGE" if ir.get("best", {}).get("verdict") != "EDGE" else "EDGE",
                                 "mean_pct": best.get("mean_pct"), "from": ir.get("from"), "to": ir.get("to")}
     return {"built": datetime.datetime.now(config.IST).strftime("%d %b %Y, %H:%M IST"),
+            "updated": updated_by(),
             "last_session": book.get("last_session"), "stake": book.get("stake", 50000),
             "regime": (sw or {}).get("regime"), "swing_session": (sw or {}).get("session"),
             "swing_status": (sw or {}).get("status"), "swing_today": swing_today, "intraday_today": intraday_today,
@@ -177,6 +204,9 @@ input.search{font:inherit;padding:8px 12px;border-radius:12px;border:1px solid v
 svg.c{width:100%;height:auto;display:block}svg.c .g{stroke:var(--line)}svg.c .ax{fill:var(--muted);font-size:11px}
 .empty{color:var(--muted);padding:18px;text-align:center;background:var(--surface);border:1px dashed var(--line);border-radius:16px}
 footer{margin-top:36px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}footer a{color:var(--brand)}
+.upd{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+padding:10px 14px;margin:4px 0 12px;font-size:13.5px;box-shadow:var(--shadow)}.upd .dot{margin-top:7px;flex:none}.upd a{color:var(--brand)}
+.upd .muted{font-size:12.5px}
 .bnav{display:none}
 @media (max-width:760px){nav.tabs{display:none}
  .bnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
@@ -217,7 +247,8 @@ const I = {
  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
  auto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>'};
-$("#upd").textContent = "Updated " + D.built;
+const U = D.updated || {at: D.built, by: "", next: null};
+$("#upd").textContent = "Updated " + U.at;
 
 // ---------- theme: system -> light -> dark
 const themes = ["system", "light", "dark"];
@@ -248,7 +279,9 @@ window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 // ---------- TODAY
 (function () {
   const r = D.regime || {}, sw = D.swing_today || [], it = D.intraday_today;
-  let h = `<div class="chips" style="margin-top:4px">
+  let h = `<div class="upd"><span class="dot up"></span><div><b>Updated ${esc(U.at)}</b> by ${U.url ? `<a href="${esc(U.url)}" target="_blank" rel="noopener">${esc(U.by)}</a>` : esc(U.by)}
+    ${U.next ? `<div class="muted">Next update: ${esc(U.next)}</div>` : ""}</div></div>
+    <div class="chips" style="margin-top:4px">
     <span class="chip"><span class="dot ${r.nifty_above_ma200 ? "up" : "dn"}"></span>NIFTY <b>${r.nifty_above_ma200 ? "above" : "below"}</b> 200-day avg</span>
     <span class="chip">Breadth <b>${r.breadth_ma50_pct ?? "–"}%</b> above 50-day</span>
     <span class="chip">Swing exposure <b>${r.exposure != null ? Math.round(r.exposure * 100) + "%" : "–"}</b></span>
