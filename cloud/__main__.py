@@ -216,8 +216,21 @@ def morning():
         sync()
     wait_until(9, 30, 30)
     con = db.connect(read_only=True)
-    _step("intraday picks", lambda: live.score(con, "09:30", 5, log=log))
+    doc = _step("intraday picks", lambda: live.score(con, "09:30", 5, log=log))
     con.close()
+    # the 9:30 candle (the paper-trade entry price) closes at 9:31:00: fetch it for the picked stocks
+    if doc:
+        wait_until(9, 31, 15)
+
+        def refresh():
+            from warehouse.loaders import minute
+            syms = [p["symbol"] for side in ("long", "short") for p in doc.get(side, [])]
+            keys, _m = minute.resolve_keys(syms, lambda m: None)
+            bars = live.fetch_today(keys, config.today_ist())
+            if not bars.empty:
+                store.upsert("minute_bars", bars, ["date", "symbol", "ts"])
+            log("9:30 candles: %d bars for %d stocks" % (len(bars), bars.symbol.nunique() if len(bars) else 0))
+        _step("9:30 entry prices", refresh)
     _step("monitor", lambda: monitor_run(log=log))
     _step("paper trades", lambda: paper_update(db.connect(read_only=True), log=log))
     _step("site", site_build)
