@@ -1,7 +1,8 @@
 """Paper trades of every published pick, Rs 50,000 a stock, settled on NSE's real prices.
 
 Swing (data/picks/swing-<session>.json):
-  entry   the open of the next session after the pick, qty = floor(50,000 / open)
+  entry   9:30 IST on the next session after the pick (the 9:30 one-minute bar's open, like intraday; the
+          day's open when no 1-minute data exists), qty = floor(50,000 / entry)
   SL      the suggested stop price; a session whose low touches it exits at the SL, or at that
           session's open when it gaps below
   exit    otherwise the close of the 10th session (the plan's hold_sessions)
@@ -29,6 +30,7 @@ from swing import charges as cnc
 from warehouse import config
 
 STAKE = 50000.0
+ENTRY_TIME = "09:30"     # swing and intraday positions are both taken at 9:30 IST
 PICKS = os.path.join(config.DATA, "picks")
 OUT = os.path.join(config.DATA, "paper", "book.json")
 DOCS = os.path.join(config.ROOT, "docs", "paper.json")
@@ -59,7 +61,21 @@ def live_day(con, symbol, session, bars, hold):
         return []
     if not r or not r[4]:
         return []
-    return [(today, r[0], r[1], r[2], r[3], bars[-1][5] if bars else 1.0)]
+    at = con.execute("SELECT max(ts) FROM minute_bars WHERE symbol = ? AND date = ?", [symbol, today]).fetchone()[0]
+    # the last minute bar that started at HH:MM closes a minute later: that is the price's time
+    at = (at + datetime.timedelta(minutes=1)).strftime("%H:%M") if at else "live"
+    return [(today, r[0], r[1], r[2], r[3], bars[-1][5] if bars else 1.0, at)]
+
+
+def entry_at(con, symbol, day):
+    """The 9:30 entry on `day` from the 1-minute candles: (price, lowest low from 9:30 on) or None."""
+    try:
+        r = con.execute("""SELECT arg_min(open, ts), min(low), count(*) FROM minute_bars
+                           WHERE symbol = ? AND date = ? AND ts::TIME >= CAST(? AS TIME)""",
+                        [symbol, day, ENTRY_TIME]).fetchone()
+    except Exception:     # noqa: BLE001
+        return None
+    return (float(r[0]), float(r[1])) if r and r[2] else None
 
 
 def swing_trades(con):
@@ -81,30 +97,40 @@ def swing_trades(con):
             if not bars:
                 trades.append(t)
                 continue
-            d0, o0 = bars[0][0], float(bars[0][1])
+            d0 = bars[0][0]
+            # enter at 9:30 on the first session (the same time as intraday); the 9:15 open if no 1-minute data
+            e = entry_at(con, p["symbol"], d0)
+            if e:
+                o0, low1, etime = e[0], e[1], ENTRY_TIME
+            else:
+                o0, low1, etime = float(bars[0][1]), float(bars[0][3]), "09:15"
             qty = int(STAKE // o0)
-            t.update(entry_date=str(d0), entry=round(o0, 2), qty=qty, status="open")
+            t.update(entry_date=str(d0), entry=round(o0, 2), qty=qty, status="open", entry_at="%s %s" % (d0, etime))
             prev_val, sl = 0.0, t["sl"]
             if bars[0][5] != bars[-1][5]:
                 t["flag"] = "bonus/split during the hold: prices after it are on a new basis"
-            for k, (d, o, h, l, c, _f) in enumerate(bars, 1):
-                o, l, c = float(o), float(l), float(c)
+            for k, row in enumerate(bars, 1):
+                d, o, h, l, c = row[0], float(row[1]), row[2], float(row[3]), float(row[4])
+                at = row[6] if len(row) > 6 else "15:30"
+                if k == 1:
+                    l = low1                      # only prices from the entry time on count on day 1
                 exit_px, reason = None, None
                 if k == 1 and o0 <= sl:
-                    exit_px, reason = o0, "opened below SL"
+                    exit_px, reason = o0, "entered below SL"
                 elif l <= sl:
                     exit_px, reason = (min(o, sl) if k > 1 else sl), "SL hit"
-                elif k == hold:
+                elif k == hold and at == "15:30":
                     exit_px, reason = c, "%d sessions done" % hold
                 mark = exit_px if exit_px is not None else c
                 total = (mark - o0) * qty
                 t["marks"].append({"date": str(d), "session": k, "close": round(c, 2), "mark": round(mark, 2),
-                                   "day_pnl": round(total - prev_val, 2), "total_pnl": round(total, 2)})
+                                   "at": at, "day_pnl": round(total - prev_val, 2), "total_pnl": round(total, 2)})
                 prev_val = total
                 if exit_px is not None:
                     t.update(status="closed", exit_date=str(d), exit=round(exit_px, 2), exit_reason=reason)
                     break
             last = t["marks"][-1]["mark"]
+            t["last"], t["last_at"] = last, "%s %s" % (t["marks"][-1]["date"], t["marks"][-1]["at"])
             t["gross"] = round((last - o0) * qty, 2)
             # an open position has paid its buy-side charges; the rest come off when it closes
             full = _fee("swing", o0 * qty)
@@ -153,9 +179,12 @@ def intraday_trades(con):
                 sign = 1 if side == "long" else -1
                 gross = sign * (exit_px - entry) * qty
                 done = reason is not None
+                last_at = at if done else bars[-1][0] + datetime.timedelta(minutes=1)
                 t.update(entry=round(entry, 2), qty=qty, status="closed" if done else "open",
                          exit_date=str(day) if done else None, exit=round(exit_px, 2), exit_reason=reason,
-                         exit_time=at.strftime("%H:%M") if at else None, gross=round(gross, 2))
+                         exit_time=at.strftime("%H:%M") if at else None, gross=round(gross, 2),
+                         entry_at="%s %s" % (day, t_dec), last=round(exit_px, 2),
+                         last_at="%s %s" % (day, last_at.strftime("%H:%M")))
                 t["charges"] = _fee("intraday", entry * qty) if done else 0.0
                 t["net"] = round(gross - t["charges"], 2)
                 t["marks"] = [{"date": str(day), "session": 1, "close": round(exit_px, 2), "mark": round(exit_px, 2),

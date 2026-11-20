@@ -76,7 +76,9 @@ def collect():
                                 "close": pk["ref_close"], "sl": pk["stop"], "sl_pct": pk["stop_pct"],
                                 "score": pk["score_pct"], "qty": int(50000 // pk["ref_close"]) if pk["ref_close"] else 0,
                                 "status": tr.get("status", "pending"), "entry": tr.get("entry"), "net": tr.get("net"),
-                                "gross": tr.get("gross"), "day": (tr.get("marks") or [{}])[-1].get("session")})
+                                "gross": tr.get("gross"), "day": (tr.get("marks") or [{}])[-1].get("session"),
+                                "entry_at": tr.get("entry_at"), "last": tr.get("last"), "last_at": tr.get("last_at"),
+                                "qty_held": tr.get("qty"), "exit": tr.get("exit"), "why": tr.get("exit_reason")})
     intraday_today = None
     if it:
         rows = []
@@ -85,7 +87,9 @@ def collect():
                 tr = by_id.get("I-%s-%s-%s" % (it["day"], side[0].upper(), pk["symbol"]), {})
                 rows.append({"side": side, "symbol": pk["symbol"], "ref": pk["ref_price"], "sl": pk["stop"],
                              "entry": tr.get("entry"), "exit": tr.get("exit"), "status": tr.get("status", "pending"),
-                             "net": tr.get("net"), "why": tr.get("exit_reason"), "time": tr.get("exit_time")})
+                             "net": tr.get("net"), "why": tr.get("exit_reason"), "time": tr.get("exit_time"),
+                             "gross": tr.get("gross"), "qty": tr.get("qty"), "entry_at": tr.get("entry_at"),
+                             "last": tr.get("last"), "last_at": tr.get("last_at")})
         intraday_today = {"day": it["day"], "made_at": it.get("made_at"), "rows": rows,
                           "leverage": it.get("leverage", 5), "effect": it.get("leverage_effect", {}),
                           "blocked": it.get("blocked", {})}
@@ -248,6 +252,8 @@ const sgn = v => v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + "₹" 
 const cl = v => v > 0 ? "up" : v < 0 ? "dn" : "";
 const fd = d => d ? new Date(String(d).slice(0, 10) + "T00:00:00").toLocaleDateString("en-IN", {day: "numeric", month: "short"}) : "–";
 const fdl = d => d ? new Date(String(d).slice(0, 10) + "T00:00:00").toLocaleDateString("en-IN", {weekday: "short", day: "numeric", month: "short", year: "numeric"}) : "–";
+const tm = s => s ? String(s).slice(11, 16) : "";
+const when = s => s ? fd(s) + " " + tm(s) : "–";
 const pct = (a, b) => b ? (a > 0 ? "+" : "") + (a / b * 100).toFixed(2) + "%" : "";
 const I = {
  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>',
@@ -304,10 +310,14 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
   else h += `<div class="grid">` + sw.map(p => {
     const val = p.status === "open" ? p.gross : p.net;
     const st = p.status === "pending" ? `<span class="pill p-info">Buy at open</span>` : p.status === "open" ? `<span class="pill p-warn">Day ${p.day}/10</span>` : `<span class="pill ${p.net >= 0 ? "p-up" : "p-dn"}">Closed</span>`;
-    const res = p.status === "pending" ? "" : `<div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${p.status === "open" ? "Open P&L" : "Net P&L"}</span><span class="pnl ${cl(val)}">${sgn(val)}</span></div>`;
+    const res = p.status === "pending" ? "" : `<div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${p.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(val)}">${sgn(val)}</span> <span class="${cl(val)}" style="font-size:12.5px">${pct(val, p.entry * (p.qty_held ?? p.qty))}</span></span></div>`;
     return `<div class="card pick ${p.status !== "pending" ? (val >= 0 ? "win" : "loss") : ""}">
       <div class="row"><div><span class="rank">#${p.rank}</span> <span class="sym">${esc(p.symbol)}</span><div class="ind">${esc(p.industry || "")}</div></div>${st}</div>
-      <div class="kv"><div>Last close<b>${inr(p.close)}</b></div><div>Stop-loss<b class="dn">${inr(p.sl)}</b></div><div>Qty / ₹50k<b>${p.qty}</b></div></div>${res}</div>`;
+      ${p.status === "pending"
+        ? `<div class="kv"><div>Last close<b>${inr(p.close)}</b></div><div>Stop-loss<b class="dn">${inr(p.sl)}</b></div><div>Qty / ₹50k<b>${p.qty}</b></div></div>
+           <div class="ind" style="margin-top:8px">Buy at 9:30 on the next trading day</div>`
+        : `<div class="kv"><div>Entry${p.entry_at ? " · " + esc(when(p.entry_at)) : ""}<b>${inr(p.entry)}</b></div><div>${p.status === "closed" ? "Exit" : "Now"}${p.last_at ? " · " + esc(tm(p.last_at)) : ""}<b>${inr(p.last ?? (p.status === "closed" ? p.exit : null))}</b></div><div>Stop-loss<b class="dn">${inr(p.sl)}</b></div></div>
+           <div class="ind" style="margin-top:6px">${p.qty_held ?? p.qty} shares${p.why ? " · " + esc(p.why) : ""}</div>`}${res}</div>`;
   }).join("") + `</div>`;
   if (it) {
     const lo = (it.effect || {}).long || {};
@@ -316,11 +326,14 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
       at ${it.leverage}x leverage that is about <b>${lo.pct_per_day_on_capital ?? "–"}% of capital a day</b>. Leverage multiplies losses as well as gains.</div>`;
     const side = s => {
       const rows = it.rows.filter(x => x.side === s);
-      const tot = rows.reduce((a, x) => a + (x.net || 0), 0);
+      const tot = rows.reduce((a, x) => a + ((x.status === "closed" ? x.net : x.gross) || 0), 0);
       return `<div class="list"><h3><span><span class="pill ${s === "long" ? "p-up" : "p-dn"}">${s === "long" ? "Buy" : "Sell"}</span> ${s === "long" ? "Long" : "Short"} picks</span>
-        <span class="${cl(tot)} num">${rows.some(x => x.status === "closed") ? sgn(tot) : ""}</span></h3>` + (rows.length ? rows.map(x => `
-        <div class="li"><div><span class="s">${esc(x.symbol)}</span><div class="d">Entry ${inr(x.entry ?? x.ref)} · SL ${inr(x.sl)}${x.why ? " · " + esc(x.why.startsWith("SL") ? "SL hit " + (x.time || "") : "closed " + (x.time || "15:09")) : ""}</div></div>
-        <div class="r ${cl(x.net)}">${x.status === "closed" ? sgn(x.net) : x.status === "open" ? "open" : "waiting"}</div></div>`).join("") : `<div class="li"><div class="d">${esc((it.blocked || {})[s] || "No picks")}</div></div>`) + `</div>`;
+        <span class="${cl(tot)} num">${rows.some(x => x.status !== "pending") ? sgn(tot) : ""}</span></h3>` + (rows.length ? rows.map(x => `
+        <div class="li"><div><span class="s">${esc(x.symbol)}</span>
+          <div class="d">Entry ${esc(tm(x.entry_at) || "9:30")} ${inr(x.entry ?? x.ref)} → ${x.status === "closed" ? "exit" : "now"} ${esc(tm(x.last_at) || x.time || "")} ${inr(x.last ?? x.exit)}</div>
+          <div class="d">SL ${inr(x.sl)}${x.qty ? " · " + x.qty + " sh" : ""}${x.why ? " · " + esc(x.why.startsWith("SL") ? "SL hit" : "squared off") : ""}</div></div>
+        <div class="r ${cl(x.status === "closed" ? x.net : x.gross)}">${x.status === "pending" ? "waiting" : sgn(x.status === "closed" ? x.net : x.gross)}
+          <div class="d" style="font-weight:600">${x.status === "open" ? "open" : x.status === "closed" ? "closed" : ""}</div></div></div>`).join("") : `<div class="li"><div class="d">${esc((it.blocked || {})[s] || "No picks")}</div></div>`) + `</div>`;
     };
     h += `<div class="cols">${side("long")}${side("short")}</div>`;
   }
@@ -348,9 +361,9 @@ T = D.trades || []; S = D.summary || {};
   } else h += `<div class="grid">` + open.map(t => {
     const m = t.marks[t.marks.length - 1] || {};
     return `<div class="card pick pos ${t.gross >= 0 ? "win" : "loss"}">
-      <div class="row"><div><span class="sym">${esc(t.symbol)}</span><div class="ind">Bought ${fd(t.entry_date)} at ${inr(t.entry)} · ${t.qty} shares</div></div>
+      <div class="row"><div><span class="sym">${esc(t.symbol)}</span><div class="ind">Bought ${esc(when(t.entry_at || t.entry_date))} at ${inr(t.entry)} · ${t.qty} shares</div></div>
       <div style="text-align:right"><div class="pnl ${cl(t.gross)}">${sgn(t.gross)}</div><div class="${cl(t.gross)}" style="font-size:12.5px">${pct(t.gross, t.entry * t.qty)}</div></div></div>
-      <div class="kv"><div>Last<b>${inr(m.mark)}</b></div><div>Today<b class="${cl(m.day_pnl)}">${sgn(m.day_pnl)}</b></div><div>Stop-loss<b class="dn">${inr(t.sl)}</b></div></div>
+      <div class="kv"><div>Now · ${esc(tm(t.last_at) || m.at || "")}<b>${inr(m.mark)}</b></div><div>Today<b class="${cl(m.day_pnl)}">${sgn(m.day_pnl)}</b></div><div>Stop-loss<b class="dn">${inr(t.sl)}</b></div></div>
       <div class="prog" title="Day ${m.session} of ${t.hold}"><i style="width:${(m.session / t.hold * 100).toFixed(0)}%"></i></div>
       <div class="ind" style="margin-top:4px">Day ${m.session} of ${t.hold}</div>
       <div class="more"><table><thead><tr><th>Day</th><th>Date</th><th class="r">Close</th><th class="r">Day P&L</th><th class="r">Total</th></tr></thead><tbody>${
@@ -379,7 +392,8 @@ T = D.trades || []; S = D.summary || {};
           const st = t.status === "closed" ? `<span class="r ${cl(t.net)}">${sgn(t.net)}</span>` :
             t.status === "open" ? `<span class="r ${cl(t.gross)}">${sgn(t.gross)} <span class="pill p-warn">open</span></span>` : `<span class="r"><span class="pill p-info">pending</span></span>`;
           const kd = t.kind === "swing" ? `<span class="pill p-info">Swing</span>` : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
-          const det = t.entry == null ? "SL " + inr(t.sl) : `${inr(t.entry)} → ${t.exit != null ? inr(t.exit) : "…"} · ${t.qty} sh${t.exit_reason ? " · " + esc(t.exit_reason) : ""}`;
+          const det = t.entry == null ? "Waiting for 9:30 entry · SL " + inr(t.sl) :
+            `In ${esc(when(t.entry_at || t.entry_date))} ${inr(t.entry)} → ${t.status === "closed" ? "out" : "now"} ${esc(when(t.last_at))} ${inr(t.last ?? t.exit)} · ${t.qty} sh${t.exit_reason ? " · " + esc(t.exit_reason) : ""}`;
           return `<div class="li"><div>${kd} <span class="s">${esc(t.symbol)}</span><div class="d">${det}</div></div>${st}</div>`;
         }).join("") + `</div>`;
     }).join("") : `<div class="empty">No trades match.</div>`;
