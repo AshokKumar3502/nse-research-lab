@@ -1,0 +1,163 @@
+{
+ "day": "2026-11-20",
+ "decision_time": "09:30",
+ "made_at": "09:30:58 IST",
+ "status": "PAPER ONLY: the walk-forward test has not shown an edge",
+ "model_report": {
+  "from": "2022-01-03",
+  "to": "2026-11-19",
+  "best": {
+   "strategy": "model_short_close",
+   "verdict": "NO EDGE"
+  }
+ },
+ "universe": 218,
+ "missing_keys": [],
+ "long": [
+  {
+   "symbol": "AMBER",
+   "side": "long",
+   "score": 0.429,
+   "ref_price": 6647.0,
+   "stop": 6596.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 15,
+   "exposure_per_lakh": 99705,
+   "risk_to_stop_rs_per_lakh": 765,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "PGEL",
+   "side": "long",
+   "score": 0.396,
+   "ref_price": 574.75,
+   "stop": 569.5,
+   "flat_by": "15:10",
+   "shares_per_lakh": 173,
+   "exposure_per_lakh": 99432,
+   "risk_to_stop_rs_per_lakh": 908,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "HYUNDAI",
+   "side": "long",
+   "score": 0.268,
+   "ref_price": 2213.2,
+   "stop": 2209.5,
+   "flat_by": "15:10",
+   "shares_per_lakh": 45,
+   "exposure_per_lakh": 99594,
+   "risk_to_stop_rs_per_lakh": 166,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "HINDPETRO",
+   "side": "long",
+   "score": 0.249,
+   "ref_price": 382.5,
+   "stop": 382.35,
+   "flat_by": "15:10",
+   "shares_per_lakh": 261,
+   "exposure_per_lakh": 99832,
+   "risk_to_stop_rs_per_lakh": 39,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "TVSMOTOR",
+   "side": "long",
+   "score": 0.242,
+   "ref_price": 4575.3,
+   "stop": 4568.4,
+   "flat_by": "15:10",
+   "shares_per_lakh": 21,
+   "exposure_per_lakh": 96081,
+   "risk_to_stop_rs_per_lakh": 145,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  }
+ ],
+ "short": [
+  {
+   "symbol": "MAXHEALTH",
+   "side": "short",
+   "score": -0.459,
+   "ref_price": 1083.35,
+   "stop": 1084.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 92,
+   "exposure_per_lakh": 99668,
+   "risk_to_stop_rs_per_lakh": 60,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "IREDA",
+   "side": "short",
+   "score": -0.414,
+   "ref_price": 129.54,
+   "stop": 132.34,
+   "flat_by": "15:10",
+   "shares_per_lakh": 771,
+   "exposure_per_lakh": 99875,
+   "risk_to_stop_rs_per_lakh": 2159,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "HINDZINC",
+   "side": "short",
+   "score": -0.278,
+   "ref_price": 510.95,
+   "stop": 513.25,
+   "flat_by": "15:10",
+   "shares_per_lakh": 195,
+   "exposure_per_lakh": 99635,
+   "risk_to_stop_rs_per_lakh": 449,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "MARUTI",
+   "side": "short",
+   "score": -0.229,
+   "ref_price": 13720.0,
+   "stop": 13815.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 7,
+   "exposure_per_lakh": 96040,
+   "risk_to_stop_rs_per_lakh": 665,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "PERSISTENT",
+   "side": "short",
+   "score": -0.198,
+   "ref_price": 6050.0,
+   "stop": 6055.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 16,
+   "exposure_per_lakh": 96800,
+   "risk_to_stop_rs_per_lakh": 80,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  }
+ ],
+ "blocked": {},
+ "per_capital": 100000.0,
+ "leverage": 5.0,
+ "leverage_effect": {
+  "long": {
+   "backtest_pct_per_day_on_exposure": -0.1823,
+   "pct_per_day_on_capital": -0.911
+  },
+  "short": {
+   "backtest_pct_per_day_on_exposure": -0.0584,
+   "pct_per_day_on_capital": -0.292
+  }
+ }
+}
