@@ -305,11 +305,11 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
     <span class="chip">Breadth <b>${r.breadth_ma50_pct ?? "–"}%</b> above 50-day</span>
     <span class="chip">Swing exposure <b>${r.exposure != null ? Math.round(r.exposure * 100) + "%" : "–"}</b></span>
     <span class="chip">Prices through <b>${fd(D.last_session)}</b></span></div>`;
-  h += `<h2>Swing picks<span class="sub">Buy at the open after ${fdl(D.swing_session)} · hold 10 sessions · ₹50,000 each</span></h2>`;
+  h += `<h2>Swing picks<span class="sub">Picked after the close of ${fdl(D.swing_session)} · bought at 9:30 next day · hold 10 sessions · ₹50,000 each</span></h2>`;
   if (!sw.length) h += `<div class="empty">No swing picks today. ${esc(D.swing_status || "")}</div>`;
   else h += `<div class="grid">` + sw.map(p => {
     const val = p.status === "open" ? p.gross : p.net;
-    const st = p.status === "pending" ? `<span class="pill p-info">Buy at open</span>` : p.status === "open" ? `<span class="pill p-warn">Day ${p.day}/10</span>` : `<span class="pill ${p.net >= 0 ? "p-up" : "p-dn"}">Closed</span>`;
+    const st = p.status === "pending" ? `<span class="pill p-info">Buy 9:30</span>` : p.status === "open" ? `<span class="pill p-warn">Day ${p.day}/10</span>` : `<span class="pill ${p.net >= 0 ? "p-up" : "p-dn"}">Closed</span>`;
     const res = p.status === "pending" ? "" : `<div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${p.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(val)}">${sgn(val)}</span> <span class="${cl(val)}" style="font-size:12.5px">${pct(val, p.entry * (p.qty_held ?? p.qty))}</span></span></div>`;
     return `<div class="card pick ${p.status !== "pending" ? (val >= 0 ? "win" : "loss") : ""}">
       <div class="row"><div><span class="rank">#${p.rank}</span> <span class="sym">${esc(p.symbol)}</span><div class="ind">${esc(p.industry || "")}</div></div>${st}</div>
@@ -321,7 +321,7 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
   }).join("") + `</div>`;
   if (it) {
     const lo = (it.effect || {}).long || {};
-    h += `<h2>Intraday<span class="sub">${fdl(it.day)} · decided at 9:30 · square off by 15:10 · ₹50,000 each</span></h2>
+    h += `<h2>Intraday<span class="sub">${fdl(it.day)} · picked and bought at 9:30 · square off by 15:10 · ₹50,000 each</span></h2>
       <div class="banner warn"><b>Paper only — no proven edge.</b> In the 2022–2026 test the long picks averaged ${lo.backtest_pct_per_day_on_exposure ?? "–"}% a day after charges;
       at ${it.leverage}x leverage that is about <b>${lo.pct_per_day_on_capital ?? "–"}% of capital a day</b>. Leverage multiplies losses as well as gains.</div>`;
     const side = s => {
@@ -357,7 +357,7 @@ T = D.trades || []; S = D.summary || {};
   h += `<h2>Open swing positions<span class="sub">Tap a stock for its day-by-day P&L</span></h2>`;
   if (!open.length) {
     const pend = T.filter(t => t.kind === "swing" && t.status === "pending");
-    h += `<div class="empty">${pend.length ? pend.length + " stocks will be bought at the next open: " + pend.map(t => esc(t.symbol)).join(", ") : "No open positions."}</div>`;
+    h += `<div class="empty">${pend.length ? pend.length + " stocks will be bought at 9:30 on the next trading day: " + pend.map(t => esc(t.symbol)).join(", ") : "No open positions."}</div>`;
   } else h += `<div class="grid">` + open.map(t => {
     const m = t.marks[t.marks.length - 1] || {};
     return `<div class="card pick pos ${t.gross >= 0 ? "win" : "loss"}">
