@@ -198,18 +198,18 @@ def daily(trades):
     rows = {}
     for t in trades:
         for m in t["marks"]:
-            r = rows.setdefault(m["date"], {"date": m["date"], "swing": 0.0, "intraday": 0.0, "charges": 0.0})
+            r = rows.setdefault(m["date"], {"date": m["date"], "swing": 0.0, "intraday": 0.0, "option": 0.0, "charges": 0.0})
             r[t["kind"]] += m["day_pnl"]
         if t["status"] == "closed":
-            r = rows.setdefault(t["exit_date"], {"date": t["exit_date"], "swing": 0.0, "intraday": 0.0, "charges": 0.0})
+            r = rows.setdefault(t["exit_date"], {"date": t["exit_date"], "swing": 0.0, "intraday": 0.0, "option": 0.0, "charges": 0.0})
             r["charges"] += t["charges"]
     out = sorted(rows.values(), key=lambda r: r["date"])
     cum = 0.0
     for r in out:
-        r["net"] = round(r["swing"] + r["intraday"] - r["charges"], 2)
+        r["net"] = round(r["swing"] + r["intraday"] + r.get("option", 0.0) - r["charges"], 2)
         cum += r["net"]
         r["cumulative"] = round(cum, 2)
-        for k in ("swing", "intraday", "charges"):
+        for k in ("swing", "intraday", "option", "charges"):
             r[k] = round(r[k], 2)
     return out
 
@@ -227,11 +227,17 @@ def summary(trades):
                 "win_pct": round(len(wins) / len(closed) * 100, 1) if closed else None}
     return {"swing": block([t for t in trades if t["kind"] == "swing"]),
             "intraday": block([t for t in trades if t["kind"] == "intraday"]),
+            "option": block([t for t in trades if t["kind"] == "option"]),
             "all": block(trades)}
 
 
 def update(con, log=print):
     trades = swing_trades(con) + intraday_trades(con)
+    try:
+        from optionlab import nifty_orb
+        trades += nifty_orb.trades()
+    except Exception as e:     # noqa: BLE001 - option rows are optional
+        log("option trades: %s" % e)
     doc = {"built": datetime.datetime.now(config.IST).strftime("%Y-%m-%d %H:%M IST"), "stake": STAKE,
            "last_session": str(con.execute("SELECT max(date) FROM calendar").fetchone()[0]),
            "summary": summary(trades), "daily": daily(trades), "trades": trades}

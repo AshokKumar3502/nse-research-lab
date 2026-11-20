@@ -286,6 +286,11 @@ def live(every_min=10, until=(15, 20)):
         bars = fetch_today(keys, today)
         if not bars.empty:
             store.upsert("minute_bars", bars, ["date", "symbol", "ts"])
+        try:
+            from optionlab import nifty_orb
+            nifty_orb.run(log=log)
+        except Exception as e:     # noqa: BLE001
+            log("nifty option: %s" % e)
         paper_update(db.connect(read_only=True), log=log)
         data = collect()
         os.makedirs(os.path.join(REPO, "docs", "data"), exist_ok=True)
@@ -326,6 +331,7 @@ def evening():
     else:
         log("data checks failed: no swing picks tonight (the monitor halts publishing)")
     _step("monitor", lambda: monitor_run(log=log))
+    _step("nifty option (final)", lambda: __import__("optionlab.nifty_orb", fromlist=["run"]).run(log=log))
     _step("paper trades", lambda: paper_update(db.connect(read_only=True), log=log))
     _step("site", site_build)
     persist()

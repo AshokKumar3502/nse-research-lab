@@ -337,6 +337,16 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
     };
     h += `<div class="cols">${side("long")}${side("short")}</div>`;
   }
+  const ops = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date));
+  const op = ops[0];
+  h += `<h2>NIFTY option<span class="sub">9:15–9:45 range breakout · ATM call or put · SL = other side of the range · exit 15:15 · 1 lot · real option prices · paper only</span></h2>`;
+  if (!op) h += `<div class="empty">No option trade yet. The rule watches NIFTY from 9:45 to 13:00 each trading day.</div>`;
+  else { const v = op.status === "closed" ? op.net : op.gross;
+    h += `<div class="grid"><div class="card pick ${v >= 0 ? "win" : "loss"}"><div class="row"><div><span class="sym">${esc(op.symbol)}</span><div class="ind">${esc(op.industry)}</div></div>
+      <span class="pill ${op.status === "open" ? "p-warn" : v >= 0 ? "p-up" : "p-dn"}">${op.status === "open" ? "Open" : "Closed"}</span></div>
+      <div class="kv"><div>Entry · ${esc(when(op.entry_at))}<b>${inr(op.entry)}</b></div><div>${op.status === "closed" ? "Exit" : "Now"} · ${esc(tm(op.last_at))}<b>${inr(op.last)}</b></div><div>SL<b class="dn" style="font-size:12.5px">${esc(op.sl_note)}</b></div></div>
+      <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}</div>
+      <div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${op.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:12.5px">${pct(v, op.entry * op.qty)}</span></span></div></div></div>`; }
   $("#v-today").innerHTML = h;
 })();
 
@@ -379,7 +389,7 @@ T = D.trades || []; S = D.summary || {};
   const box = $("#v-history");
   box.innerHTML = `<h2>History<span class="sub">Every pick ever published, with its result</span></h2>
     <div class="tools"><div class="seg" role="group" aria-label="Filter">
-    ${[["all", "All"], ["swing", "Swing"], ["intraday", "Intraday"]].map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === "all"}">${l}</button>`).join("")}</div>
+    ${[["all", "All"], ["swing", "Swing"], ["intraday", "Intraday"], ["option", "Options"]].map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === "all"}">${l}</button>`).join("")}</div>
     <input class="search" type="search" placeholder="Search a stock" aria-label="Search a stock"></div><div id="hl"></div>`;
   function draw() {
     const rows = T.filter(t => (kind === "all" || t.kind === kind) && (!q || t.symbol.includes(q)));
@@ -391,7 +401,7 @@ T = D.trades || []; S = D.summary || {};
         <div class="list">` + ts.map(t => {
           const st = t.status === "closed" ? `<span class="r ${cl(t.net)}">${sgn(t.net)}</span>` :
             t.status === "open" ? `<span class="r ${cl(t.gross)}">${sgn(t.gross)} <span class="pill p-warn">open</span></span>` : `<span class="r"><span class="pill p-info">pending</span></span>`;
-          const kd = t.kind === "swing" ? `<span class="pill p-info">Swing</span>` : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
+          const kd = t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>` : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
           const det = t.entry == null ? "Waiting for 9:30 entry · SL " + inr(t.sl) :
             `In ${esc(when(t.entry_at || t.entry_date))} ${inr(t.entry)} → ${t.status === "closed" ? "out" : "now"} ${esc(when(t.last_at))} ${inr(t.last ?? t.exit)} · ${t.qty} sh${t.exit_reason ? " · " + esc(t.exit_reason) : ""}`;
           return `<div class="li"><div>${kd} <span class="s">${esc(t.symbol)}</span><div class="d">${det}</div></div>${st}</div>`;
@@ -425,7 +435,7 @@ T = D.trades || []; S = D.summary || {};
   const closed = T.filter(t => t.status === "closed");
   const grp = (name, f) => { const ts = closed.filter(f), w = ts.filter(t => t.net > 0).length, tot = ts.reduce((a, t) => a + t.net, 0);
     return [name, ts.length, ts.length ? Math.round(w / ts.length * 100) + "%" : "–", ts.length ? sgn(tot / ts.length) : "–", tot, ts.length]; };
-  const g = [grp("Swing", t => t.kind === "swing"), grp("Intraday — buy", t => t.kind === "intraday" && t.side === "long"), grp("Intraday — sell", t => t.kind === "intraday" && t.side === "short")];
+  const g = [grp("Swing", t => t.kind === "swing"), grp("Intraday — buy", t => t.kind === "intraday" && t.side === "long"), grp("Intraday — sell", t => t.kind === "intraday" && t.side === "short"), grp("NIFTY option (1 lot)", t => t.kind === "option")];
   h += `<h2>By strategy</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
     g.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td class="r">${r[2]}</td><td class="r">${r[3]}</td><td class="r ${cl(r[4])}"><b>${r[5] ? sgn(r[4]) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;
   const bySym = {}; closed.forEach(t => bySym[t.symbol] = (bySym[t.symbol] || 0) + t.net);
