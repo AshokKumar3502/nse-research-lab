@@ -288,6 +288,7 @@ def live(every_min=10, until=(15, 20)):
             store.upsert("minute_bars", bars, ["date", "symbol", "ts"])
         paper_update(db.connect(read_only=True), log=log)
         data = collect()
+        os.makedirs(os.path.join(REPO, "docs", "data"), exist_ok=True)
         with open(os.path.join(REPO, "docs", "data", "live.json"), "w", encoding="utf-8") as fh:
             json.dump(data, fh, default=str)
         log("live: %d stocks priced, %s" % (len(syms), data["updated"]["at"]))
