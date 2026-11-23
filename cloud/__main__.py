@@ -107,8 +107,21 @@ def persist():
     _results_to_state()
 
 
+def session_day(phase):
+    """The trading day a job belongs to. GitHub can start the 18:45 evening job hours late (even after midnight),
+    and a missed evening is caught up the next morning: an evening run before 15:30 IST settles the previous
+    weekday."""
+    now = datetime.datetime.now(config.IST)
+    d = now.date()
+    if phase == "evening" and now.time() < datetime.time(15, 30):
+        d -= datetime.timedelta(days=1)
+        while d.weekday() >= 5:
+            d -= datetime.timedelta(days=1)
+    return d
+
+
 def done_marker(phase):
-    return os.path.join(STATE, "done", "%s-%s" % (phase, config.today_ist()))
+    return os.path.join(STATE, "done", "%s-%s" % (phase, session_day(phase)))
 
 
 # ---------------------------------------------------------------- the slim warehouse
@@ -214,6 +227,15 @@ def morning():
     if not store.month_files("eq_daily"):
         log("no warehouse in the cache: rebuilding it first")
         sync()
+    else:
+        # a missed evening leaves the warehouse a day behind and the picks would find no rows: catch it up
+        prev = config.today_ist() - datetime.timedelta(days=1)
+        while prev.weekday() >= 5:
+            prev -= datetime.timedelta(days=1)
+        last = db.connect(read_only=True).execute("SELECT max(date) FROM eq_daily").fetchone()[0]
+        if last is None or last < prev:
+            log("warehouse ends %s, before %s: syncing first" % (last, prev))
+            sync()
     wait_until(9, 30, 30)
     con = db.connect(read_only=True)
     doc = _step("intraday picks", lambda: live.score(con, "09:30", 5, log=log))
@@ -346,7 +368,7 @@ def main(argv):
     cmd = argv[0] if argv else ""
     force = "--force" in argv
     if cmd in ("morning", "evening"):
-        if datetime.datetime.now(config.IST).weekday() >= 5 and not force:
+        if session_day(cmd).weekday() >= 5 and not force:
             log("weekend: nothing to do")
             return 0
         if force:
