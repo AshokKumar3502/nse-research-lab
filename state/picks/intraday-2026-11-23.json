@@ -1,0 +1,163 @@
+{
+ "day": "2026-11-23",
+ "decision_time": "09:30",
+ "made_at": "11:15:44 IST",
+ "status": "PAPER ONLY: the walk-forward test has not shown an edge",
+ "model_report": {
+  "from": "2022-01-03",
+  "to": "2026-11-19",
+  "best": {
+   "strategy": "model_short_close",
+   "verdict": "NO EDGE"
+  }
+ },
+ "universe": 218,
+ "missing_keys": [],
+ "long": [
+  {
+   "symbol": "MOTILALOFS",
+   "side": "long",
+   "score": 0.54,
+   "ref_price": 1202.0,
+   "stop": 1200.65,
+   "flat_by": "15:10",
+   "shares_per_lakh": 83,
+   "exposure_per_lakh": 99766,
+   "risk_to_stop_rs_per_lakh": 112,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "TATAELXSI",
+   "side": "long",
+   "score": 0.522,
+   "ref_price": 3856.3,
+   "stop": 3855.5,
+   "flat_by": "15:10",
+   "shares_per_lakh": 25,
+   "exposure_per_lakh": 96408,
+   "risk_to_stop_rs_per_lakh": 20,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "JUBLFOOD",
+   "side": "long",
+   "score": 0.506,
+   "ref_price": 424.1,
+   "stop": 424.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 235,
+   "exposure_per_lakh": 99664,
+   "risk_to_stop_rs_per_lakh": 24,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "COALINDIA",
+   "side": "long",
+   "score": 0.439,
+   "ref_price": 389.5,
+   "stop": 389.3,
+   "flat_by": "15:10",
+   "shares_per_lakh": 256,
+   "exposure_per_lakh": 99712,
+   "risk_to_stop_rs_per_lakh": 51,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "OFSS",
+   "side": "long",
+   "score": 0.438,
+   "ref_price": 9717.0,
+   "stop": 9692.5,
+   "flat_by": "15:10",
+   "shares_per_lakh": 10,
+   "exposure_per_lakh": 97170,
+   "risk_to_stop_rs_per_lakh": 245,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  }
+ ],
+ "short": [
+  {
+   "symbol": "UNIONBANK",
+   "side": "short",
+   "score": -2.155,
+   "ref_price": 210.67,
+   "stop": 219.72,
+   "flat_by": "15:10",
+   "shares_per_lakh": 474,
+   "exposure_per_lakh": 99858,
+   "risk_to_stop_rs_per_lakh": 4290,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "AXISBANK",
+   "side": "short",
+   "score": -1.391,
+   "ref_price": 1409.3,
+   "stop": 1458.9,
+   "flat_by": "15:10",
+   "shares_per_lakh": 70,
+   "exposure_per_lakh": 98651,
+   "risk_to_stop_rs_per_lakh": 3472,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "APLAPOLLO",
+   "side": "short",
+   "score": -1.301,
+   "ref_price": 1909.5,
+   "stop": 2006.4,
+   "flat_by": "15:10",
+   "shares_per_lakh": 52,
+   "exposure_per_lakh": 99294,
+   "risk_to_stop_rs_per_lakh": 5039,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "CUB",
+   "side": "short",
+   "score": -0.629,
+   "ref_price": 243.0,
+   "stop": 253.99,
+   "flat_by": "15:10",
+   "shares_per_lakh": 411,
+   "exposure_per_lakh": 99873,
+   "risk_to_stop_rs_per_lakh": 4517,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "KALYANKJIL",
+   "side": "short",
+   "score": -0.301,
+   "ref_price": 667.1,
+   "stop": 669.9,
+   "flat_by": "15:10",
+   "shares_per_lakh": 149,
+   "exposure_per_lakh": 99398,
+   "risk_to_stop_rs_per_lakh": 417,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  }
+ ],
+ "blocked": {},
+ "per_capital": 100000.0,
+ "leverage": 5.0,
+ "leverage_effect": {
+  "long": {
+   "backtest_pct_per_day_on_exposure": -0.1823,
+   "pct_per_day_on_capital": -0.911
+  },
+  "short": {
+   "backtest_pct_per_day_on_exposure": -0.0584,
+   "pct_per_day_on_capital": -0.292
+  }
+ }
+}
