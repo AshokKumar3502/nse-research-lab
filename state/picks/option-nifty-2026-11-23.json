@@ -1,7 +1,7 @@
 {
  "day": "2026-11-23",
- "status": "open",
- "updated": "11:13",
+ "status": "closed",
+ "updated": "23:19",
  "rule": "NIFTY 9:15-9:45 range breakout, ATM option, SL = other side of the range, exit 15:15",
  "range_high": 25992.6,
  "range_low": 25567.3,
@@ -15,9 +15,12 @@
  "entry_at": "2026-11-23 10:52",
  "entry": 80.45,
  "sl_index": 25992.6,
- "last": 56.8,
- "last_at": "2026-11-23 11:13",
- "gross": -1537.25,
- "charges": 0.0,
- "net": -1537.25
+ "exit": 168.75,
+ "exit_at": "2026-11-23 15:15",
+ "last": 168.75,
+ "last_at": "2026-11-23 15:15",
+ "why": "15:15 exit",
+ "gross": 5739.5,
+ "charges": 65.02,
+ "net": 5674.48
 }

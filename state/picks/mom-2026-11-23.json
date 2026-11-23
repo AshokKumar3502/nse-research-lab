@@ -1,0 +1,76 @@
+{
+ "session": "2026-11-23",
+ "rule": "12-1 month momentum, top 10, hold 20 sessions",
+ "picks": [
+  {
+   "symbol": "CUPID",
+   "ref_close": 362.15,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 3.966
+  },
+  {
+   "symbol": "WELCORP",
+   "ref_close": 2152.8,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.6344
+  },
+  {
+   "symbol": "MTARTECH",
+   "ref_close": 5659.0,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.4576
+  },
+  {
+   "symbol": "SHREEJISPG",
+   "ref_close": 910.0,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.4433
+  },
+  {
+   "symbol": "AEROFLEX",
+   "ref_close": 464.05,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.4428
+  },
+  {
+   "symbol": "SBC",
+   "ref_close": 68.07,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.441
+  },
+  {
+   "symbol": "WHEELS",
+   "ref_close": 2120.6,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.4187
+  },
+  {
+   "symbol": "KMEW",
+   "ref_close": 709.4,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.3406
+  },
+  {
+   "symbol": "SHILPAMED",
+   "ref_close": 857.2,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.3057
+  },
+  {
+   "symbol": "CPPLUS",
+   "ref_close": 4074.1,
+   "stop": null,
+   "hold_sessions": 20,
+   "mom12_1": 1.2634
+  }
+ ]
+}

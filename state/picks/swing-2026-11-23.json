@@ -1,0 +1,187 @@
+{
+ "session": "2026-11-23",
+ "made_at": "2026-11-23 23:19 IST",
+ "status": "VALIDATED",
+ "review": {
+  "verdict": "KEEP",
+  "problems": [],
+  "mean_pct": 0.907,
+  "t_offset0": 2.3
+ },
+ "regime": {
+  "nifty_above_ma200": true,
+  "breadth_ma50_pct": 56.4,
+  "exposure": 1.0
+ },
+ "model_backtest": {
+  "mean_pct": 1.0307,
+  "t": 2.3,
+  "win_days_pct": 57.4,
+  "verdict": "EDGE",
+  "years": {
+   "2019": 0.051,
+   "2020": 2.203,
+   "2021": 2.208,
+   "2022": -0.254,
+   "2023": 1.75,
+   "2024": 1.409,
+   "2025": -0.385,
+   "2026": 1.342
+  }
+ },
+ "tested_rule": "Buy at the next open, sell at the close of the 10th session. The 2-ATR stop is shown for reference only: in the test it lowered results (+0.66% vs +1.03% a period).",
+ "per_capital": 100000.0,
+ "picks": [
+  {
+   "symbol": "INDIAGLYCO",
+   "industry": "Capital Goods",
+   "score_pct": 1.98,
+   "ref_close": 294.85,
+   "stop": 259.61,
+   "stop_pct": -11.95,
+   "use_stop": false,
+   "shares_per_lakh": 33,
+   "value_per_lakh": 9730,
+   "hold_sessions": 10,
+   "ret_20_pct": 3.1,
+   "rs_industry_20_pct": -0.2
+  },
+  {
+   "symbol": "KEC",
+   "industry": "Construction",
+   "score_pct": 1.97,
+   "ref_close": 295.25,
+   "stop": 272.29,
+   "stop_pct": -7.78,
+   "use_stop": false,
+   "shares_per_lakh": 33,
+   "value_per_lakh": 9743,
+   "hold_sessions": 10,
+   "ret_20_pct": -12.3,
+   "rs_industry_20_pct": -16.6
+  },
+  {
+   "symbol": "THERMAX",
+   "industry": "Construction",
+   "score_pct": 1.91,
+   "ref_close": 2705.5,
+   "stop": 2455.93,
+   "stop_pct": -9.22,
+   "use_stop": false,
+   "shares_per_lakh": 3,
+   "value_per_lakh": 8116,
+   "hold_sessions": 10,
+   "ret_20_pct": -15.1,
+   "rs_industry_20_pct": -19.4
+  },
+  {
+   "symbol": "PIIND",
+   "industry": "Chemicals",
+   "score_pct": 1.57,
+   "ref_close": 1571.0,
+   "stop": 1427.44,
+   "stop_pct": -9.14,
+   "use_stop": false,
+   "shares_per_lakh": 6,
+   "value_per_lakh": 9426,
+   "hold_sessions": 10,
+   "ret_20_pct": -22.2,
+   "rs_industry_20_pct": -25.1
+  },
+  {
+   "symbol": "INOXWIND",
+   "industry": "Construction",
+   "score_pct": 1.56,
+   "ref_close": 53.7,
+   "stop": 47.83,
+   "stop_pct": -10.92,
+   "use_stop": false,
+   "shares_per_lakh": 186,
+   "value_per_lakh": 9988,
+   "hold_sessions": 10,
+   "ret_20_pct": -8.0,
+   "rs_industry_20_pct": -12.3
+  },
+  {
+   "symbol": "RAYMOND",
+   "industry": "Realty",
+   "score_pct": 1.48,
+   "ref_close": 1205.2,
+   "stop": 1094.21,
+   "stop_pct": -9.21,
+   "use_stop": false,
+   "shares_per_lakh": 8,
+   "value_per_lakh": 9642,
+   "hold_sessions": 10,
+   "ret_20_pct": 14.2,
+   "rs_industry_20_pct": -5.8
+  },
+  {
+   "symbol": "CUPID",
+   "industry": "Financial Services",
+   "score_pct": 1.39,
+   "ref_close": 362.15,
+   "stop": 332.71,
+   "stop_pct": -8.13,
+   "use_stop": false,
+   "shares_per_lakh": 27,
+   "value_per_lakh": 9778,
+   "hold_sessions": 10,
+   "ret_20_pct": 15.3,
+   "rs_industry_20_pct": 1.8
+  },
+  {
+   "symbol": "SUNSHINE",
+   "industry": "UNKNOWN",
+   "score_pct": 1.27,
+   "ref_close": 536.5,
+   "stop": 480.46,
+   "stop_pct": -10.45,
+   "use_stop": false,
+   "shares_per_lakh": 18,
+   "value_per_lakh": 9657,
+   "hold_sessions": 10,
+   "ret_20_pct": 36.6,
+   "rs_industry_20_pct": null
+  },
+  {
+   "symbol": "DIACABS",
+   "industry": "Fast Moving Consumer Goods",
+   "score_pct": 1.02,
+   "ref_close": 364.05,
+   "stop": 330.23,
+   "stop_pct": -9.29,
+   "use_stop": false,
+   "shares_per_lakh": 27,
+   "value_per_lakh": 9829,
+   "hold_sessions": 10,
+   "ret_20_pct": 12.0,
+   "rs_industry_20_pct": -0.0
+  },
+  {
+   "symbol": "MARSONS",
+   "industry": "Oil Gas & Consumable Fuels",
+   "score_pct": 1.0,
+   "ref_close": 158.69,
+   "stop": 137.72,
+   "stop_pct": -13.22,
+   "use_stop": false,
+   "shares_per_lakh": 63,
+   "value_per_lakh": 9997,
+   "hold_sessions": 10,
+   "ret_20_pct": 35.2,
+   "rs_industry_20_pct": 27.1
+  }
+ ],
+ "rules_today": {
+  "sector_leaders": [
+   "MOTILALOFS",
+   "IREDA",
+   "KALYANKJIL",
+   "VOLTAS",
+   "MAHABANK"
+  ],
+  "results_jump": []
+ },
+ "universe": 493
+}
