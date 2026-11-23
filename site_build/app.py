@@ -340,6 +340,8 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
   const ops = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date));
   const op = ops[0];
   h += `<h2>NIFTY option<span class="sub">9:15–9:45 range breakout · ATM call or put · SL = other side of the range · exit 15:15 · 1 lot · real option prices · paper only</span></h2>`;
+  h += `<div class="banner warn"><b>Unproven — paper only.</b> The 2022–2026 backtest looked strong, but buying a random call or put at 9:45 did just as well in the same price model,
+      and real NSE option prices showed the model flatters option buyers by about ₹160–330 a trade. On real prices a random buyer loses a little. This paper trade, on real prices, is the test.</div>`;
   if (!op) h += `<div class="empty">No option trade yet. The rule watches NIFTY from 9:45 to 13:00 each trading day.</div>`;
   else { const v = op.status === "closed" ? op.net : op.gross;
     h += `<div class="grid"><div class="card pick ${v >= 0 ? "win" : "loss"}"><div class="row"><div><span class="sym">${esc(op.symbol)}</span><div class="ind">${esc(op.industry)}</div></div>
@@ -448,7 +450,9 @@ T = D.trades || []; S = D.summary || {};
     <div class="card"><div class="row"><b>Swing · 10 sessions</b>${vp(sv.verdict)}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Top 10 picks averaged
     <b class="${cl(sv.mean_pct)}">${sv.mean_pct != null ? (sv.mean_pct > 0 ? "+" : "") + sv.mean_pct.toFixed(2) + "%" : "–"}</b> per 10 sessions after costs (t ${sv.t ?? "–"}), ${sv.from ? String(sv.from).slice(0, 4) : ""}–${sv.to ? String(sv.to).slice(0, 4) : ""}, out of sample.</p></div>
     <div class="card"><div class="row"><b>Intraday · 9:30</b>${vp(iv.verdict)}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Long picks averaged
-    <b class="${cl(iv.mean_pct)}">${iv.mean_pct != null ? iv.mean_pct.toFixed(2) + "%" : "–"}</b> a day after costs. The ranking works, but the edge is smaller than the charges.</p></div></div>
+    <b class="${cl(iv.mean_pct)}">${iv.mean_pct != null ? iv.mean_pct.toFixed(2) + "%" : "–"}</b> a day after costs. The ranking works, but the edge is smaller than the charges.</p></div>
+    <div class="card"><div class="row"><b>NIFTY option · 9:45 breakout</b>${vp("UNPROVEN")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Did no better than a
+    random call or put in the 2022–2026 price model, and real option prices show that model flatters buyers by ₹160–330 a trade. Paper-traded on real prices to find out.</p></div></div>
     <p><a href="research.html" style="color:var(--brand)">Full research results →</a></p>`;
   $("#v-stats").innerHTML = h;
 })();

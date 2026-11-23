@@ -1,6 +1,8 @@
 """NIFTY 9:45 range breakout, paper-traded on REAL NIFTY option prices (Upstox public 1-minute candles).
 
-The rule (research: 2022-2026, modelled option prices, t 3.74, positive every year):
+UNPROVEN (2026-11-23): the 2022-2026 modelled backtest (t 3.74) was matched by buying a random call or put at
+9:45, and real Upstox option prices show the Black-Scholes model flatters buyers by Rs 160-330 a trade. This
+paper trade on real prices is the test. The rule:
   range   NIFTY's high and low from 9:15 to 9:45
   entry   from 9:45 to 13:00, the first 1-minute close above the high -> buy the ATM CALL, below the low ->
           buy the ATM PUT, at the next minute's open; nearest expiry; one trade a day, one lot
