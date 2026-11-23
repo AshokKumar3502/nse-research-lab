@@ -1,0 +1,23 @@
+{
+ "day": "2026-11-23",
+ "status": "open",
+ "updated": "11:13",
+ "rule": "NIFTY 9:15-9:45 range breakout, ATM option, SL = other side of the range, exit 15:15",
+ "range_high": 25992.6,
+ "range_low": 25567.3,
+ "side": "PE",
+ "strike": 25550,
+ "expiry": "2026-11-23",
+ "symbol": "NIFTY 25550 PE",
+ "lot": 65,
+ "key": "NSE_FO|64476",
+ "signal_at": "2026-11-23 10:51",
+ "entry_at": "2026-11-23 10:52",
+ "entry": 80.45,
+ "sl_index": 25992.6,
+ "last": 56.8,
+ "last_at": "2026-11-23 11:13",
+ "gross": -1537.25,
+ "charges": 0.0,
+ "net": -1537.25
+}

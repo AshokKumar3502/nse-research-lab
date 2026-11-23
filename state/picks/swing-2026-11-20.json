@@ -1,0 +1,187 @@
+{
+ "session": "2026-11-20",
+ "made_at": "2026-11-23 11:13 IST",
+ "status": "VALIDATED",
+ "review": {
+  "verdict": "KEEP",
+  "problems": [],
+  "mean_pct": 0.907,
+  "t_offset0": 2.3
+ },
+ "regime": {
+  "nifty_above_ma200": true,
+  "breadth_ma50_pct": 59.4,
+  "exposure": 1.0
+ },
+ "model_backtest": {
+  "mean_pct": 1.0307,
+  "t": 2.3,
+  "win_days_pct": 57.4,
+  "verdict": "EDGE",
+  "years": {
+   "2019": 0.051,
+   "2020": 2.203,
+   "2021": 2.208,
+   "2022": -0.254,
+   "2023": 1.75,
+   "2024": 1.409,
+   "2025": -0.385,
+   "2026": 1.342
+  }
+ },
+ "tested_rule": "Buy at the next open, sell at the close of the 10th session. The 2-ATR stop is shown for reference only: in the test it lowered results (+0.66% vs +1.03% a period).",
+ "per_capital": 100000.0,
+ "picks": [
+  {
+   "symbol": "KEC",
+   "industry": "Construction",
+   "score_pct": 2.12,
+   "ref_close": 300.15,
+   "stop": 273.01,
+   "stop_pct": -9.04,
+   "use_stop": false,
+   "shares_per_lakh": 33,
+   "value_per_lakh": 9905,
+   "hold_sessions": 10,
+   "ret_20_pct": -8.4,
+   "rs_industry_20_pct": -15.0
+  },
+  {
+   "symbol": "PIIND",
+   "industry": "Chemicals",
+   "score_pct": 1.74,
+   "ref_close": 1597.4,
+   "stop": 1452.39,
+   "stop_pct": -9.08,
+   "use_stop": false,
+   "shares_per_lakh": 6,
+   "value_per_lakh": 9584,
+   "hold_sessions": 10,
+   "ret_20_pct": -22.1,
+   "rs_industry_20_pct": -26.3
+  },
+  {
+   "symbol": "THERMAX",
+   "industry": "Construction",
+   "score_pct": 1.65,
+   "ref_close": 2718.1,
+   "stop": 2461.66,
+   "stop_pct": -9.43,
+   "use_stop": false,
+   "shares_per_lakh": 3,
+   "value_per_lakh": 8154,
+   "hold_sessions": 10,
+   "ret_20_pct": -12.2,
+   "rs_industry_20_pct": -18.8
+  },
+  {
+   "symbol": "INOXWIND",
+   "industry": "Construction",
+   "score_pct": 1.47,
+   "ref_close": 55.46,
+   "stop": 49.76,
+   "stop_pct": -10.28,
+   "use_stop": false,
+   "shares_per_lakh": 180,
+   "value_per_lakh": 9983,
+   "hold_sessions": 10,
+   "ret_20_pct": -5.9,
+   "rs_industry_20_pct": -12.5
+  },
+  {
+   "symbol": "SUNSHINE",
+   "industry": "UNKNOWN",
+   "score_pct": 1.24,
+   "ref_close": 512.4,
+   "stop": 459.56,
+   "stop_pct": -10.31,
+   "use_stop": false,
+   "shares_per_lakh": 19,
+   "value_per_lakh": 9736,
+   "hold_sessions": 10,
+   "ret_20_pct": 31.2,
+   "rs_industry_20_pct": null
+  },
+  {
+   "symbol": "CUPID",
+   "industry": "Financial Services",
+   "score_pct": 1.12,
+   "ref_close": 365.65,
+   "stop": 335.44,
+   "stop_pct": -8.26,
+   "use_stop": false,
+   "shares_per_lakh": 27,
+   "value_per_lakh": 9873,
+   "hold_sessions": 10,
+   "ret_20_pct": 19.3,
+   "rs_industry_20_pct": 6.2
+  },
+  {
+   "symbol": "RAYMOND",
+   "industry": "Realty",
+   "score_pct": 1.06,
+   "ref_close": 1198.7,
+   "stop": 1085.97,
+   "stop_pct": -9.4,
+   "use_stop": false,
+   "shares_per_lakh": 8,
+   "value_per_lakh": 9590,
+   "hold_sessions": 10,
+   "ret_20_pct": 12.7,
+   "rs_industry_20_pct": -8.6
+  },
+  {
+   "symbol": "DIACABS",
+   "industry": "Fast Moving Consumer Goods",
+   "score_pct": 1.03,
+   "ref_close": 363.05,
+   "stop": 328.87,
+   "stop_pct": -9.41,
+   "use_stop": false,
+   "shares_per_lakh": 27,
+   "value_per_lakh": 9802,
+   "hold_sessions": 10,
+   "ret_20_pct": 15.2,
+   "rs_industry_20_pct": 2.1
+  },
+  {
+   "symbol": "MARSONS",
+   "industry": "Oil Gas & Consumable Fuels",
+   "score_pct": 1.02,
+   "ref_close": 152.56,
+   "stop": 131.27,
+   "stop_pct": -13.95,
+   "use_stop": false,
+   "shares_per_lakh": 65,
+   "value_per_lakh": 9916,
+   "hold_sessions": 10,
+   "ret_20_pct": 28.8,
+   "rs_industry_20_pct": 17.4
+  },
+  {
+   "symbol": "POLICYBZR",
+   "industry": "Financial Services",
+   "score_pct": 0.97,
+   "ref_close": 1022.8,
+   "stop": 931.23,
+   "stop_pct": -8.95,
+   "use_stop": false,
+   "shares_per_lakh": 9,
+   "value_per_lakh": 9205,
+   "hold_sessions": 10,
+   "ret_20_pct": 0.8,
+   "rs_industry_20_pct": -12.3
+  }
+ ],
+ "rules_today": {
+  "sector_leaders": [
+   "GODREJPROP",
+   "LODHA",
+   "CEMPRO",
+   "HDFCBANK",
+   "PHOENIXLTD"
+  ],
+  "results_jump": []
+ },
+ "universe": 493
+}
