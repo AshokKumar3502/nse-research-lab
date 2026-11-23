@@ -1,0 +1,15 @@
+{
+ "id": "results_drift_delivery",
+ "name": "Results drift with delivery buying",
+ "author": "claude",
+ "hypothesis": "A 5%+ results-day jump on 3x turnover, closing near the high, with delivery well above normal (real buyers, not traders), keeps drifting up for two weeks while NIFTY is above its 200-day average.",
+ "mode": "event",
+ "filter": "days_since_result == 0 and result_ret >= {jump} and result_turn_mult >= {vol} and result_close_loc >= 0.8 and deliv_z > {dz} and nifty_above_ma200 == 1",
+ "hold": 10,
+ "stop_atr": null,
+ "params": {
+  "jump": 0.05,
+  "vol": 3.0,
+  "dz": 1.0
+ }
+}

@@ -1,0 +1,14 @@
+{
+ "id": "results_jump_10",
+ "name": "Results jump, 10-session hold",
+ "author": "claude",
+ "hypothesis": "A 4%+ move on quarterly results on 2x turnover, closing near the high, keeps drifting up over the next 10 sessions (post-earnings drift) while NIFTY is above its 200-day average.",
+ "mode": "event",
+ "filter": "days_since_result == 0 and result_ret >= {jump} and result_turn_mult >= {vol} and result_close_loc >= 0.75 and nifty_above_ma200 == 1",
+ "hold": 10,
+ "stop_atr": null,
+ "params": {
+  "jump": 0.04,
+  "vol": 2.0
+ }
+}

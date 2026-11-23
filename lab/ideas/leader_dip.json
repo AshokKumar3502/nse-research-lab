@@ -1,0 +1,17 @@
+{
+ "id": "leader_dip",
+ "name": "Sharp dip in a 6-month leader",
+ "author": "claude",
+ "hypothesis": "A 7%+ five-session fall in a stock up 15%+ over 120 sessions and still above its 200-day, with a firm close today and VIX calm, is a pullback in a leader and bounces within a week.",
+ "mode": "cohort",
+ "filter": "ret_5 < -{drop} and ret_120 > {mom} and dist_ma200 > 0 and close_loc_1 > 0.5 and vix < {vix_max} and not avoid",
+ "rank": "ret_5",
+ "k": 10,
+ "hold": 5,
+ "stop_atr": null,
+ "params": {
+  "drop": 0.07,
+  "mom": 0.15,
+  "vix_max": 22
+ }
+}

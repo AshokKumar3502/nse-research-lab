@@ -1,0 +1,14 @@
+{
+ "id": "delivery_spike_upday",
+ "name": "Delivery spike on a strong up-day",
+ "author": "claude",
+ "hypothesis": "A 2%+ up-day closing near the high with delivery 2 standard deviations above normal, above the 50-day in a healthy market, shows institutions buying and follows through for a week.",
+ "mode": "event",
+ "filter": "deliv_z > {z} and ret_1 > {up} and close_loc_1 > 0.7 and dist_ma50 > 0 and nifty_above_ma200 == 1 and not avoid",
+ "hold": 5,
+ "stop_atr": null,
+ "params": {
+  "z": 2.0,
+  "up": 0.02
+ }
+}

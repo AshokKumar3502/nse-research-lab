@@ -1,0 +1,16 @@
+{
+ "id": "calm_momentum",
+ "name": "Calm 6-month leaders",
+ "author": "claude",
+ "hypothesis": "Stocks up 20%+ over 120 sessions with low daily volatility (a steady climb, not a spike), above the 50-day in a healthy market, keep outperforming over the next two weeks.",
+ "mode": "cohort",
+ "filter": "ret_120 > {mom} and vol_20 < {vmax} and dist_ma50 > 0 and nifty_above_ma200 == 1 and not avoid",
+ "rank": "-ret_120",
+ "k": 10,
+ "hold": 10,
+ "stop_atr": null,
+ "params": {
+  "mom": 0.2,
+  "vmax": 0.018
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "id": "high52_volume_breakout",
+ "name": "52-week high on heavy volume",
+ "author": "claude",
+ "hypothesis": "Stocks closing within 1% of their 52-week high on 1.5x their usual turnover, near the day's high, in an uptrend and a healthy market, keep rising for two weeks (52-week-high anchoring).",
+ "mode": "cohort",
+ "filter": "dist_hi252 > -{near} and turn_ratio_5_60 > {vol} and close_loc_1 > 0.7 and ma50_over_ma200 > 0 and nifty_above_ma200 == 1 and not avoid",
+ "rank": "-turn_ratio_5_60",
+ "k": 10,
+ "hold": 10,
+ "stop_atr": null,
+ "params": {
+  "near": 0.01,
+  "vol": 1.5
+ }
+}
