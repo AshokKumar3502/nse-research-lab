@@ -33,7 +33,9 @@ permissions:
   actions: write
 
 concurrency:
-  group: daily-${{ inputs.phase || (contains(github.event.schedule, ' 3 ') && 'morning' || 'evening') }}
+  # one queue for both phases: a late morning trigger can run the evening job (cloud/__main__.py), and two
+  # evening jobs must never run side by side; the second one finds the done marker and stops
+  group: daily
   cancel-in-progress: false
 
 jobs:
