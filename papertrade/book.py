@@ -78,8 +78,16 @@ def entry_at(con, symbol, day):
     return (float(r[0]), float(r[1])) if r and r[2] else None
 
 
+def _previous():
+    """Trades from the last published book, by id: a recorded 9:30 entry must never change on a rebuild."""
+    try:
+        return {t["id"]: t for t in _load(DOCS).get("trades", [])}
+    except Exception:     # noqa: BLE001 - no book yet
+        return {}
+
+
 def swing_trades(con):
-    trades = []
+    trades, prev = [], _previous()
     for path in sorted(glob.glob(os.path.join(PICKS, "swing-*.json"))):
         doc = _load(path)
         session = datetime.date.fromisoformat(doc["session"])
@@ -100,12 +108,22 @@ def swing_trades(con):
             d0 = bars[0][0]
             # enter at 9:30 on the first session (the same time as intraday); the 9:15 open if no 1-minute data
             e = entry_at(con, p["symbol"], d0)
-            if e:
+            old = prev.get(t["id"]) or {}
+            if not e and old.get("entry") and old.get("entry_date") == str(d0) \
+                    and str(old.get("entry_at", "")).endswith(ENTRY_TIME):
+                # the 1-minute bars are gone (the cloud keeps a slim window): keep the 9:30 entry already recorded
+                o0, etime = float(old["entry"]), ENTRY_TIME
+                low1 = old.get("entry_low")
+                if low1 is None:     # books before entry_low: day 1 was checked on real 1-minute prices then
+                    stopped_d1 = old.get("status") == "closed" and old.get("exit_date") == str(d0)
+                    low1 = float(bars[0][3]) if stopped_d1 else max(float(bars[0][3]), t["sl"] + 0.01)
+            elif e:
                 o0, low1, etime = e[0], e[1], ENTRY_TIME
             else:
                 o0, low1, etime = float(bars[0][1]), float(bars[0][3]), "09:15"
             qty = int(STAKE // o0)
-            t.update(entry_date=str(d0), entry=round(o0, 2), qty=qty, status="open", entry_at="%s %s" % (d0, etime))
+            t.update(entry_date=str(d0), entry=round(o0, 2), qty=qty, status="open", entry_at="%s %s" % (d0, etime),
+                     entry_low=round(float(low1), 2))
             prev_val, sl = 0.0, t["sl"]
             if bars[0][5] != bars[-1][5]:
                 t["flag"] = "bonus/split during the hold: prices after it are on a new basis"
