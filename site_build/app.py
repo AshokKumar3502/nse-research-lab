@@ -219,6 +219,25 @@ padding:10px 14px;margin:4px 0 12px;font-size:13.5px;box-shadow:var(--shadow)}.u
 .lastupd{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);
 font-size:12.5px;color:var(--muted);padding:7px 16px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lastupd b{color:var(--text)}.lastupd .dot{display:inline-block;margin-right:6px;vertical-align:middle}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:absolute;left:-999px;top:8px;z-index:60;background:var(--brand);color:var(--brandtx);padding:8px 14px;border-radius:10px;font-weight:700}.skip:focus{left:8px}
+:focus-visible{outline:3px solid var(--brand2);outline-offset:2px;border-radius:6px}
+.seg{max-width:100%;overflow-x:auto;scrollbar-width:thin}.seg button{white-space:nowrap}.seg .n,.jump .n{font-size:11.5px;opacity:.75;margin-left:2px}
+.jump{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;margin:14px 0 0;scrollbar-width:thin}
+.jump button{flex:none;font:inherit;font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--text);cursor:pointer}
+.sec{scroll-margin-top:72px}.sec>h2{margin:22px 0 10px}
+.secbtn{all:unset;box-sizing:border-box;display:flex;gap:8px;align-items:flex-start;width:100%;cursor:pointer;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.secbtn:focus-visible{outline:3px solid var(--brand2);outline-offset:4px}
+.secbtn .chev{flex:none;width:10px;height:10px;margin-top:9px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+.secbtn[aria-expanded=true] .chev{transform:rotate(45deg)}
+.cnt{display:inline-block;font-size:12px;font-weight:800;color:var(--brand);background:color-mix(in srgb,var(--brand) 14%,transparent);border-radius:999px;padding:1px 8px;vertical-align:middle}
+details.why{padding:9px 14px}details.why summary{cursor:pointer}details.why[open] summary{margin-bottom:2px}
+.linkbtn{font:inherit;font-size:12.5px;font-weight:600;border:0;background:none;color:var(--brand);cursor:pointer;padding:4px 0}
+.more-btn{display:block;margin:16px auto 0;font:inherit;font-weight:600;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);cursor:pointer}
+select.sel{font:inherit;font-size:13px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+.sumline{font-size:13px;color:var(--muted);margin:0 2px 8px}
+h3.month{display:flex;justify-content:space-between;margin:22px 2px 0;font-size:15px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 .bnav{display:none}
 @media (max-width:760px){nav.tabs{display:none}
  .lastupd{bottom:calc(58px + env(safe-area-inset-bottom));font-size:11.5px}main{padding-bottom:130px}
@@ -227,12 +246,13 @@ font-size:12.5px;color:var(--muted);padding:7px 16px;text-align:center;white-spa
  .bnav button svg{width:22px;height:22px}.bnav button[aria-current=page]{color:var(--brand)}
  .cols{grid-template-columns:1fr}.brand small{display:none}.kpi .v{font-size:21px}}
 </style></head><body>
+<a class="skip" href="#main">Skip to content</a>
 <header class="top"><div class="bar">
 <a class="brand" href="#today"><img src="logo.svg" alt=""><span>NSE Lab<small id="upd"></small></span></a>
 <nav class="tabs" aria-label="Sections"></nav>
 <button class="iconbtn" id="theme" title="Theme" aria-label="Change theme"></button>
 </div></header>
-<main>
+<main id="main" tabindex="-1">
 <section class="view" id="v-today"></section>
 <section class="view" id="v-portfolio"></section>
 <section class="view" id="v-history"></section>
@@ -291,6 +311,46 @@ function show(v) {
 document.querySelectorAll("[data-v]").forEach(b => b.onclick = () => show(b.dataset.v));
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 
+// ---------- shared UI state (kept across the 3-minute live refresh)
+let COLLAPSED = new Set();
+try { COLLAPSED = new Set(JSON.parse(localStorage.getItem("collapsed") || "[]")); } catch (e) {}
+const PF = {kind: "all", sort: "pnl"};
+const HS = {kind: "all", q: "", status: "all", limit: 20};
+const KINDS = [["swing", "Swing"], ["results", "Results jump"], ["momentum", "Momentum"], ["intraday", "Intraday"], ["option", "Options"]];
+const MULTI = ["swing", "results", "momentum"];
+const kindPill = t => t.kind === "momentum" ? `<span class="pill p-info">Momentum</span>` : t.kind === "results" ? `<span class="pill p-info">Results</span>`
+  : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>`
+  : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
+const reduceMotion = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+document.addEventListener("click", e => {
+  if (e.target.closest(".skip")) { e.preventDefault(); $("#main").focus(); return; }
+  const s = e.target.closest("[data-sec]");
+  if (s) {
+    const id = s.dataset.sec, open = s.getAttribute("aria-expanded") !== "true";
+    s.setAttribute("aria-expanded", String(open));
+    const body = document.getElementById("body-" + id);
+    if (body) body.hidden = !open;
+    if (open) COLLAPSED.delete(id); else COLLAPSED.add(id);
+    try { localStorage.setItem("collapsed", JSON.stringify([...COLLAPSED])); } catch (err) {}
+    return;
+  }
+  const j = e.target.closest("[data-jump]");
+  if (j) {
+    const el = document.getElementById("sec-" + j.dataset.jump), b = el && el.querySelector("[data-sec]");
+    if (b && b.getAttribute("aria-expanded") !== "true") b.click();
+    if (el) { el.scrollIntoView({behavior: reduceMotion() ? "auto" : "smooth", block: "start"}); if (b) b.focus({preventScroll: true}); }
+    return;
+  }
+  const p = e.target.closest("[data-pos]");
+  if (p) {
+    const open = p.getAttribute("aria-expanded") !== "true";
+    p.setAttribute("aria-expanded", String(open));
+    p.textContent = open ? "Hide day-by-day P&L" : "Show day-by-day P&L";
+    const m = document.getElementById(p.getAttribute("aria-controls"));
+    if (m) m.hidden = !open;
+  }
+});
+
 function renderAll() {
 U = D.updated || {at: D.built, by: "", next: null};
 $("#upd").textContent = "Updated " + U.at;
@@ -305,9 +365,10 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
     <span class="chip">Breadth <b>${r.breadth_ma50_pct ?? "–"}%</b> above 50-day</span>
     <span class="chip">Swing exposure <b>${r.exposure != null ? Math.round(r.exposure * 100) + "%" : "–"}</b></span>
     <span class="chip">Prices through <b>${fd(D.last_session)}</b></span></div>`;
-  h += `<h2>Swing picks<span class="sub">Picked after the close of ${fdl(D.swing_session)} · bought at 9:30 next day · hold 10 sessions · ₹50,000 each</span></h2>`;
-  if (!sw.length) h += `<div class="empty">No swing picks today. ${esc(D.swing_status || "")}</div>`;
-  else h += `<div class="grid">` + sw.map(p => {
+  const secs = [];
+  const sec = (id, title, sub, count, body) => secs.push({id, title, sub, count, body});
+  const why = (lead, text) => `<details class="why banner warn"><summary><b>${lead}</b> <span class="muted">Why?</span></summary><p style="margin:6px 0 0">${text}</p></details>`;
+  const swingCard = p => {
     const val = p.status === "open" ? p.gross : p.net;
     const st = p.status === "pending" ? `<span class="pill p-info">Buy 9:30</span>` : p.status === "open" ? `<span class="pill p-warn">Day ${p.day}/10</span>` : `<span class="pill ${p.net >= 0 ? "p-up" : "p-dn"}">Closed</span>`;
     const res = p.status === "pending" ? "" : `<div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${p.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(val)}">${sgn(val)}</span> <span class="${cl(val)}" style="font-size:12.5px">${pct(val, p.entry * (p.qty_held ?? p.qty))}</span></span></div>`;
@@ -318,12 +379,11 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
            <div class="ind" style="margin-top:8px">Buy at 9:30 on the next trading day</div>`
         : `<div class="kv"><div>Entry${p.entry_at ? " · " + esc(when(p.entry_at)) : ""}<b>${inr(p.entry)}</b></div><div>${p.status === "closed" ? "Exit" : "Now"}${p.last_at ? " · " + esc(tm(p.last_at)) : ""}<b>${inr(p.last ?? (p.status === "closed" ? p.exit : null))}</b></div><div>Stop-loss<b class="dn">${inr(p.sl)}</b></div></div>
            <div class="ind" style="margin-top:6px">${p.qty_held ?? p.qty} shares${p.why ? " · " + esc(p.why) : ""}</div>`}${res}</div>`;
-  }).join("") + `</div>`;
+  };
+  sec("swing", "Swing picks", `Picked after the close of ${fdl(D.swing_session)} · bought at 9:30 next day · hold 10 sessions · ₹50,000 each`, sw.length,
+    sw.length ? `<div class="grid">` + sw.map(swingCard).join("") + `</div>` : `<div class="empty">No swing picks today. ${esc(D.swing_status || "")}</div>`);
   if (it) {
     const lo = (it.effect || {}).long || {};
-    h += `<h2>Intraday<span class="sub">${fdl(it.day)} · picked and bought at 9:30 · square off by 15:10 · ₹50,000 each</span></h2>
-      <div class="banner warn"><b>Paper only — no proven edge.</b> In the 2022–2026 test the long picks averaged ${lo.backtest_pct_per_day_on_exposure ?? "–"}% a day after charges;
-      at ${it.leverage}x leverage that is about <b>${lo.pct_per_day_on_capital ?? "–"}% of capital a day</b>. Leverage multiplies losses as well as gains.</div>`;
     const side = s => {
       const rows = it.rows.filter(x => x.side === s);
       const tot = rows.reduce((a, x) => a + ((x.status === "closed" ? x.net : x.gross) || 0), 0);
@@ -335,105 +395,149 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
         <div class="r ${cl(x.status === "closed" ? x.net : x.gross)}">${x.status === "pending" ? "waiting" : sgn(x.status === "closed" ? x.net : x.gross)}
           <div class="d" style="font-weight:600">${x.status === "open" ? "open" : x.status === "closed" ? "closed" : ""}</div></div></div>`).join("") : `<div class="li"><div class="d">${esc((it.blocked || {})[s] || "No picks")}</div></div>`) + `</div>`;
     };
-    h += `<div class="cols">${side("long")}${side("short")}</div>`;
+    sec("intraday", "Intraday", `${fdl(it.day)} · picked and bought at 9:30 · square off by 15:10 · ₹50,000 each`, (it.rows || []).length,
+      why("Paper only — no proven edge.", `In the 2022–2026 test the long picks averaged ${lo.backtest_pct_per_day_on_exposure ?? "–"}% a day after charges; at ${it.leverage}x leverage that is about ${lo.pct_per_day_on_capital ?? "–"}% of capital a day. Leverage multiplies losses as well as gains.`)
+      + `<div class="cols">${side("long")}${side("short")}</div>`);
   }
-  const ops = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date));
-  const op = ops[0];
-  h += `<h2>NIFTY option<span class="sub">9:15–9:45 range breakout · ATM call or put · SL = other side of the range · exit 15:15 · 1 lot · real option prices · paper only</span></h2>`;
-  h += `<div class="banner warn"><b>Unproven — paper only.</b> The 2022–2026 backtest looked strong, but buying a random call or put at 9:45 did just as well in the same price model,
-      and real NSE option prices showed the model flatters option buyers by about ₹160–330 a trade. On real prices a random buyer loses a little. This paper trade, on real prices, is the test.</div>`;
-  if (!op) h += `<div class="empty">No option trade yet. The rule watches NIFTY from 9:45 to 13:00 each trading day.</div>`;
+  const op = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date))[0];
+  let ob = why("Unproven — paper only.", "The 2022–2026 backtest looked strong, but buying a random call or put at 9:45 did just as well in the same price model, and real NSE option prices showed the model flatters option buyers by about ₹160–330 a trade. On real prices a random buyer loses a little. This paper trade, on real prices, is the test.");
+  if (!op) ob += `<div class="empty">No option trade yet. The rule watches NIFTY from 9:45 to 13:00 each trading day.</div>`;
   else { const v = op.status === "closed" ? op.net : op.gross;
-    h += `<div class="grid"><div class="card pick ${v >= 0 ? "win" : "loss"}"><div class="row"><div><span class="sym">${esc(op.symbol)}</span><div class="ind">${esc(op.industry)}</div></div>
+    ob += `<div class="grid"><div class="card pick ${v >= 0 ? "win" : "loss"}"><div class="row"><div><span class="sym">${esc(op.symbol)}</span><div class="ind">${esc(op.industry)}</div></div>
       <span class="pill ${op.status === "open" ? "p-warn" : v >= 0 ? "p-up" : "p-dn"}">${op.status === "open" ? "Open" : "Closed"}</span></div>
       <div class="kv"><div>Entry · ${esc(when(op.entry_at))}<b>${inr(op.entry)}</b></div><div>${op.status === "closed" ? "Exit" : "Now"} · ${esc(tm(op.last_at))}<b>${inr(op.last)}</b></div><div>SL<b class="dn" style="font-size:12.5px">${esc(op.sl_note)}</b></div></div>
       <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}</div>
       <div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${op.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:12.5px">${pct(v, op.entry * op.qty)}</span></span></div></div></div>`; }
-  const rj = (D.trades || []).filter(t => t.kind === "results" && t.status !== "closed").sort((a, b) => b.signal_date.localeCompare(a.signal_date) || (b.gross || 0) - (a.gross || 0));
-  h += `<h2>Results jump<span class="sub">results-day jump of 4%+ on 2x volume · buy 9:30 next day · hold 10 sessions · no stop-loss · ₹50,000 each · paper test</span></h2>`;
-  h += `<div class="banner warn"><b>Promising, not proven.</b> On 2017–2026 data it averaged +0.81% a trade after charges and beat random picks, but its t of 2.09 is below the 2.89 bar,
-      and a few big winners made all the profit. This paper trade on real prices is the test.</div>`;
-  if (!rj.length) h += `<div class="empty">No open results-jump trades. The rule fires in results season, about 75 times a year.</div>`;
-  else h += `<div class="list">` + rj.map(t => {
-    const m = (t.marks || []).slice(-1)[0] || {}, v = t.status === "open" ? t.gross : 0;
-    const det = t.status === "pending" ? "Results day " + esc(fdl(t.signal_date)) + " · buy at 9:30 next session"
-      : "In " + esc(when(t.entry_at || t.entry_date)) + " " + inr(t.entry) + " → now " + inr(t.last) + " · day " + (m.session || 1) + " of " + t.hold + " · " + t.qty + " sh";
-    return `<div class="li"><div><b>${esc(t.symbol)}</b><div class="d">${det}</div></div><span class="r ${cl(v)}">${t.status === "pending" ? `<span class="pill p-info">pending</span>` : sgn(v)}</span></div>`;
-  }).join("") + `</div>`;
-  const mo = (D.trades || []).filter(t => t.kind === "momentum" && t.status !== "closed").sort((a, b) => b.signal_date.localeCompare(a.signal_date) || (b.gross || 0) - (a.gross || 0));
-  h += `<h2>12-1 momentum<span class="sub">10 strongest 12-month gainers (skipping the last month) · rebalanced every 20 sessions · buy 9:30 · no stop-loss · ₹50,000 each · paper test</span></h2>`;
-  h += `<div class="banner warn"><b>Promising, not proven.</b> 2017–2026: +22% a year vs NIFTY +12%, but it fell up to 45% from a peak (NIFTY 30%) and lost 25% in 2018 and 16% in 2022.
-      A few big winners made the profit. This paper trade on real prices is the test.</div>`;
-  if (!mo.length) h += `<div class="empty">No open momentum trades yet. New picks come every 20 sessions.</div>`;
-  else h += `<div class="list">` + mo.map(t => {
-    const m = (t.marks || []).slice(-1)[0] || {}, v = t.status === "open" ? t.gross : 0;
-    const det = t.status === "pending" ? "Picked " + esc(fdl(t.signal_date)) + " · buy at 9:30 next session"
-      : "In " + esc(when(t.entry_at || t.entry_date)) + " " + inr(t.entry) + " → now " + inr(t.last) + " · day " + (m.session || 1) + " of " + t.hold + " · " + t.qty + " sh";
-    return `<div class="li"><div><b>${esc(t.symbol)}</b><div class="d">${det}</div></div><span class="r ${cl(v)}">${t.status === "pending" ? `<span class="pill p-info">pending</span>` : sgn(v)}</span></div>`;
-  }).join("") + `</div>`;
+  sec("option", "NIFTY option", "9:15–9:45 range breakout · ATM call or put · SL = other side of the range · exit 15:15 · 1 lot · paper only", op ? 1 : 0, ob);
+  const multi = (kind, label) => {
+    const ts = (D.trades || []).filter(t => t.kind === kind && t.status !== "closed").sort((a, b) => b.signal_date.localeCompare(a.signal_date) || (b.gross || 0) - (a.gross || 0));
+    return [ts.length, ts.length ? `<div class="list">` + ts.map(t => {
+      const m = (t.marks || []).slice(-1)[0] || {}, v = t.status === "open" ? t.gross : 0;
+      const det = t.status === "pending" ? label + esc(fdl(t.signal_date)) + " · buy at 9:30 next session"
+        : "In " + esc(when(t.entry_at || t.entry_date)) + " " + inr(t.entry) + " → now " + inr(t.last) + " · day " + (m.session || 1) + " of " + t.hold + " · " + t.qty + " sh";
+      return `<div class="li"><div><b>${esc(t.symbol)}</b><div class="d">${det}</div></div><span class="r ${cl(v)}">${t.status === "pending" ? `<span class="pill p-info">pending</span>` : sgn(v)}</span></div>`;
+    }).join("") + `</div>` : null];
+  };
+  const [nr, rb] = multi("results", "Results day ");
+  sec("results", "Results jump", "results-day jump of 4%+ on 2x volume · buy 9:30 next day · hold 10 sessions · no stop-loss · ₹50,000 each · paper test", nr,
+    why("Promising, not proven.", "On 2017–2026 data it averaged +0.81% a trade after charges and beat random picks, but its t of 2.09 is below the 2.89 bar, and a few big winners made all the profit. This paper trade on real prices is the test.")
+    + (rb || `<div class="empty">No open results-jump trades. The rule fires in results season, about 75 times a year.</div>`));
+  const [nm, mb] = multi("momentum", "Picked ");
+  sec("momentum", "12-1 momentum", "10 strongest 12-month gainers (skipping the last month) · rebalanced every 20 sessions · buy 9:30 · no stop-loss · ₹50,000 each · paper test", nm,
+    why("Promising, not proven.", "2017–2026: +22% a year vs NIFTY +12%, but it fell up to 45% from a peak (NIFTY 30%) and lost 25% in 2018 and 16% in 2022. A few big winners made the profit. This paper trade on real prices is the test.")
+    + (mb || `<div class="empty">No open momentum trades yet. New picks come every 20 sessions.</div>`));
+  h += `<nav class="jump" aria-label="Jump to a strategy">` + secs.map(s => `<button type="button" data-jump="${s.id}">${s.title} <span class="n">${s.count}</span></button>`).join("") + `</nav>`;
+  h += secs.map(s => {
+    const open = !COLLAPSED.has(s.id);
+    return `<section class="sec" id="sec-${s.id}" aria-labelledby="h-${s.id}"><h2 id="h-${s.id}"><button type="button" class="secbtn" data-sec="${s.id}" aria-expanded="${open}" aria-controls="body-${s.id}">
+      <span class="chev" aria-hidden="true"></span><span>${s.title} <span class="cnt">${s.count}</span><span class="sub">${s.sub}</span></span></button></h2>
+      <div id="body-${s.id}"${open ? "" : " hidden"}>${s.body}</div></section>`;
+  }).join("");
   $("#v-today").innerHTML = h;
 })();
 
 // ---------- PORTFOLIO
 T = D.trades || []; S = D.summary || {};
 (function () {
-  const open = T.filter(t => t.kind === "swing" && t.status === "open").sort((a, b) => b.gross - a.gross);
+  const openAll = T.filter(t => MULTI.includes(t.kind) && t.status === "open");
   const last = (D.daily || []).slice(-1)[0];
   const openCh = T.filter(t => t.status === "open").reduce((a, t) => a + (t.charges || 0), 0);
   const total = ((S.all || {}).realised || 0) + ((S.all || {}).unrealised || 0) - openCh;
   const closed = T.filter(t => t.status === "closed"), wins = closed.filter(t => t.net > 0);
   const k = [["Total P&L", sgn(total), cl(total), "closed + open, after charges"],
     ["Latest day", last ? sgn(last.net) : "–", last ? cl(last.net) : "", last ? fdl(last.date) : "no trades yet"],
-    ["Open swing", open.length + " stocks", "", "invested " + inr(Math.round(open.reduce((a, t) => a + t.entry * t.qty, 0)))],
+    ["Open positions", openAll.length + " stocks", "", "invested " + inr(Math.round(openAll.reduce((a, t) => a + t.entry * t.qty, 0)))],
     ["Win rate", closed.length ? Math.round(wins.length / closed.length * 100) + "%" : "–", "", closed.length + " closed trades"]];
   let h = `<h2>Portfolio<span class="sub">Paper trades at ₹50,000 a stock, after Zerodha charges</span></h2><div class="kpis">` +
     k.map(([l, v, c, s]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div><div class="s">${esc(s)}</div></div>`).join("") + `</div>`;
-  h += `<h2>Open swing positions<span class="sub">Tap a stock for its day-by-day P&L</span></h2>`;
-  if (!open.length) {
-    const pend = T.filter(t => t.kind === "swing" && t.status === "pending");
-    h += `<div class="empty">${pend.length ? pend.length + " stocks will be bought at 9:30 on the next trading day: " + pend.map(t => esc(t.symbol)).join(", ") : "No open positions."}</div>`;
-  } else h += `<div class="grid">` + open.map(t => {
-    const m = t.marks[t.marks.length - 1] || {};
-    return `<div class="card pick pos ${t.gross >= 0 ? "win" : "loss"}">
-      <div class="row"><div><span class="sym">${esc(t.symbol)}</span><div class="ind">Bought ${esc(when(t.entry_at || t.entry_date))} at ${inr(t.entry)} · ${t.qty} shares</div></div>
-      <div style="text-align:right"><div class="pnl ${cl(t.gross)}">${sgn(t.gross)}</div><div class="${cl(t.gross)}" style="font-size:12.5px">${pct(t.gross, t.entry * t.qty)}</div></div></div>
-      <div class="kv"><div>Now · ${esc(tm(t.last_at) || m.at || "")}<b>${inr(m.mark)}</b></div><div>Today<b class="${cl(m.day_pnl)}">${sgn(m.day_pnl)}</b></div><div>Stop-loss<b class="dn">${inr(t.sl)}</b></div></div>
-      <div class="prog" title="Day ${m.session} of ${t.hold}"><i style="width:${(m.session / t.hold * 100).toFixed(0)}%"></i></div>
-      <div class="ind" style="margin-top:4px">Day ${m.session} of ${t.hold}</div>
-      <div class="more"><table><thead><tr><th>Day</th><th>Date</th><th class="r">Close</th><th class="r">Day P&L</th><th class="r">Total</th></tr></thead><tbody>${
-        t.marks.map(x => `<tr><td>${x.session}</td><td>${fd(x.date)}</td><td class="r">${inr(x.mark)}</td><td class="r ${cl(x.day_pnl)}">${sgn(x.day_pnl)}</td><td class="r ${cl(x.total_pnl)}">${sgn(x.total_pnl)}</td></tr>`).join("")}</tbody></table></div></div>`;
-  }).join("") + `</div>`;
+  const kinds = [["all", "All"], ...KINDS.filter(x => MULTI.includes(x[0]))];
+  h += `<h2 id="h-open">Open positions<span class="sub">Multi-day paper trades · open a card for its day-by-day P&L</span></h2>
+    <div class="tools"><div class="seg" role="group" aria-label="Show strategy">${kinds.map(([kk, l]) => `<button type="button" data-pk="${kk}" aria-pressed="${PF.kind === kk}">${l} <span class="n">${kk === "all" ? openAll.length : openAll.filter(t => t.kind === kk).length}</span></button>`).join("")}</div>
+    <label class="sr" for="psort">Sort open positions</label><select id="psort" class="sel">${[["pnl", "P&L: high to low"], ["pnl_asc", "P&L: low to high"], ["pct", "% change"], ["day", "Days held"], ["name", "Name A–Z"]].map(([kk, l]) => `<option value="${kk}"${PF.sort === kk ? " selected" : ""}>${l}</option>`).join("")}</select></div>
+    <p class="sumline" id="psum" aria-live="polite"></p><div id="pgrid"></div>`;
   $("#v-portfolio").innerHTML = h;
-  document.querySelectorAll(".pos").forEach(c => c.onclick = () => c.classList.toggle("open"));
+  const day = t => ((t.marks || []).slice(-1)[0] || {}).session || 0;
+  const draw = () => {
+    let rows = openAll.filter(t => PF.kind === "all" || t.kind === PF.kind);
+    const key = {pnl: t => -t.gross, pnl_asc: t => t.gross, pct: t => -t.gross / (t.entry * t.qty), day: t => -day(t), name: t => t.symbol}[PF.sort];
+    rows = rows.slice().sort((a, b) => { const x = key(a), y = key(b); return typeof x === "string" ? x.localeCompare(y) : x - y; });
+    const tot = rows.reduce((a, t) => a + t.gross, 0);
+    $("#psum").textContent = rows.length + " open " + (rows.length === 1 ? "position" : "positions") + " · P&L now " + sgn(tot);
+    if (!rows.length) {
+      const pend = T.filter(t => MULTI.includes(t.kind) && (PF.kind === "all" || t.kind === PF.kind) && t.status === "pending");
+      $("#pgrid").innerHTML = `<div class="empty">${pend.length ? pend.length + " stocks will be bought at 9:30 on the next trading day: " + pend.map(t => esc(t.symbol)).join(", ") : "No open positions."}</div>`;
+      return;
+    }
+    $("#pgrid").innerHTML = `<div class="grid">` + rows.map((t, i) => {
+      const m = t.marks[t.marks.length - 1] || {}, id = "pm-" + i;
+      return `<div class="card pick ${t.gross >= 0 ? "win" : "loss"}">
+        <div class="row"><div>${kindPill(t)} <span class="sym">${esc(t.symbol)}</span><div class="ind">Bought ${esc(when(t.entry_at || t.entry_date))} at ${inr(t.entry)} · ${t.qty} shares</div></div>
+        <div style="text-align:right"><div class="pnl ${cl(t.gross)}">${sgn(t.gross)}</div><div class="${cl(t.gross)}" style="font-size:12.5px">${pct(t.gross, t.entry * t.qty)}</div></div></div>
+        <div class="kv"><div>Now · ${esc(tm(t.last_at) || m.at || "")}<b>${inr(m.mark)}</b></div><div>Today<b class="${cl(m.day_pnl)}">${sgn(m.day_pnl)}</b></div><div>Stop-loss<b class="dn">${t.sl != null ? inr(t.sl) : "none"}</b></div></div>
+        <div class="prog" role="progressbar" aria-label="Days held" aria-valuemin="0" aria-valuemax="${t.hold}" aria-valuenow="${m.session}"><i style="width:${(m.session / t.hold * 100).toFixed(0)}%"></i></div>
+        <div class="row" style="margin-top:4px"><span class="ind">Day ${m.session} of ${t.hold}</span>
+        <button type="button" class="linkbtn" data-pos aria-expanded="false" aria-controls="${id}">Show day-by-day P&L</button></div>
+        <div class="more" id="${id}" hidden><table><caption class="sr">${esc(t.symbol)} day-by-day P&L</caption><thead><tr><th scope="col">Day</th><th scope="col">Date</th><th scope="col" class="r">Close</th><th scope="col" class="r">Day P&L</th><th scope="col" class="r">Total</th></tr></thead><tbody>${
+          t.marks.map(x => `<tr><td>${x.session}</td><td>${fd(x.date)}</td><td class="r">${inr(x.mark)}</td><td class="r ${cl(x.day_pnl)}">${sgn(x.day_pnl)}</td><td class="r ${cl(x.total_pnl)}">${sgn(x.total_pnl)}</td></tr>`).join("")}</tbody></table></div></div>`;
+    }).join("") + `</div>`;
+  };
+  $("#v-portfolio").querySelectorAll("[data-pk]").forEach(b => b.onclick = () => {
+    PF.kind = b.dataset.pk; $("#v-portfolio").querySelectorAll("[data-pk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); draw(); });
+  $("#psort").onchange = e => { PF.sort = e.target.value; draw(); };
+  draw();
 })();
 
 // ---------- HISTORY
 (function () {
-  let kind = "all", q = "";
   const box = $("#v-history");
-  box.innerHTML = `<h2>History<span class="sub">Every pick ever published, with its result</span></h2>
-    <div class="tools"><div class="seg" role="group" aria-label="Filter">
-    ${[["all", "All"], ["swing", "Swing"], ["intraday", "Intraday"], ["option", "Options"], ["results", "Results jump"], ["momentum", "Momentum"]].map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === "all"}">${l}</button>`).join("")}</div>
-    <input class="search" type="search" placeholder="Search a stock" aria-label="Search a stock"></div><div id="hl"></div>`;
+  const count = kk => kk === "all" ? T.length : T.filter(t => t.kind === kk).length;
+  const statuses = [["all", "All statuses"], ["open", "Open"], ["closed", "Closed"], ["won", "Closed: won"], ["lost", "Closed: lost"], ["pending", "Pending"]];
+  if (!box.querySelector("#hl")) {
+    box.innerHTML = `<h2>History<span class="sub">Every pick ever published, with its result</span></h2>
+      <div class="tools"><div class="seg" role="group" aria-label="Show strategy">${[["all", "All"], ...KINDS].map(([kk, l]) => `<button type="button" data-k="${kk}" aria-pressed="${HS.kind === kk}">${l} <span class="n"></span></button>`).join("")}</div></div>
+      <div class="tools"><label class="sr" for="hq">Search a stock</label><input id="hq" class="search" type="search" placeholder="Search a stock" autocomplete="off" spellcheck="false">
+      <label class="sr" for="hs">Status</label><select id="hs" class="sel">${statuses.map(([kk, l]) => `<option value="${kk}">${l}</option>`).join("")}</select></div>
+      <p class="sumline" id="hsum" aria-live="polite" tabindex="-1"></p><div id="hl"></div>`;
+    box.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
+      HS.kind = b.dataset.k; HS.limit = 20; box.querySelectorAll("[data-k]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); draw(); });
+    let timer;
+    $("#hq").oninput = e => { clearTimeout(timer); timer = setTimeout(() => { HS.q = e.target.value.trim().toUpperCase(); HS.limit = 20; draw(); }, 150); };
+    $("#hs").onchange = e => { HS.status = e.target.value; HS.limit = 20; draw(); };
+  }
   function draw() {
-    const rows = T.filter(t => (kind === "all" || t.kind === kind) && (!q || t.symbol.includes(q)));
+    box.querySelectorAll("[data-k]").forEach(b => { b.querySelector(".n").textContent = count(b.dataset.k); });
+    const okStatus = t => HS.status === "all" || t.status === HS.status || (HS.status === "won" && t.status === "closed" && t.net > 0)
+      || (HS.status === "lost" && t.status === "closed" && t.net <= 0);
+    const rows = T.filter(t => (HS.kind === "all" || t.kind === HS.kind) && (!HS.q || t.symbol.includes(HS.q)) && okStatus(t));
+    const cls = rows.filter(t => t.status === "closed"), won = cls.filter(t => t.net > 0).length, net = cls.reduce((a, t) => a + t.net, 0);
+    $("#hsum").textContent = rows.length + " trades · " + cls.length + " closed" + (cls.length ? " · " + Math.round(won / cls.length * 100) + "% won · net " + sgn(net) : "");
     const days = [...new Set(rows.map(t => t.signal_date))].sort().reverse();
-    $("#hl").innerHTML = days.length ? days.map(d => {
+    const shown = days.slice(0, HS.limit);
+    let lastMonth = "", h = "";
+    shown.forEach(d => {
+      const mon = String(d).slice(0, 7);
+      if (mon !== lastMonth) {
+        const ms = rows.filter(t => String(t.signal_date).startsWith(mon) && t.status === "closed").reduce((a, t) => a + t.net, 0);
+        h += `<h3 class="month"><span>${new Date(mon + "-01T00:00:00").toLocaleDateString("en-IN", {month: "long", year: "numeric"})}</span><span class="${cl(ms)} num">${sgn(ms)}</span></h3>`;
+        lastMonth = mon;
+      }
       const ts = rows.filter(t => t.signal_date === d);
       const tot = ts.filter(t => t.status === "closed").reduce((a, t) => a + t.net, 0);
-      return `<div class="dayhead"><span>${fdl(d)}</span><span class="${cl(tot)} num">${ts.some(t => t.status === "closed") ? sgn(tot) : ""}</span></div>
+      h += `<div class="dayhead"><span>${fdl(d)}</span><span class="${cl(tot)} num">${ts.some(t => t.status === "closed") ? sgn(tot) : ""}</span></div>
         <div class="list">` + ts.map(t => {
           const st = t.status === "closed" ? `<span class="r ${cl(t.net)}">${sgn(t.net)}</span>` :
             t.status === "open" ? `<span class="r ${cl(t.gross)}">${sgn(t.gross)} <span class="pill p-warn">open</span></span>` : `<span class="r"><span class="pill p-info">pending</span></span>`;
-          const kd = t.kind === "momentum" ? `<span class="pill p-info">Momentum</span>` : t.kind === "results" ? `<span class="pill p-info">Results</span>` : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>` : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
-          const det = t.entry == null ? "Waiting for 9:30 entry · SL " + inr(t.sl) :
+          const det = t.entry == null ? "Waiting for 9:30 entry" + (t.sl != null ? " · SL " + inr(t.sl) : "") :
             `In ${esc(when(t.entry_at || t.entry_date))} ${inr(t.entry)} → ${t.status === "closed" ? "out" : "now"} ${esc(when(t.last_at))} ${inr(t.last ?? t.exit)} · ${t.qty} sh${t.exit_reason ? " · " + esc(t.exit_reason) : ""}`;
-          return `<div class="li"><div>${kd} <span class="s">${esc(t.symbol)}</span><div class="d">${det}</div></div>${st}</div>`;
+          return `<div class="li"><div>${kindPill(t)} <span class="s">${esc(t.symbol)}</span><div class="d">${det}</div></div>${st}</div>`;
         }).join("") + `</div>`;
-    }).join("") : `<div class="empty">No trades match.</div>`;
+    });
+    if (!days.length) h = `<div class="empty">No trades match.</div>`;
+    else if (days.length > HS.limit) h += `<button type="button" class="more-btn" id="hmore">Show older days (${days.length - HS.limit} more)</button>`;
+    $("#hl").innerHTML = h;
+    const more = $("#hmore");
+    if (more) more.onclick = () => { HS.limit += 20; draw(); const n = $("#hmore"); if (n) n.focus(); else $("#hsum").focus(); };
   }
-  box.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { kind = b.dataset.k; box.querySelectorAll("[data-k]").forEach(x => x.setAttribute("aria-pressed", x === b)); draw(); });
-  box.querySelector("input").oninput = e => { q = e.target.value.trim().toUpperCase(); draw(); };
   draw();
 })();
 
