@@ -86,9 +86,10 @@ def _previous():
         return {}
 
 
-def swing_trades(con):
+def swing_trades(con, pattern="swing-*.json", kind="swing", tag="S"):
+    """Multi-session long trades from pick files: the swing model (S-) and the results-jump paper test (R-)."""
     trades, prev = [], _previous()
-    for path in sorted(glob.glob(os.path.join(PICKS, "swing-*.json"))):
+    for path in sorted(glob.glob(os.path.join(PICKS, pattern))):
         doc = _load(path)
         session = datetime.date.fromisoformat(doc["session"])
         for rank, p in enumerate(doc.get("picks", []), 1):
@@ -97,9 +98,9 @@ def swing_trades(con):
                                   WHERE sym_id = ? AND date > ? ORDER BY date LIMIT ?""",
                                [p["symbol"], session, hold]).fetchall()
             bars = bars + live_day(con, p["symbol"], session, bars, hold)
-            t = {"id": "S-%s-%s" % (session, p["symbol"]), "kind": "swing", "side": "long", "symbol": p["symbol"],
+            t = {"id": "%s-%s-%s" % (tag, session, p["symbol"]), "kind": kind, "side": "long", "symbol": p["symbol"],
                  "industry": p.get("industry"), "rank": rank, "signal_date": str(session), "hold": hold,
-                 "sl": float(p["stop"]), "ref_close": float(p["ref_close"]), "status": "pending",
+                 "sl": float(p["stop"]) if p.get("stop") is not None else None, "ref_close": float(p["ref_close"]), "status": "pending",
                  "entry_date": None, "entry": None, "qty": 0, "exit_date": None, "exit": None, "exit_reason": None,
                  "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": None}
             if not bars:
@@ -116,7 +117,7 @@ def swing_trades(con):
                 low1 = old.get("entry_low")
                 if low1 is None:     # books before entry_low: day 1 was checked on real 1-minute prices then
                     stopped_d1 = old.get("status") == "closed" and old.get("exit_date") == str(d0)
-                    low1 = float(bars[0][3]) if stopped_d1 else max(float(bars[0][3]), t["sl"] + 0.01)
+                    low1 = float(bars[0][3]) if stopped_d1 else max(float(bars[0][3]), (t["sl"] or 0.0) + 0.01)
             elif e:
                 o0, low1, etime = e[0], e[1], ENTRY_TIME
             else:
@@ -124,7 +125,7 @@ def swing_trades(con):
             qty = int(STAKE // o0)
             t.update(entry_date=str(d0), entry=round(o0, 2), qty=qty, status="open", entry_at="%s %s" % (d0, etime),
                      entry_low=round(float(low1), 2))
-            prev_val, sl = 0.0, t["sl"]
+            prev_val, sl = 0.0, (t["sl"] if t["sl"] is not None else float("-inf"))
             if bars[0][5] != bars[-1][5]:
                 t["flag"] = "bonus/split during the hold: prices after it are on a new basis"
             for k, row in enumerate(bars, 1):
@@ -216,18 +217,18 @@ def daily(trades):
     rows = {}
     for t in trades:
         for m in t["marks"]:
-            r = rows.setdefault(m["date"], {"date": m["date"], "swing": 0.0, "intraday": 0.0, "option": 0.0, "charges": 0.0})
+            r = rows.setdefault(m["date"], {"date": m["date"], "swing": 0.0, "intraday": 0.0, "option": 0.0, "results": 0.0, "charges": 0.0})
             r[t["kind"]] += m["day_pnl"]
         if t["status"] == "closed":
-            r = rows.setdefault(t["exit_date"], {"date": t["exit_date"], "swing": 0.0, "intraday": 0.0, "option": 0.0, "charges": 0.0})
+            r = rows.setdefault(t["exit_date"], {"date": t["exit_date"], "swing": 0.0, "intraday": 0.0, "option": 0.0, "results": 0.0, "charges": 0.0})
             r["charges"] += t["charges"]
     out = sorted(rows.values(), key=lambda r: r["date"])
     cum = 0.0
     for r in out:
-        r["net"] = round(r["swing"] + r["intraday"] + r.get("option", 0.0) - r["charges"], 2)
+        r["net"] = round(r["swing"] + r["intraday"] + r.get("option", 0.0) + r.get("results", 0.0) - r["charges"], 2)
         cum += r["net"]
         r["cumulative"] = round(cum, 2)
-        for k in ("swing", "intraday", "option", "charges"):
+        for k in ("swing", "intraday", "option", "results", "charges"):
             r[k] = round(r[k], 2)
     return out
 
@@ -246,11 +247,12 @@ def summary(trades):
     return {"swing": block([t for t in trades if t["kind"] == "swing"]),
             "intraday": block([t for t in trades if t["kind"] == "intraday"]),
             "option": block([t for t in trades if t["kind"] == "option"]),
+            "results": block([t for t in trades if t["kind"] == "results"]),
             "all": block(trades)}
 
 
 def update(con, log=print):
-    trades = swing_trades(con) + intraday_trades(con)
+    trades = swing_trades(con) + swing_trades(con, "rjump-*.json", "results", "R") + intraday_trades(con)
     try:
         from optionlab import nifty_orb
         trades += nifty_orb.trades()
