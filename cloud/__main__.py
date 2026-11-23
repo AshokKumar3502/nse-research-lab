@@ -372,6 +372,13 @@ def main(argv):
     cmd = argv[0] if argv else ""
     force = "--force" in argv
     if cmd in ("morning", "evening"):
+        now = datetime.datetime.now(config.IST)
+        if cmd == "morning" and now.time() >= datetime.time(15, 30):
+            # GitHub can start the 08:50 schedule hours late; by now the useful job is the evening one
+            # (its own done marker stops it running twice)
+            log("morning trigger arrived at %s IST, after the close: running the evening job instead"
+                % now.strftime("%H:%M"))
+            cmd = "evening"
         if session_day(cmd).weekday() >= 5 and not force:
             log("weekend: nothing to do")
             return 0
