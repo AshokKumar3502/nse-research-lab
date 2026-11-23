@@ -360,6 +360,17 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
       : "In " + esc(when(t.entry_at || t.entry_date)) + " " + inr(t.entry) + " → now " + inr(t.last) + " · day " + (m.session || 1) + " of " + t.hold + " · " + t.qty + " sh";
     return `<div class="li"><div><b>${esc(t.symbol)}</b><div class="d">${det}</div></div><span class="r ${cl(v)}">${t.status === "pending" ? `<span class="pill p-info">pending</span>` : sgn(v)}</span></div>`;
   }).join("") + `</div>`;
+  const mo = (D.trades || []).filter(t => t.kind === "momentum" && t.status !== "closed").sort((a, b) => b.signal_date.localeCompare(a.signal_date) || (b.gross || 0) - (a.gross || 0));
+  h += `<h2>12-1 momentum<span class="sub">10 strongest 12-month gainers (skipping the last month) · rebalanced every 20 sessions · buy 9:30 · no stop-loss · ₹50,000 each · paper test</span></h2>`;
+  h += `<div class="banner warn"><b>Promising, not proven.</b> 2017–2026: +22% a year vs NIFTY +12%, but it fell up to 45% from a peak (NIFTY 30%) and lost 25% in 2018 and 16% in 2022.
+      A few big winners made the profit. This paper trade on real prices is the test.</div>`;
+  if (!mo.length) h += `<div class="empty">No open momentum trades yet. New picks come every 20 sessions.</div>`;
+  else h += `<div class="list">` + mo.map(t => {
+    const m = (t.marks || []).slice(-1)[0] || {}, v = t.status === "open" ? t.gross : 0;
+    const det = t.status === "pending" ? "Picked " + esc(fdl(t.signal_date)) + " · buy at 9:30 next session"
+      : "In " + esc(when(t.entry_at || t.entry_date)) + " " + inr(t.entry) + " → now " + inr(t.last) + " · day " + (m.session || 1) + " of " + t.hold + " · " + t.qty + " sh";
+    return `<div class="li"><div><b>${esc(t.symbol)}</b><div class="d">${det}</div></div><span class="r ${cl(v)}">${t.status === "pending" ? `<span class="pill p-info">pending</span>` : sgn(v)}</span></div>`;
+  }).join("") + `</div>`;
   $("#v-today").innerHTML = h;
 })();
 
@@ -402,7 +413,7 @@ T = D.trades || []; S = D.summary || {};
   const box = $("#v-history");
   box.innerHTML = `<h2>History<span class="sub">Every pick ever published, with its result</span></h2>
     <div class="tools"><div class="seg" role="group" aria-label="Filter">
-    ${[["all", "All"], ["swing", "Swing"], ["intraday", "Intraday"], ["option", "Options"], ["results", "Results jump"]].map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === "all"}">${l}</button>`).join("")}</div>
+    ${[["all", "All"], ["swing", "Swing"], ["intraday", "Intraday"], ["option", "Options"], ["results", "Results jump"], ["momentum", "Momentum"]].map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === "all"}">${l}</button>`).join("")}</div>
     <input class="search" type="search" placeholder="Search a stock" aria-label="Search a stock"></div><div id="hl"></div>`;
   function draw() {
     const rows = T.filter(t => (kind === "all" || t.kind === kind) && (!q || t.symbol.includes(q)));
@@ -414,7 +425,7 @@ T = D.trades || []; S = D.summary || {};
         <div class="list">` + ts.map(t => {
           const st = t.status === "closed" ? `<span class="r ${cl(t.net)}">${sgn(t.net)}</span>` :
             t.status === "open" ? `<span class="r ${cl(t.gross)}">${sgn(t.gross)} <span class="pill p-warn">open</span></span>` : `<span class="r"><span class="pill p-info">pending</span></span>`;
-          const kd = t.kind === "results" ? `<span class="pill p-info">Results</span>` : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>` : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
+          const kd = t.kind === "momentum" ? `<span class="pill p-info">Momentum</span>` : t.kind === "results" ? `<span class="pill p-info">Results</span>` : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>` : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
           const det = t.entry == null ? "Waiting for 9:30 entry · SL " + inr(t.sl) :
             `In ${esc(when(t.entry_at || t.entry_date))} ${inr(t.entry)} → ${t.status === "closed" ? "out" : "now"} ${esc(when(t.last_at))} ${inr(t.last ?? t.exit)} · ${t.qty} sh${t.exit_reason ? " · " + esc(t.exit_reason) : ""}`;
           return `<div class="li"><div>${kd} <span class="s">${esc(t.symbol)}</span><div class="d">${det}</div></div>${st}</div>`;
@@ -448,7 +459,7 @@ T = D.trades || []; S = D.summary || {};
   const closed = T.filter(t => t.status === "closed");
   const grp = (name, f) => { const ts = closed.filter(f), w = ts.filter(t => t.net > 0).length, tot = ts.reduce((a, t) => a + t.net, 0);
     return [name, ts.length, ts.length ? Math.round(w / ts.length * 100) + "%" : "–", ts.length ? sgn(tot / ts.length) : "–", tot, ts.length]; };
-  const g = [grp("Swing", t => t.kind === "swing"), grp("Intraday — buy", t => t.kind === "intraday" && t.side === "long"), grp("Intraday — sell", t => t.kind === "intraday" && t.side === "short"), grp("NIFTY option (1 lot)", t => t.kind === "option"), grp("Results jump (paper test)", t => t.kind === "results")];
+  const g = [grp("Swing", t => t.kind === "swing"), grp("Intraday — buy", t => t.kind === "intraday" && t.side === "long"), grp("Intraday — sell", t => t.kind === "intraday" && t.side === "short"), grp("NIFTY option (1 lot)", t => t.kind === "option"), grp("Results jump (paper test)", t => t.kind === "results"), grp("12-1 momentum (paper test)", t => t.kind === "momentum")];
   h += `<h2>By strategy</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
     g.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td class="r">${r[2]}</td><td class="r">${r[3]}</td><td class="r ${cl(r[4])}"><b>${r[5] ? sgn(r[4]) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;
   const bySym = {}; closed.forEach(t => bySym[t.symbol] = (bySym[t.symbol] || 0) + t.net);
@@ -465,7 +476,9 @@ T = D.trades || []; S = D.summary || {};
     <div class="card"><div class="row"><b>NIFTY option · 9:45 breakout</b>${vp("UNPROVEN")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Did no better than a
     random call or put in the 2022–2026 price model, and real option prices show that model flatters buyers by ₹160–330 a trade. Paper-traded on real prices to find out.</p></div>
     <div class="card"><div class="row"><b>Results jump · 10 sessions</b>${vp("PROMISING")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">+0.81% a trade after
-    charges on 2017–2026 (798 trades, 8 of 10 years positive, beat random picks), but t 2.09 is below the 2.89 bar and a few big winners made all the profit. Paper-traded to find out.</p></div></div>
+    charges on 2017–2026 (798 trades, 8 of 10 years positive, beat random picks), but t 2.09 is below the 2.89 bar and a few big winners made all the profit. Paper-traded to find out.</p></div>
+    <div class="card"><div class="row"><b>12-1 momentum · 20 sessions</b>${vp("PROMISING")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">2017–2026: +22% a year vs NIFTY +12%,
+    but a worst fall of −45% (NIFTY −30%), losing years 2018 and 2022, and t 2.60 below the 3.01 bar. The best 5% of trades made the profit. Paper-traded to find out.</p></div></div>
     <p><a href="research.html" style="color:var(--brand)">Full research results →</a></p>`;
   $("#v-stats").innerHTML = h;
 })();

@@ -352,6 +352,8 @@ def evening():
         _step("swing picks", lambda: scan.run(db.connect(read_only=True), log=log))
         _step("results-jump picks (paper test)",
               lambda: __import__("papertrade.results_jump", fromlist=["run"]).run(db.connect(read_only=True), log=log))
+        _step("momentum picks (paper test)",
+              lambda: __import__("papertrade.momentum", fromlist=["run"]).run(db.connect(read_only=True), log=log))
     else:
         log("data checks failed: no swing picks tonight (the monitor halts publishing)")
     _step("monitor", lambda: monitor_run(log=log))
