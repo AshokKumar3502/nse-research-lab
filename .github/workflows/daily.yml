@@ -102,3 +102,6 @@ jobs:
           path: docs
       - id: deploy
         uses: actions/deploy-pages@v4
+        # a GitHub Pages hiccup must not mark the day's job as failed: picks and paper trades are already
+        # committed above, and the next run publishes the site again
+        continue-on-error: true
