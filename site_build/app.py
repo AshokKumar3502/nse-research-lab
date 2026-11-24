@@ -54,7 +54,7 @@ def updated_by():
                 slot = t.replace(hour=hh, minute=mm, second=0, microsecond=0)
                 if slot > now:
                     when = ("today" if slot.date() == now.date() else slot.strftime("%a %d %b"))
-                    return dict(base, next="%s around %s %s" % (label.capitalize(), slot.strftime("%H:%M"), when))
+                    return dict(base, next="%s around %s %s" % (label[0].upper() + label[1:],slot.strftime("%H:%M"), when))
         t = (t + datetime.timedelta(days=1)).replace(hour=0, minute=0)
     return dict(base, next=None)
 
