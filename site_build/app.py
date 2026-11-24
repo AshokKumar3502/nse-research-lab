@@ -146,7 +146,7 @@ def build():
     notify = {"built": data["built"], "messages": msgs}
     with open(os.path.join(DOCS, "data", "notify.json"), "w", encoding="utf-8") as fh:
         json.dump(notify, fh)
-    manifest = {"name": "NSE Lab", "short_name": "NSE Lab", "start_url": "./", "scope": "./", "display": "standalone",
+    manifest = {"name": "NIFTY Option Lab", "short_name": "NIFTY Options", "start_url": "./", "scope": "./", "display": "standalone",
                 "background_color": "#0b1220", "theme_color": "#0f766e",
                 "icons": [{"src": "logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]}
     with open(os.path.join(DOCS, "manifest.webmanifest"), "w", encoding="utf-8") as fh:
@@ -159,7 +159,7 @@ def build():
 
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>NSE Lab</title><meta name="description" content="NIFTY 9:45 range-breakout option rule, paper traded every day on real option prices, with every result kept.">
+<title>NIFTY Option Lab</title><meta name="description" content="NIFTY 9:45 range-breakout option rule, paper traded every day on real option prices, with every result kept.">
 <meta name="theme-color" content="#0f766e"><link rel="icon" href="logo.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem("theme");if(t&&t!=="system")document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
@@ -259,7 +259,7 @@ h3.month{display:flex;justify-content:space-between;margin:22px 2px 0;font-size:
 </style></head><body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="top"><div class="bar">
-<a class="brand" href="#today"><img src="logo.svg" alt=""><span>NSE Lab<small id="upd"></small></span></a>
+<a class="brand" href="#today"><img src="logo.svg" alt=""><span>NIFTY Option Lab<small id="upd"></small></span></a>
 <nav class="tabs" aria-label="Sections"></nav>
 <button class="iconbtn" id="theme" title="Theme" aria-label="Change theme"></button>
 </div></header>
@@ -268,9 +268,8 @@ h3.month{display:flex;justify-content:space-between;margin:22px 2px 0;font-size:
 <section class="view" id="v-portfolio"></section>
 <section class="view" id="v-history"></section>
 <section class="view" id="v-stats"></section>
-<footer>Paper trading at ₹50,000 a stock on real NSE prices, after Zerodha charges. For education and research only; not
-investment advice, and the author is not a SEBI-registered adviser. Nothing here places orders.
-<a href="research.html">How each method was tested →</a> · <a href="tracker.html">Classic tracker</a></footer>
+<footer>Paper trading 1 lot of NIFTY options a day on real NSE option prices, after Zerodha charges. For education and research only; not
+investment advice, and the author is not a SEBI-registered adviser. Nothing here places orders.</footer>
 </main>
 <div class="lastupd" id="lastupd" role="status"></div>
 <nav class="bnav" aria-label="Sections"></nav>
@@ -531,7 +530,7 @@ ODAILY = (() => {
   if (!box.querySelector("#hl")) {
     box.innerHTML = `<h2>History<span class="sub">Every pick ever published, with its result</span></h2>
       <div class="tools"><div class="seg" role="group" aria-label="Show strategy">${[["all", "All"], ...KINDS].map(([kk, l]) => `<button type="button" data-k="${kk}" aria-pressed="${HS.kind === kk}">${l} <span class="n"></span></button>`).join("")}</div></div>
-      <div class="tools"><label class="sr" for="hq">Search a stock</label><input id="hq" class="search" type="search" placeholder="Search a stock" autocomplete="off" spellcheck="false">
+      <div class="tools"><label class="sr" for="hq">Search a strike</label><input id="hq" class="search" type="search" placeholder="Search a strike, e.g. 25500 CE" autocomplete="off" spellcheck="false">
       <label class="sr" for="hs">Status</label><select id="hs" class="sel">${statuses.map(([kk, l]) => `<option value="${kk}">${l}</option>`).join("")}</select></div>
       <p class="sumline" id="hsum" aria-live="polite" tabindex="-1"></p><div id="hl"></div>`;
     box.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
@@ -612,8 +611,7 @@ ODAILY = (() => {
     <div class="card"><div class="row"><b>2022–2026 backtest</b>${vp("UNPROVEN")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Did no better than buying a
     random call or put in the option price model, and real option prices show that model flatters buyers by ₹160–330 a trade. The same breakout traded as NIFTY futures lost about ₹116 a day.</p></div>
     <div class="card"><div class="row"><b>Last 3 months (24 Aug – 23 Nov 2026)</b>${vp("GOOD STRETCH")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">59 trades, 53% won,
-    about +₹51,000 to +₹61,000 a lot after correcting the model; the same trades in NIFTY futures made +₹58,000. NIFTY trended strongly in these months, which suits a breakout rule.</p></div></div>
-    <p><a href="research.html" style="color:var(--brand)">Full research results →</a></p>`;
+    about +₹51,000 to +₹61,000 a lot after correcting the model; the same trades in NIFTY futures made +₹58,000. NIFTY trended strongly in these months, which suits a breakout rule.</p></div></div>`;
   $("#v-stats").innerHTML = h;
 })();
 }

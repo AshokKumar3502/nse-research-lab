@@ -74,7 +74,7 @@ public class NotifyWorker extends Worker {
                 if (age > MAX_AGE_MS || (first && age > FIRST_RUN_MS)) {
                     continue;
                 }
-                show(ctx, id, m.optString("title", "NSE Lab"), m.optString("text"));
+                show(ctx, id, m.optString("title", "NIFTY Option Lab"), m.optString("text"));
             }
             seen.retainAll(ids);
             prefs.edit().putStringSet("seen", seen).apply();

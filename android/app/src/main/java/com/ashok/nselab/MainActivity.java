@@ -20,7 +20,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-/** The NSE Lab website in an app window. Links to other sites open in the phone's browser. */
+/** The NIFTY Option Lab website in an app window. Links to other sites open in the phone's browser. */
 public class MainActivity extends Activity {
     static final String HOME = "https://ashokkumar3502.github.io/nse-research-lab/";
     private static final long RELOAD_AFTER_MS = 5 * 60 * 1000;   // fresh data when coming back after 5 minutes
@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
             public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (r.isForMainFrame()) {
                     v.loadDataWithBaseURL(HOME, "<html><body style='font-family:sans-serif;padding:28px;line-height:1.5'>"
-                        + "<h2>No internet</h2><p>NSE Lab needs an internet connection.</p>"
+                        + "<h2>No internet</h2><p>NIFTY Option Lab needs an internet connection.</p>"
                         + "<p><a href='" + HOME + "'>Try again</a></p></body></html>", "text/html", "utf-8", null);
                 }
             }
