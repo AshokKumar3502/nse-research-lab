@@ -50,7 +50,7 @@ def updated_by():
     t = now
     for _ in range(8):
         if t.weekday() < 5:
-            for hh, mm, label in ((9, 31, "intraday picks"), (18, 55, "swing picks and P&L")):
+            for hh, mm, label in ((9, 46, "NIFTY option watch (9:45 range set)"), (18, 55, "the day's final option result")):
                 slot = t.replace(hour=hh, minute=mm, second=0, microsecond=0)
                 if slot > now:
                     when = ("today" if slot.date() == now.date() else slot.strftime("%a %d %b"))
@@ -134,6 +134,15 @@ def build():
     if names_i:
         msgs.append({"id": "intraday-%s" % it.get("day"), "ts": now, "title": "Intraday picks (paper only)",
                      "text": "Buy: %s" % names_i})
+    msgs = []                     # option-only app: no stock-pick messages
+    ops = sorted((t for t in data.get("trades", []) if t.get("kind") == "option"), key=lambda t: t["signal_date"])
+    if ops:
+        o = ops[-1]
+        v = o["net"] if o["status"] == "closed" else (o.get("gross") or 0)
+        msgs.append({"id": "option-%s-%s" % (o["signal_date"], o["status"]), "ts": now,
+                     "title": "NIFTY option %s" % ("closed" if o["status"] == "closed" else "open"),
+                     "text": "%s · entry Rs %s · %s Rs %s" % (o["symbol"], o["entry"], "net" if o["status"] == "closed" else "now",
+                                                          format(int(round(v)), ","))})
     notify = {"built": data["built"], "messages": msgs}
     with open(os.path.join(DOCS, "data", "notify.json"), "w", encoding="utf-8") as fh:
         json.dump(notify, fh)
@@ -150,7 +159,7 @@ def build():
 
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>NSE Lab</title><meta name="description" content="Daily swing and intraday picks for NSE stocks, paper traded at Rs 50,000 a stock, with every result kept.">
+<title>NSE Lab</title><meta name="description" content="NIFTY 9:45 range-breakout option rule, paper traded every day on real option prices, with every result kept.">
 <meta name="theme-color" content="#0f766e"><link rel="icon" href="logo.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem("theme");if(t&&t!=="system")document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
@@ -318,8 +327,10 @@ let COLLAPSED = new Set();
 try { COLLAPSED = new Set(JSON.parse(localStorage.getItem("collapsed") || "[]")); } catch (e) {}
 const PF = {kind: "all", sort: "pnl"};
 const HS = {kind: "all", q: "", status: "all", limit: 20};
-const KINDS = [["swing", "Swing"], ["results", "Results jump"], ["momentum", "Momentum"], ["intraday", "Intraday"], ["option", "Options"]];
-const MULTI = ["swing", "results", "momentum"];
+// option-only app: stock strategies keep running in the cloud but are not shown
+const KINDS = [["option", "NIFTY option"]];
+const MULTI = [];
+let ODAILY = [];
 const kindPill = t => t.kind === "momentum" ? `<span class="pill p-info">Momentum</span>` : t.kind === "results" ? `<span class="pill p-info">Results</span>`
   : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>`
   : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
@@ -364,8 +375,6 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
     ${U.next ? `<div class="muted">Next update: ${esc(U.next)}</div>` : ""}</div></div>
     <div class="chips" style="margin-top:4px">
     <span class="chip"><span class="dot ${r.nifty_above_ma200 ? "up" : "dn"}"></span>NIFTY <b>${r.nifty_above_ma200 ? "above" : "below"}</b> 200-day avg</span>
-    <span class="chip">Breadth <b>${r.breadth_ma50_pct ?? "–"}%</b> above 50-day</span>
-    <span class="chip">Swing exposure <b>${r.exposure != null ? Math.round(r.exposure * 100) + "%" : "–"}</b></span>
     <span class="chip">Prices through <b>${fd(D.last_session)}</b></span></div>`;
   const secs = [];
   const sec = (id, title, sub, count, body) => secs.push({id, title, sub, count, body});
@@ -428,6 +437,16 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
   sec("momentum", "12-1 momentum", "10 strongest 12-month gainers (skipping the last month) · rebalanced every 20 sessions · buy 9:30 · no stop-loss · ₹50,000 each · paper test", nm,
     why("Promising, not proven.", "2017–2026: +22% a year vs NIFTY +12%, but it fell up to 45% from a peak (NIFTY 30%) and lost 25% in 2018 and 16% in 2022. A few big winners made the profit. This paper trade on real prices is the test.")
     + (mb || `<div class="empty">No open momentum trades yet. New picks come every 20 sessions.</div>`));
+  const keep = secs.filter(s => s.id === "option");
+  const recent = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date)).slice(0, 15);
+  keep.push({id: "recent", title: "Recent option trades", sub: "Last 15 paper trades on real option prices · 1 lot each, after charges", count: recent.length,
+    body: recent.length ? `<div class="list">` + recent.map(t => {
+      const v = t.status === "closed" ? t.net : t.gross;
+      return `<div class="li"><div><b>${esc(t.symbol)}</b> <span class="muted">${esc(fdl(t.signal_date))}</span>
+        <div class="d">In ${esc(tm(t.entry_at))} ${inr(t.entry)} → ${t.status === "closed" ? "out" : "now"} ${esc(tm(t.last_at))} ${inr(t.last)}${t.exit_reason ? " · " + esc(t.exit_reason) : ""}</div></div>
+        <span class="r ${cl(v)}">${sgn(v)}${t.status === "open" ? ` <span class="pill p-warn">open</span>` : ""}</span></div>`;
+    }).join("") + `</div>` : `<div class="empty">No option trades yet.</div>`});
+  secs.splice(0, secs.length, ...keep);
   h += `<nav class="jump" aria-label="Jump to a strategy">` + secs.map(s => `<button type="button" data-jump="${s.id}">${s.title} <span class="n">${s.count}</span></button>`).join("") + `</nav>`;
   h += secs.map(s => {
     const open = !COLLAPSED.has(s.id);
@@ -439,19 +458,34 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
 })();
 
 // ---------- PORTFOLIO
-T = D.trades || []; S = D.summary || {};
+T = (D.trades || []).filter(t => t.kind === "option"); S = {};
+ODAILY = (() => {
+  const m = {};
+  T.forEach(t => { if (t.status !== "pending") m[t.signal_date] = (m[t.signal_date] || 0) + (t.status === "closed" ? t.net : (t.gross || 0)); });
+  let c = 0;
+  return Object.keys(m).sort().map(d => ({date: d, net: m[d], cumulative: (c += m[d])}));
+})();
 (function () {
   const openAll = T.filter(t => MULTI.includes(t.kind) && t.status === "open");
-  const last = (D.daily || []).slice(-1)[0];
+  const last = ODAILY.slice(-1)[0];
   const openCh = T.filter(t => t.status === "open").reduce((a, t) => a + (t.charges || 0), 0);
-  const total = ((S.all || {}).realised || 0) + ((S.all || {}).unrealised || 0) - openCh;
+  const total = T.reduce((a, t) => a + (t.status === "closed" ? t.net : t.status === "open" ? (t.gross || 0) : 0), 0);
   const closed = T.filter(t => t.status === "closed"), wins = closed.filter(t => t.net > 0);
   const k = [["Total P&L", sgn(total), cl(total), "closed + open, after charges"],
     ["Latest day", last ? sgn(last.net) : "–", last ? cl(last.net) : "", last ? fdl(last.date) : "no trades yet"],
-    ["Open positions", openAll.length + " stocks", "", "invested " + inr(Math.round(openAll.reduce((a, t) => a + t.entry * t.qty, 0)))],
+    ["Trades", T.filter(t => t.status !== "pending").length + "", "", closed.length ? "avg " + sgn(closed.reduce((a, t) => a + t.net, 0) / closed.length) + " a trade" : "none closed yet"],
     ["Win rate", closed.length ? Math.round(wins.length / closed.length * 100) + "%" : "–", "", closed.length + " closed trades"]];
-  let h = `<h2>Portfolio<span class="sub">Paper trades at ₹50,000 a stock, after Zerodha charges</span></h2><div class="kpis">` +
+  let h = `<h2>NIFTY option paper trading<span class="sub">1 lot a day on real option prices, after Zerodha charges</span></h2><div class="kpis">` +
     k.map(([l, v, c, s]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div><div class="s">${esc(s)}</div></div>`).join("") + `</div>`;
+  if (!MULTI.length) {
+    const mon = {};
+    T.filter(t => t.status === "closed").forEach(t => { const k = String(t.signal_date).slice(0, 7); (mon[k] = mon[k] || []).push(t.net); });
+    const rows = Object.keys(mon).sort().reverse();
+    h += `<h2>By month<span class="sub">Closed option trades</span></h2>` + (rows.length ? `<div class="list"><table><caption class="sr">Option P&L by month</caption><thead><tr><th scope="col">Month</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Won</th><th scope="col" class="r">Net</th></tr></thead><tbody>${
+      rows.map(k => { const a = mon[k], n = a.reduce((x, y) => x + y, 0); return `<tr><td>${new Date(k + "-01T00:00:00").toLocaleDateString("en-IN", {month: "long", year: "numeric"})}</td><td class="r">${a.length}</td><td class="r">${Math.round(a.filter(x => x > 0).length / a.length * 100)}%</td><td class="r ${cl(n)}"><b>${sgn(n)}</b></td></tr>`; }).join("")}</tbody></table></div>` : `<div class="empty">No closed option trades yet.</div>`);
+    $("#v-portfolio").innerHTML = h;
+    return;
+  }
   const kinds = [["all", "All"], ...KINDS.filter(x => MULTI.includes(x[0]))];
   h += `<h2 id="h-open">Open positions<span class="sub">Multi-day paper trades · open a card for its day-by-day P&L</span></h2>
     <div class="tools"><div class="seg" role="group" aria-label="Show strategy">${kinds.map(([kk, l]) => `<button type="button" data-pk="${kk}" aria-pressed="${PF.kind === kk}">${l} <span class="n">${kk === "all" ? openAll.length : openAll.filter(t => t.kind === kk).length}</span></button>`).join("")}</div>
@@ -545,7 +579,7 @@ T = D.trades || []; S = D.summary || {};
 
 // ---------- STATS
 (function () {
-  const dd = D.daily || [];
+  const dd = ODAILY;
   let h = `<h2>Stats<span class="sub">Live paper results, and how each method tested</span></h2>`;
   if (dd.length) {
     const W = 760, H = 210, P = 40, vals = dd.map(r => r.cumulative), lo = Math.min(0, ...vals), hi = Math.max(0, ...vals), sp = (hi - lo) || 1;
@@ -565,26 +599,20 @@ T = D.trades || []; S = D.summary || {};
   const closed = T.filter(t => t.status === "closed");
   const grp = (name, f) => { const ts = closed.filter(f), w = ts.filter(t => t.net > 0).length, tot = ts.reduce((a, t) => a + t.net, 0);
     return [name, ts.length, ts.length ? Math.round(w / ts.length * 100) + "%" : "–", ts.length ? sgn(tot / ts.length) : "–", tot, ts.length]; };
-  const g = [grp("Swing", t => t.kind === "swing"), grp("Intraday — buy", t => t.kind === "intraday" && t.side === "long"), grp("Intraday — sell", t => t.kind === "intraday" && t.side === "short"), grp("NIFTY option (1 lot)", t => t.kind === "option"), grp("Results jump (paper test)", t => t.kind === "results"), grp("12-1 momentum (paper test)", t => t.kind === "momentum")];
-  h += `<h2>By strategy</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
+  const g = [grp("NIFTY option, calls (CE)", t => / CE$/.test(t.symbol)), grp("NIFTY option, puts (PE)", t => / PE$/.test(t.symbol)), grp("All option trades", t => true)];
+  h += `<h2>Calls vs puts</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
     g.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td class="r">${r[2]}</td><td class="r">${r[3]}</td><td class="r ${cl(r[4])}"><b>${r[5] ? sgn(r[4]) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;
-  const bySym = {}; closed.forEach(t => bySym[t.symbol] = (bySym[t.symbol] || 0) + t.net);
+  const bySym = {}; closed.forEach(t => { const k = fd(t.signal_date) + " · " + t.symbol; bySym[k] = (bySym[k] || 0) + t.net; });
   const ranked = Object.entries(bySym).sort((a, b) => b[1] - a[1]);
   const mini = (title, arr) => `<div class="list"><h3>${title}</h3>${arr.length ? arr.map(([s, v]) => `<div class="li"><span class="s">${esc(s)}</span><span class="r ${cl(v)}">${sgn(v)}</span></div>`).join("") : `<div class="li"><span class="d">None yet</span></div>`}</div>`;
-  h += `<h2>Best and worst stocks</h2><div class="cols">${mini("Best", ranked.filter(x => x[1] > 0).slice(0, 5))}${mini("Worst", ranked.filter(x => x[1] < 0).slice(-5).reverse())}</div>`;
+  h += `<h2>Best and worst trades</h2><div class="cols">${mini("Best", ranked.filter(x => x[1] > 0).slice(0, 5))}${mini("Worst", ranked.filter(x => x[1] < 0).slice(-5).reverse())}</div>`;
   const V = D.verdicts || {}, sv = V.swing || {}, iv = V.intraday || {};
   const vp = v => `<span class="pill ${/KEEP|EDGE/.test(v || "") && !/NO/.test(v || "") ? "p-up" : /NO/.test(v || "") ? "p-dn" : "p-warn"}">${esc(v || "–")}</span>`;
-  h += `<h2>How each method tested<span class="sub">Walk-forward on 10 years of NSE data, after charges</span></h2><div class="cols">
-    <div class="card"><div class="row"><b>Swing · 10 sessions</b>${vp(sv.verdict)}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Top 10 picks averaged
-    <b class="${cl(sv.mean_pct)}">${sv.mean_pct != null ? (sv.mean_pct > 0 ? "+" : "") + sv.mean_pct.toFixed(2) + "%" : "–"}</b> per 10 sessions after costs (t ${sv.t ?? "–"}), ${sv.from ? String(sv.from).slice(0, 4) : ""}–${sv.to ? String(sv.to).slice(0, 4) : ""}, out of sample.</p></div>
-    <div class="card"><div class="row"><b>Intraday · 9:30</b>${vp(iv.verdict)}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Long picks averaged
-    <b class="${cl(iv.mean_pct)}">${iv.mean_pct != null ? iv.mean_pct.toFixed(2) + "%" : "–"}</b> a day after costs. The ranking works, but the edge is smaller than the charges.</p></div>
-    <div class="card"><div class="row"><b>NIFTY option · 9:45 breakout</b>${vp("UNPROVEN")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Did no better than a
-    random call or put in the 2022–2026 price model, and real option prices show that model flatters buyers by ₹160–330 a trade. Paper-traded on real prices to find out.</p></div>
-    <div class="card"><div class="row"><b>Results jump · 10 sessions</b>${vp("PROMISING")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">+0.81% a trade after
-    charges on 2017–2026 (798 trades, 8 of 10 years positive, beat random picks), but t 2.09 is below the 2.89 bar and a few big winners made all the profit. Paper-traded to find out.</p></div>
-    <div class="card"><div class="row"><b>12-1 momentum · 20 sessions</b>${vp("PROMISING")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">2017–2026: +22% a year vs NIFTY +12%,
-    but a worst fall of −45% (NIFTY −30%), losing years 2018 and 2022, and t 2.60 below the 3.01 bar. The best 5% of trades made the profit. Paper-traded to find out.</p></div></div>
+  h += `<h2>How it tested<span class="sub">Same rule as the live paper trade, after charges</span></h2><div class="cols">
+    <div class="card"><div class="row"><b>2022–2026 backtest</b>${vp("UNPROVEN")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Did no better than buying a
+    random call or put in the option price model, and real option prices show that model flatters buyers by ₹160–330 a trade. The same breakout traded as NIFTY futures lost about ₹116 a day.</p></div>
+    <div class="card"><div class="row"><b>Last 3 months (24 Aug – 23 Nov 2026)</b>${vp("GOOD STRETCH")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">59 trades, 53% won,
+    about +₹51,000 to +₹61,000 a lot after correcting the model; the same trades in NIFTY futures made +₹58,000. NIFTY trended strongly in these months, which suits a breakout rule.</p></div></div>
     <p><a href="research.html" style="color:var(--brand)">Full research results →</a></p>`;
   $("#v-stats").innerHTML = h;
 })();
