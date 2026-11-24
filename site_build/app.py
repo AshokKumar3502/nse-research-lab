@@ -73,7 +73,9 @@ def collect():
         for i, pk in enumerate(sw.get("picks", []), 1):
             tr = by_id.get("S-%s-%s" % (sw["session"], pk["symbol"]), {})
             swing_today.append({"rank": i, "symbol": pk["symbol"], "industry": ind.get(pk["symbol"], pk.get("industry")),
-                                "close": pk["ref_close"], "sl": pk["stop"], "sl_pct": pk["stop_pct"],
+                                "close": pk["ref_close"], "sl": tr.get("sl", pk["stop"]) if tr else (
+                                    pk["stop"] if pk.get("use_stop") or sw["session"] < "2026-11-23" else None),
+                                "sl_pct": pk["stop_pct"],
                                 "score": pk["score_pct"], "qty": int(50000 // pk["ref_close"]) if pk["ref_close"] else 0,
                                 "status": tr.get("status", "pending"), "entry": tr.get("entry"), "net": tr.get("net"),
                                 "gross": tr.get("gross"), "day": (tr.get("marks") or [{}])[-1].get("session"),
@@ -375,9 +377,9 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
     return `<div class="card pick ${p.status !== "pending" ? (val >= 0 ? "win" : "loss") : ""}">
       <div class="row"><div><span class="rank">#${p.rank}</span> <span class="sym">${esc(p.symbol)}</span><div class="ind">${esc(p.industry || "")}</div></div>${st}</div>
       ${p.status === "pending"
-        ? `<div class="kv"><div>Last close<b>${inr(p.close)}</b></div><div>Stop-loss<b class="dn">${inr(p.sl)}</b></div><div>Qty / ₹50k<b>${p.qty}</b></div></div>
+        ? `<div class="kv"><div>Last close<b>${inr(p.close)}</b></div><div>Stop-loss<b class="${p.sl != null ? "dn" : "muted"}">${p.sl != null ? inr(p.sl) : "none"}</b></div><div>Qty / ₹50k<b>${p.qty}</b></div></div>
            <div class="ind" style="margin-top:8px">Buy at 9:30 on the next trading day</div>`
-        : `<div class="kv"><div>Entry${p.entry_at ? " · " + esc(when(p.entry_at)) : ""}<b>${inr(p.entry)}</b></div><div>${p.status === "closed" ? "Exit" : "Now"}${p.last_at ? " · " + esc(tm(p.last_at)) : ""}<b>${inr(p.last ?? (p.status === "closed" ? p.exit : null))}</b></div><div>Stop-loss<b class="dn">${inr(p.sl)}</b></div></div>
+        : `<div class="kv"><div>Entry${p.entry_at ? " · " + esc(when(p.entry_at)) : ""}<b>${inr(p.entry)}</b></div><div>${p.status === "closed" ? "Exit" : "Now"}${p.last_at ? " · " + esc(tm(p.last_at)) : ""}<b>${inr(p.last ?? (p.status === "closed" ? p.exit : null))}</b></div><div>Stop-loss<b class="${p.sl != null ? "dn" : "muted"}">${p.sl != null ? inr(p.sl) : "none"}</b></div></div>
            <div class="ind" style="margin-top:6px">${p.qty_held ?? p.qty} shares${p.why ? " · " + esc(p.why) : ""}</div>`}${res}</div>`;
   };
   sec("swing", "Swing picks", `Picked after the close of ${fdl(D.swing_session)} · bought at 9:30 next day · hold 10 sessions · ₹50,000 each`, sw.length,

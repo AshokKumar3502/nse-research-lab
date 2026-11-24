@@ -86,6 +86,21 @@ def _previous():
         return {}
 
 
+# The swing rule that passed validation sells at the 10th session's close with no stop (in the 10-year test the
+# 2-ATR stop lowered results; a 24 Aug - 19 Nov 2026 replay: -Rs 1.32 lakh with it, -Rs 0.58 lakh without).
+# Picks made from this session on follow the pick's use_stop flag (the scan writes False); earlier trades keep
+# the stop they were opened with, so recorded results do not change.
+SWING_NO_STOP_FROM = datetime.date(2026, 11, 23)
+
+
+def _stop(p, kind, session):
+    if p.get("stop") is None:
+        return None
+    if kind == "swing" and session >= SWING_NO_STOP_FROM and not p.get("use_stop", False):
+        return None
+    return float(p["stop"])
+
+
 def swing_trades(con, pattern="swing-*.json", kind="swing", tag="S"):
     """Multi-session long trades from pick files: the swing model (S-) and the results-jump paper test (R-)."""
     trades, prev = [], _previous()
@@ -100,7 +115,7 @@ def swing_trades(con, pattern="swing-*.json", kind="swing", tag="S"):
             bars = bars + live_day(con, p["symbol"], session, bars, hold)
             t = {"id": "%s-%s-%s" % (tag, session, p["symbol"]), "kind": kind, "side": "long", "symbol": p["symbol"],
                  "industry": p.get("industry"), "rank": rank, "signal_date": str(session), "hold": hold,
-                 "sl": float(p["stop"]) if p.get("stop") is not None else None, "ref_close": float(p["ref_close"]), "status": "pending",
+                 "sl": _stop(p, kind, session), "ref_close": float(p["ref_close"]), "status": "pending",
                  "entry_date": None, "entry": None, "qty": 0, "exit_date": None, "exit": None, "exit_reason": None,
                  "gross": 0.0, "charges": 0.0, "net": 0.0, "marks": [], "flag": None}
             if not bars:
