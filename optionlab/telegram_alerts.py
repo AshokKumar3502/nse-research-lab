@@ -14,6 +14,7 @@ import json
 import os
 import urllib.parse
 import urllib.request
+import uuid
 
 from warehouse import config
 
@@ -31,6 +32,46 @@ def send(text):
         return True
     except OSError:
         return False
+
+
+def send_photo(png, caption):
+    """Send a PNG card with a short caption (multipart upload). False if it could not be sent."""
+    tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN", ""), os.environ.get("TELEGRAM_CHAT_ID", "")
+    if not (tok and chat):
+        return False
+    bnd = "----nifty%s" % uuid.uuid4().hex
+    parts = []
+    for k, v in (("chat_id", chat), ("caption", caption)):
+        parts.append(("--%s\r\nContent-Disposition: form-data; name=\"%s\"\r\n\r\n%s\r\n" % (bnd, k, v)).encode("utf-8"))
+    parts.append(("--%s\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"alert.png\"\r\n"
+                  "Content-Type: image/png\r\n\r\n" % bnd).encode() + png + b"\r\n")
+    parts.append(("--%s--\r\n" % bnd).encode())
+    req = urllib.request.Request("https://api.telegram.org/bot%s/sendPhoto" % tok, b"".join(parts),
+                                 {"Content-Type": "multipart/form-data; boundary=%s" % bnd})
+    try:
+        urllib.request.urlopen(req, timeout=30).read()
+        return True
+    except OSError:
+        return False
+
+
+CAPTION = {"range": "🔵 NIFTY 9:45 range set: waiting for a breakout", "no trade": "⚪ NIFTY: no trade today",
+           "status": "🔵 Live update", "entry": "{dot} NEW SIGNAL: BUY {sym}", "exit": "{dot} CLOSED {sym}: {res}"}
+
+
+def deliver(event, text, doc):
+    """The colour card with a short caption; plain text if the card cannot be drawn or sent."""
+    try:
+        from .telegram_cards import card
+        dot = "🟢" if (doc.get("side") == "CE" if event == "entry" else (doc.get("net") or 0) > 0) else "🔴"
+        cap = CAPTION[event].format(dot=dot, sym=doc.get("symbol", ""), res="PROFIT" if (doc.get("net") or 0) > 0 else "LOSS")
+        if event == "status":
+            cap = "%s %s · P&L %s" % (cap, doc["symbol"], _rs(doc["gross"]))
+        if send_photo(card(event, doc), cap + "\n" + FOOT):
+            return True
+    except Exception:      # noqa: BLE001  (no Pillow, bad data): fall back to text
+        pass
+    return send(text)
 
 
 def _rs(x):
@@ -75,7 +116,7 @@ def notify(doc, log=print):
             sent = json.load(fh).get("sent", [])
     n = 0
     for event, text in messages(doc, set(sent)):
-        if send(text):
+        if deliver(event, text, doc):
             n += 1
             if event != "status":
                 sent.append(event)
@@ -96,3 +137,19 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
                   "on trading days: the 9:45 range, the entry, a status every 10 minutes and the exit P&L.\n" + FOOT)
         print("sent" if ok else "NOT sent (check TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID, and press Start in the bot first)")
         sys.exit(0 if ok else 1)
+    if "--sample" in sys.argv:        # the five alert cards with made-up numbers, marked SAMPLE
+        b = {"day": "SAMPLE", "range_high": 25850.5, "range_low": 25760.2, "symbol": "NIFTY 25800 CE", "side": "CE",
+             "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "SAMPLE 10:19",
+             "sl_option": 198.5, "sl_index": 25760.2}
+        docs = [("range", dict(b, status="waiting")), ("entry", dict(b, status="open", last=242.0, last_at="SAMPLE 10:19", gross=0.0)),
+                ("status", dict(b, status="open", last=301.4, last_at="SAMPLE 12:30", gross=(301.4 - 242) * 65)),
+                ("exit", dict(b, status="closed", exit=240.0, exit_at="SAMPLE 15:15", why="15:15 exit", net=-213.4,
+                              charges=83.4, last=240.0, last_at="SAMPLE 15:15", gross=-130.0)),
+                ("no trade", dict(b, status="no trade", note="No breakout of the 9:15-9:45 range by 13:00"))]
+        send("SAMPLE ALERTS (made-up numbers): this is how each NIFTY option message will look.")
+        ok = 0
+        for ev, d in docs:
+            msg = dict(messages(d, set())).get(ev, "")
+            ok += deliver(ev, msg, d)
+        print("sent %d of %d sample cards" % (ok, len(docs)))
+        sys.exit(0 if ok == len(docs) else 1)
