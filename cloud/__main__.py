@@ -309,8 +309,8 @@ def live(every_min=10, until=(15, 20)):
         if not bars.empty:
             store.upsert("minute_bars", bars, ["date", "symbol", "ts"])
         try:
-            from optionlab import nifty_orb
-            nifty_orb.run(log=log)
+            from optionlab import nifty_orb, telegram_alerts
+            telegram_alerts.notify(nifty_orb.run(log=log), log=log)
         except Exception as e:     # noqa: BLE001
             log("nifty option: %s" % e)
         paper_update(db.connect(read_only=True), log=log)
