@@ -120,6 +120,12 @@ def replay(con, start, end):
         if exitp is None:
             exitp = _bs(s_exit, K, _years(ts[kx], exp), sg, call)
         pts = (s_exit - float(op[j])) * (1 if call else -1)
+        # the best price reached while the trade was open (hindsight: what selling at the high would have made)
+        bests = [_bs(hi[k] if call else lo[k], K, _years(ts[k], exp), sg, call) for k in range(j, kx + 1)]
+        kb = int(np.argmax(bests))
+        peak = max(bests[kb], entry)
+        row.update(high=round(peak, 2), high_time=ts[j + kb].strftime("%H:%M"),
+                   high_pnl=round((peak - entry) * LOT - charges(entry, peak, LOT)))
         rows.append(dict(row, status="closed", side="CE" if call else "PE", strike=int(K), expiry=str(exp),
                          expiry_day=bool(d == exp), entry_time=ts[j].strftime("%H:%M"), exit_time=ts[kx].strftime("%H:%M"),
                          why="SL: option back to its 9:15-9:45 low" if len(hit) else "15:15 exit", sl_option=round(opt_low, 2),
@@ -196,7 +202,9 @@ def build(months=6, log=print):
                        "capital_avg": round(sum(r["capital"] for r in tr) / len(tr)) if tr else None,
                        "capital_max": max((r["capital"] for r in tr), default=None),
                        "corrected_net": [sum(pn) - BIAS[1] * model_n, sum(pn) - BIAS[0] * model_n],
-                       "futures_net": sum(r.get("futures_pnl", 0) for r in tr if "futures_pnl" in r)},
+                       "futures_net": sum(r.get("futures_pnl", 0) for r in tr if "futures_pnl" in r),
+                       "high_net": sum(r["high_pnl"] for r in tr if "high_pnl" in r),
+                       "high_vs_actual_trades": sum(1 for r in tr if "high_pnl" in r)},
            "months": months_out, "days": rows}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as fh:

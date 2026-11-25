@@ -357,7 +357,8 @@ function renderBacktest() {
     ["Win rate", (S.win_pct ?? "–") + "%", "", S.won + " of " + S.trades + " trades won"],
     ["Avg win / loss", `<span class="nw">${sgn(S.avg_win)}</span> / <span class="nw">${sgn(S.avg_loss)}</span>`, "", "per trade"],
     ["Capital a trade", inr(S.capital_avg), "", "average · highest " + inr(S.capital_max)],
-    ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)]];
+    ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)],
+    ["If sold at the high", S.high_net != null ? sgn(S.high_net) : "–", cl(S.high_net), "hindsight best · vs actual " + sgn(S.net)]];
   let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · NIFTY 9:45 range breakout · 1 lot (${M.lot || 65}) a day · after charges</span></h2>
     <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
       <p style="margin:6px 0 0">${esc(M.rule || "")}</p><p style="margin:6px 0 0">${esc(M.prices || "")} ${esc(M.bias || "")}
@@ -429,6 +430,8 @@ function drawBacktest() {
         <span class="pill ${sl ? "p-dn" : "p-mute"}">${sl ? "Stop-loss" : "15:15 exit"}</span>${d.source === "real" ? `<span class="pill p-info">Real prices</span>` : ""}${d.expiry_day ? `<span class="pill p-warn">Expiry day</span>` : ""}</div>
       <div class="kv kv4"><div>Entry · ${esc(d.entry_time)}<b>${inr(d.entry)}</b></div><div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div>
         <div>Capital<b>${inr(d.capital)}</b></div><div>Total so far<b class="${cl(d.cum)}">${sgn(d.cum)}</b></div></div>
+      ${d.high != null ? `<div class="kv kv4"><div>High · ${esc(d.high_time)}<b>${inr(d.high)}</b></div><div>P&L at the high<b class="${cl(d.high_pnl)}">${sgn(d.high_pnl)}</b></div>
+        <div>P&L at exit<b class="${cl(d.pnl)}">${sgn(d.pnl)}</b></div><div>Left on table<b class="muted">${sgn(d.high_pnl - d.pnl)}</b></div></div>` : ""}
       <button type="button" class="linkbtn" data-btd aria-expanded="false" aria-controls="${id}">Details</button>
       <div class="btd" id="${id}" hidden>9:15–9:45 range ${d.range_low ?? "–"} – ${d.range_high ?? "–"}${d.nifty_entry ? `<br>NIFTY ${d.nifty_entry} → ${d.nifty_exit} (${d.nifty_pts >= 0 ? d.nifty_pts + " pts in the trade's favour" : Math.abs(d.nifty_pts) + " pts against the trade"})` : ""}
         <br>Expiry ${esc(d.expiry || "–")} · exit reason: ${esc(d.why || "")}${d.futures_pnl != null ? `<br>Same trade in NIFTY futures: ${sgn(d.futures_pnl)}` : ""}</div></article>`;
