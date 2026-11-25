@@ -87,3 +87,12 @@ def notify(doc, log=print):
     if n:
         log("telegram: %d message(s) sent" % n)
     return n
+
+
+if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (GitHub: the "Telegram test" workflow)
+    import sys
+    if "--test" in sys.argv:
+        ok = send("Connected: NIFTY Option Lab bot is linked to this chat.\nYou will get the NIFTY option paper trade here "
+                  "on trading days: the 9:45 range, the entry, a status every 10 minutes and the exit P&L.\n" + FOOT)
+        print("sent" if ok else "NOT sent (check TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID, and press Start in the bot first)")
+        sys.exit(0 if ok else 1)
