@@ -249,10 +249,18 @@ select.sel{font:inherit;font-size:13px;padding:8px 10px;border-radius:12px;borde
 .sumline{font-size:13px;color:var(--muted);margin:0 2px 8px}
 h3.month{display:flex;justify-content:space-between;margin:22px 2px 0;font-size:15px;padding-bottom:6px;border-bottom:2px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+.bt-kpis .v{font-size:20px}.bt-kpis .v.sm{font-size:15.5px;line-height:1.35}.nw{white-space:nowrap}.bt-kpis .kpi{padding:12px}
+.btlist{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.btday{border-left:4px solid var(--line);padding:12px 14px}.btday.win{border-left-color:var(--up)}.btday.loss{border-left-color:var(--dn)}
+.btday .dt{font-weight:700;font-size:14.5px}.btday .pnl{font-size:19px}
+.kv.kv4{grid-template-columns:repeat(4,1fr)}
+.btmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.btd{margin-top:8px;font-size:12.5px;color:var(--muted);line-height:1.6;background:var(--surface2);border-radius:10px;padding:8px 10px}
+@media (max-width:520px){.kv.kv4{grid-template-columns:repeat(2,1fr)}.btlist{grid-template-columns:1fr}.bt-kpis .v{font-size:18px}}
 .bnav{display:none}
 @media (max-width:760px){nav.tabs{display:none}
  .lastupd{bottom:calc(58px + env(safe-area-inset-bottom));font-size:11.5px}main{padding-bottom:130px}
- .bnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+ .bnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
  .bnav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;padding:4px}
  .bnav button svg{width:22px;height:22px}.bnav button[aria-current=page]{color:var(--brand)}
  .cols{grid-template-columns:1fr}.brand small{display:none}.kpi .v{font-size:21px}}
@@ -268,6 +276,7 @@ h3.month{display:flex;justify-content:space-between;margin:22px 2px 0;font-size:
 <section class="view" id="v-portfolio"></section>
 <section class="view" id="v-history"></section>
 <section class="view" id="v-stats"></section>
+<section class="view" id="v-backtest"></section>
 <footer>Paper trading 1 lot of NIFTY options a day on real NSE option prices, after Zerodha charges. For education and research only; not
 investment advice, and the author is not a SEBI-registered adviser. Nothing here places orders.</footer>
 </main>
@@ -289,6 +298,7 @@ const I = {
  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>',
  portfolio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
  history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>',
+ backtest: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v4M7 15v6M17 3v8M17 17v4"/><rect x="4.5" y="7" width="5" height="8" rx="1"/><rect x="14.5" y="11" width="5" height="6" rx="1"/></svg>',
  stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
@@ -308,7 +318,7 @@ setTheme(cur);
 $("#theme").onclick = () => { cur = themes[(themes.indexOf(cur) + 1) % 3]; setTheme(cur); };
 
 // ---------- navigation
-const views = [["today", "Today"], ["portfolio", "Portfolio"], ["history", "History"], ["stats", "Stats"]];
+const views = [["today", "Today"], ["backtest", "Backtest"], ["portfolio", "Portfolio"], ["history", "History"], ["stats", "Stats"]];
 $("nav.tabs").innerHTML = views.map(([k, l]) => `<button data-v="${k}">${l}</button>`).join("");
 $(".bnav").innerHTML = views.map(([k, l]) => `<button data-v="${k}">${I[k]}<span>${l}</span></button>`).join("");
 function show(v) {
@@ -316,10 +326,115 @@ function show(v) {
   document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + v));
   document.querySelectorAll("[data-v]").forEach(b => { if (b.dataset.v === v) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   if (location.hash !== "#" + v) history.replaceState(null, "", "#" + v);
+  if (v === "backtest") loadBacktest();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("[data-v]").forEach(b => b.onclick = () => show(b.dataset.v));
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+// ---------- BACKTEST: last 6 months of the NIFTY option rule (docs/data/backtest.json), loaded on first open
+let BT = null;
+const BTF = {month: "all", kind: "all", limit: 30};
+async function loadBacktest() {
+  const box = $("#v-backtest");
+  if (BT) { renderBacktest(); return; }
+  box.innerHTML = `<h2>Backtest</h2><div class="empty" role="status">Loading 6 months of trades…</div>`;
+  try {
+    const r = await fetch("data/backtest.json?t=" + Date.now(), {cache: "no-store"});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    BT = await r.json();
+  } catch (e) {
+    box.innerHTML = `<h2>Backtest</h2><div class="empty" role="alert">Could not load the backtest (${esc(String(e.message || e))}). Check the connection and open this tab again.</div>`;
+    return;
+  }
+  renderBacktest();
+}
+function renderBacktest() {
+  const box = $("#v-backtest"), S = BT.summary, M = BT.method || {};
+  const mshort = m => new Date(m + "-01T00:00:00").toLocaleDateString("en-IN", {month: "short"});
+  const k = [["Net P&L", sgn(S.net), cl(S.net), "1 lot a day, after charges"],
+    ["After model correction", `<span class="nw">${sgn(S.corrected_net[0])}</span> to <span class="nw">${sgn(S.corrected_net[1])}</span>`, cl(S.corrected_net[0]), "realistic range"],
+    ["Win rate", (S.win_pct ?? "–") + "%", "", S.won + " of " + S.trades + " trades won"],
+    ["Avg win / loss", `<span class="nw">${sgn(S.avg_win)}</span> / <span class="nw">${sgn(S.avg_loss)}</span>`, "", "per trade"],
+    ["Capital a trade", inr(S.capital_avg), "", "average · highest " + inr(S.capital_max)],
+    ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)]];
+  let h = `<h2>Backtest · last 6 months<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · NIFTY 9:45 range breakout · 1 lot (${M.lot || 65}) a day · after charges</span></h2>
+    <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
+      <p style="margin:6px 0 0">${esc(M.rule || "")}</p><p style="margin:6px 0 0">${esc(M.prices || "")} ${esc(M.bias || "")}
+      The same trades in NIFTY futures (real prices) made ${sgn(S.futures_net)}. Capital = the premium paid for 1 lot. Past results are not predictions.</p></details>
+    <div class="kpis bt-kpis">` + k.map(([l, v, c, s2]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}${v.length > 11 ? " sm" : ""}">${v}</div><div class="s">${esc(s2)}</div></div>`).join("") + `</div>`;
+  const pts = BT.days.filter(d => d.status !== "holiday");
+  if (pts.length > 1) {
+    const W = 760, H = 190, P = 34, vals = pts.map(d => d.cum), lo = Math.min(0, ...vals), hi = Math.max(0, ...vals), sp = (hi - lo) || 1;
+    const x = i => P + i * (W - 2 * P) / (pts.length - 1), y = v => H - 22 - (v - lo) / sp * (H - 44);
+    const line = pts.map((d, i) => `${x(i).toFixed(1)},${y(d.cum).toFixed(1)}`).join(" ");
+    const ticks = BT.months.map(m => { const i = pts.findIndex(d => d.date.startsWith(m.month)); return i < 0 ? "" : `<text class="ax" x="${x(i)}" y="${H - 4}" text-anchor="start">${mshort(m.month)}</text>`; }).join("");
+    h += `<div class="chart" style="margin-top:12px"><div class="row"><b>Running total</b><span class="${cl(vals[vals.length - 1])} num"><b>${sgn(vals[vals.length - 1])}</b></span></div>
+      <svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Running total of the backtest, ${esc(sgn(vals[vals.length - 1]))} at the end">
+      <line class="g" x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}"/>
+      <polygon points="${x(0)},${y(0)} ${line} ${x(pts.length - 1)},${y(0)}" fill="color-mix(in srgb,var(--brand) 16%,transparent)"/>
+      <polyline points="${line}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/>${ticks}</svg></div>`;
+  }
+  h += `<h2>By month<span class="sub">Tap a month to see its days</span></h2>
+    <div class="tools"><div class="seg" role="group" aria-label="Month">` +
+    [["all", "All", S.net], ...BT.months.map(m => [m.month, mshort(m.month), m.net])].map(([kk, l, n]) =>
+      `<button type="button" data-btm="${kk}" aria-pressed="${BTF.month === kk}">${l} <span class="n ${cl(n)}">${sgn(n)}</span></button>`).join("") + `</div></div>
+    <div class="tools"><div class="seg" role="group" aria-label="Show">` +
+    [["all", "All days"], ["win", "Wins"], ["loss", "Losses"], ["none", "No trade"]].map(([kk, l]) =>
+      `<button type="button" data-btk="${kk}" aria-pressed="${BTF.kind === kk}">${l}</button>`).join("") + `</div></div>
+    <p class="sumline" id="btsum" aria-live="polite" tabindex="-1"></p><div id="btlist"></div>`;
+  box.innerHTML = h;
+  box.querySelectorAll("[data-btm]").forEach(b => b.onclick = () => { BTF.month = b.dataset.btm; BTF.limit = 30;
+    box.querySelectorAll("[data-btm]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawBacktest(); });
+  box.querySelectorAll("[data-btk]").forEach(b => b.onclick = () => { BTF.kind = b.dataset.btk; BTF.limit = 30;
+    box.querySelectorAll("[data-btk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawBacktest(); });
+  box.onclick = e => {
+    const b = e.target.closest("[data-btd]");
+    if (!b) return;
+    const open = b.getAttribute("aria-expanded") !== "true";
+    b.setAttribute("aria-expanded", String(open)); b.textContent = open ? "Hide details" : "Details";
+    document.getElementById(b.getAttribute("aria-controls")).hidden = !open;
+  };
+  drawBacktest();
+}
+function drawBacktest() {
+  const all = BT.days.filter(d => d.status !== "holiday").slice().reverse();
+  const rows = all.filter(d => (BTF.month === "all" || d.date.startsWith(BTF.month)) &&
+    (BTF.kind === "all" || (BTF.kind === "none" ? d.status !== "closed" : d.status === "closed" && (BTF.kind === "win" ? d.pnl > 0 : d.pnl <= 0))));
+  const tr = rows.filter(d => d.status === "closed"), net = tr.reduce((a, d) => a + d.pnl, 0), won = tr.filter(d => d.pnl > 0).length;
+  const capMax = Math.max(0, ...tr.map(d => d.capital || 0));
+  $("#btsum").textContent = rows.length + " days · " + tr.length + " trades" + (tr.length ? " · " + Math.round(won / tr.length * 100) + "% won · net " + sgn(net) + " · capital up to " + inr(capMax) : "");
+  let h = "", last = "";
+  rows.slice(0, BTF.limit).forEach(d => {
+    const mo = d.date.slice(0, 7);
+    if (mo !== last) {
+      const mm = BT.months.find(m => m.month === mo) || {};
+      h += (last ? `</div>` : "") + `<h3 class="month"><span>${new Date(mo + "-01T00:00:00").toLocaleDateString("en-IN", {month: "long", year: "numeric"})}</span><span class="${cl(mm.net)} num">${sgn(mm.net)}</span></h3><div class="btlist">`;
+      last = mo;
+    }
+    if (d.status !== "closed") {
+      h += `<article class="card btday"><div class="row"><span class="dt">${esc(fdl(d.date))}</span><span class="pill p-mute">No trade</span></div>
+        <div class="ind" style="margin-top:6px">${esc(d.why || "")}${d.range_low ? " · range " + d.range_low + "–" + d.range_high : ""}</div></article>`;
+      return;
+    }
+    const id = "btd-" + d.date, sl = /^SL/.test(d.why || "");
+    h += `<article class="card btday ${d.pnl > 0 ? "win" : "loss"}">
+      <div class="row"><span class="dt">${esc(fdl(d.date))}</span><span class="pnl ${cl(d.pnl)}">${sgn(d.pnl)}</span></div>
+      <div class="btmeta"><span class="pill ${d.side === "CE" ? "p-up" : "p-dn"}">${d.side === "CE" ? "Call" : "Put"}</span><b>NIFTY ${d.strike} ${d.side}</b>
+        <span class="pill ${sl ? "p-dn" : "p-mute"}">${sl ? "Stop-loss" : "15:15 exit"}</span>${d.source === "real" ? `<span class="pill p-info">Real prices</span>` : ""}${d.expiry_day ? `<span class="pill p-warn">Expiry day</span>` : ""}</div>
+      <div class="kv kv4"><div>Entry · ${esc(d.entry_time)}<b>${inr(d.entry)}</b></div><div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div>
+        <div>Capital<b>${inr(d.capital)}</b></div><div>Total so far<b class="${cl(d.cum)}">${sgn(d.cum)}</b></div></div>
+      <button type="button" class="linkbtn" data-btd aria-expanded="false" aria-controls="${id}">Details</button>
+      <div class="btd" id="${id}" hidden>9:15–9:45 range ${d.range_low ?? "–"} – ${d.range_high ?? "–"}${d.nifty_entry ? `<br>NIFTY ${d.nifty_entry} → ${d.nifty_exit} (${d.nifty_pts >= 0 ? d.nifty_pts + " pts in the trade's favour" : Math.abs(d.nifty_pts) + " pts against the trade"})` : ""}
+        <br>Expiry ${esc(d.expiry || "–")} · exit reason: ${esc(d.why || "")}${d.futures_pnl != null ? `<br>Same trade in NIFTY futures: ${sgn(d.futures_pnl)}` : ""}</div></article>`;
+  });
+  if (last) h += `</div>`;
+  if (!rows.length) h = `<div class="empty">No days match.</div>`;
+  else if (rows.length > BTF.limit) h += `<button type="button" class="more-btn" id="btmore">Show more (${rows.length - BTF.limit} older days)</button>`;
+  $("#btlist").innerHTML = h;
+  const more = $("#btmore");
+  if (more) more.onclick = () => { BTF.limit += 30; drawBacktest(); const n = $("#btmore"); (n || $("#btsum")).focus(); };
+}
 
 // ---------- shared UI state (kept across the 3-minute live refresh)
 let COLLAPSED = new Set();

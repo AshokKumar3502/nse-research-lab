@@ -1,0 +1,207 @@
+"""Replay the app's NIFTY option rule (optionlab/nifty_orb.py) day by day over the last N months, for the app's
+Backtest tab.
+
+  python -m optionlab.replay --months 6        -> docs/data/backtest.json
+
+Signal, entry and exit times and the stop-loss come from REAL NIFTY 1-minute prices. Option prices: Black-Scholes
+with the previous day's real ATM implied volatility from NSE's bhavcopy, because 1-minute prices of expired
+contracts are not available for free. Checked against real option prices (Oct-Nov 2026) that model flatters
+buyers by about Rs 160-330 a trade, so the file also carries a corrected total. Days the app paper-traded on real
+option prices use those real trades. Also given: the same trade in NIFTY futures (real prices) as a check.
+1 lot = 65 (today's lot size) for every day; charges as nifty_orb.charges. Capital = premium paid for 1 lot.
+"""
+import argparse
+import datetime as dt
+import glob
+import json
+import math
+import os
+
+import numpy as np
+import pandas as pd
+from scipy.optimize import brentq
+from scipy.stats import norm
+
+from warehouse import config, db
+
+from .nifty_orb import EXIT, LAST_ENTRY, RANGE_END, STEP, charges
+
+LOT, R = 65, 0.065
+BIAS = (160, 330)
+OUT = os.path.join(config.ROOT, "docs", "data", "backtest.json")
+
+
+def _bs(S, K, T, s, call):
+    if T <= 1e-6:
+        return max(S - K, 0.0) if call else max(K - S, 0.0)
+    d1 = (math.log(S / K) + (R + 0.5 * s * s) * T) / (s * math.sqrt(T))
+    d2 = d1 - s * math.sqrt(T)
+    if call:
+        return S * norm.cdf(d1) - K * math.exp(-R * T) * norm.cdf(d2)
+    return K * math.exp(-R * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
+
+
+def _iv(price, S, K, T, call):
+    try:
+        return brentq(lambda s: _bs(S, K, T, s, call) - price, 0.01, 3.0)
+    except Exception:     # noqa: BLE001
+        return None
+
+
+def _years(t, e):
+    return max((dt.datetime.combine(e, dt.time(15, 30)) - t).total_seconds() / (365 * 86400), 0.0)
+
+
+def _fut_cost(a, b):
+    return 40 + 0.0002 * max(a, b) * LOT + 0.0000173 * (a + b) * LOT * 1.18 + 2 * LOT
+
+
+def replay(con, start, end):
+    m = con.execute("SELECT date, ts, open, high, low, close FROM minute_bars WHERE symbol = 'NIFTY 50' "
+                    "AND date >= ? AND date <= ? ORDER BY ts", [start, end]).df()
+    m["ts"] = pd.to_datetime(m.ts)
+    m["date"] = m.ts.dt.date
+    idx = con.execute("SELECT date, close FROM idx_daily WHERE index_key = 'nifty 50' AND date >= ? AND date <= ? ORDER BY date",
+                      [start - dt.timedelta(days=10), end]).df()
+    idx["date"] = pd.to_datetime(idx.date).dt.date
+    close, days = dict(zip(idx.date, idx.close)), list(idx.date)
+    opts = con.execute("SELECT date, expiry, strike, option_type, close FROM fo_options WHERE symbol = 'NIFTY' "
+                       "AND instrument = 'OPTIDX' AND date >= ? AND date <= ? AND close > 0",
+                       [start - dt.timedelta(days=10), end]).df()
+    opts["date"] = pd.to_datetime(opts.date).dt.date
+    opts["expiry"] = pd.to_datetime(opts.expiry).dt.date
+    og = {d: g for d, g in opts.groupby("date")}
+    byday = {d: g.reset_index(drop=True) for d, g in m.groupby("date")}
+    rows = []
+    for i in range(1, len(days)):
+        d, prev = days[i], days[i - 1]
+        g, po = byday.get(d), og.get(prev)
+        if d < start or g is None or po is None or len(g) < 300:
+            continue
+        tt = g.ts.dt.time.to_numpy()
+        ts = [x.to_pydatetime() for x in g.ts]
+        hi, lo, op, cl = g.high.to_numpy(), g.low.to_numpy(), g.open.to_numpy(), g.close.to_numpy()
+        j0, k_end = int(np.searchsorted(tt, RANGE_END)), int(np.searchsorted(tt, EXIT))
+        if k_end >= len(tt):
+            continue
+        rh, rl = float(hi[:j0].max()), float(lo[:j0].min())
+        row = {"date": str(d), "range_low": round(rl, 1), "range_high": round(rh, 1)}
+        sig = None
+        for k in range(j0, len(tt) - 1):
+            if tt[k] >= LAST_ENTRY:
+                break
+            if cl[k] > rh or cl[k] < rl:
+                sig = (k + 1, bool(cl[k] > rh))
+                break
+        if sig is None:
+            rows.append(dict(row, status="no trade", why="No breakout of the 9:15-9:45 range by 13:00"))
+            continue
+        j, call = sig
+        exps = sorted(e for e in po.expiry.unique() if e >= d)
+        if not exps:
+            continue
+        exp = exps[0]
+        K0 = round(close[prev] / STEP) * STEP
+        p_ = po[(po.expiry == exp) & (po.strike == K0)]
+        ivs = [x for x in (_iv(r.close, close[prev], K0, _years(dt.datetime.combine(prev, dt.time(15, 30)), exp),
+                               r.option_type == "CE") for r in p_.itertuples()) if x]
+        if not ivs:
+            continue
+        sg = float(np.mean(ivs))
+        K = round(op[j] / STEP) * STEP
+        hit = np.nonzero((lo[j:k_end + 1] <= rl) if call else (hi[j:k_end + 1] >= rh))[0]
+        kx = j + int(hit[0]) if len(hit) else k_end
+        s_exit = (rl if call else rh) if len(hit) else float(op[k_end])
+        entry = _bs(float(op[j]), K, _years(ts[j], exp), sg, call)
+        exitp = _bs(s_exit, K, _years(ts[kx], exp), sg, call)
+        pts = (s_exit - float(op[j])) * (1 if call else -1)
+        rows.append(dict(row, status="closed", side="CE" if call else "PE", strike=int(K), expiry=str(exp),
+                         expiry_day=bool(d == exp), entry_time=ts[j].strftime("%H:%M"), exit_time=ts[kx].strftime("%H:%M"),
+                         why="SL: NIFTY back through the range" if len(hit) else "15:15 exit",
+                         nifty_entry=round(float(op[j]), 1), nifty_exit=round(s_exit, 1), nifty_pts=round(pts, 1),
+                         entry=round(entry, 2), exit=round(exitp, 2),
+                         pnl=round((exitp - entry) * LOT - charges(entry, exitp, LOT)),
+                         capital=round(entry * LOT), futures_pnl=round(pts * LOT - _fut_cost(float(op[j]), s_exit)),
+                         source="model"))
+    return rows
+
+
+def real_trades(after):
+    out = []
+    for f in sorted(glob.glob(os.path.join(config.ROOT, "state", "picks", "option-nifty-*.json"))):
+        with open(f, encoding="utf-8") as fh:
+            d = json.load(fh)
+        if d["day"] <= str(after):
+            continue
+        base = {"date": d["day"], "range_low": d.get("range_low"), "range_high": d.get("range_high")}
+        if d.get("status") == "closed":
+            out.append(dict(base, status="closed", side=d["side"], strike=int(d["strike"]), expiry=d["expiry"],
+                            expiry_day=d["expiry"] == d["day"], entry_time=d["entry_at"][11:], exit_time=d["exit_at"][11:],
+                            why=d["why"].replace("SL: NIFTY back to the other side of the range", "SL: NIFTY back through the range"),
+                            entry=d["entry"], exit=d["exit"], pnl=round(d["net"]), capital=round(d["entry"] * d["lot"]),
+                            source="real"))
+        elif d.get("status") == "no trade":
+            out.append(dict(base, status="no trade", why=d.get("note", "No breakout")))
+        elif d.get("status") == "no market":
+            out.append(dict(base, status="holiday", why="Market holiday"))
+    return out
+
+
+def build(months=6, log=print):
+    con = db.connect(read_only=True)
+    end = con.execute("SELECT max(date) FROM minute_bars WHERE symbol = 'NIFTY 50'").fetchone()[0]
+    start = (pd.Timestamp(end) - pd.DateOffset(months=months)).date()
+    rows = replay(con, start, end) + real_trades(end)
+    rows.sort(key=lambda r: r["date"])
+    cum = 0
+    for r in rows:
+        cum += r.get("pnl", 0) or 0
+        r["cum"] = cum
+    tr = [r for r in rows if r["status"] == "closed"]
+    pn = [r["pnl"] for r in tr]
+    wins = [x for x in pn if x > 0]
+    peak, dd = 0, 0
+    for r in rows:
+        peak = max(peak, r["cum"])
+        dd = min(dd, r["cum"] - peak)
+    model_n = sum(1 for r in tr if r["source"] == "model")
+    months_out = []
+    for mo in sorted({r["date"][:7] for r in rows}):
+        t = [r for r in tr if r["date"].startswith(mo)]
+        months_out.append({"month": mo, "days": sum(1 for r in rows if r["date"].startswith(mo) and r["status"] != "holiday"),
+                           "trades": len(t), "won": sum(1 for r in t if r["pnl"] > 0), "net": sum(r["pnl"] for r in t),
+                           "capital_max": max((r["capital"] for r in t), default=0)})
+    doc = {"built": dt.datetime.now(config.IST).strftime("%d %b %Y, %H:%M IST"),
+           "from": rows[0]["date"] if rows else None, "to": rows[-1]["date"] if rows else None,
+           "method": {"rule": "9:15-9:45 range breakout; first 1-minute close outside it by 13:00 buys the ATM call (up) "
+                              "or put (down) at the next minute; SL when NIFTY crosses back to the other side of the "
+                              "range; otherwise exit at 15:15. 1 lot, nearest expiry.",
+                      "prices": "Times and levels: real NIFTY 1-minute prices. Option prices: a model set each day from "
+                                "NSE's real option prices; 'real' days are the app's own paper trades on real option prices.",
+                      "bias": "The model flatters option buyers by about Rs %d-%d a trade (checked on real prices)." % BIAS,
+                      "lot": LOT},
+           "summary": {"trading_days": sum(1 for r in rows if r["status"] != "holiday"), "trades": len(tr),
+                       "no_trade_days": sum(1 for r in rows if r["status"] == "no trade"),
+                       "won": len(wins), "win_pct": round(len(wins) / len(tr) * 100) if tr else None,
+                       "net": sum(pn), "avg": round(sum(pn) / len(pn)) if pn else None,
+                       "avg_win": round(sum(wins) / len(wins)) if wins else None,
+                       "avg_loss": round(sum(x for x in pn if x <= 0) / max(1, len(pn) - len(wins))) if pn else None,
+                       "best": max(pn, default=None), "worst": min(pn, default=None), "max_drawdown": dd,
+                       "capital_avg": round(sum(r["capital"] for r in tr) / len(tr)) if tr else None,
+                       "capital_max": max((r["capital"] for r in tr), default=None),
+                       "corrected_net": [sum(pn) - BIAS[1] * model_n, sum(pn) - BIAS[0] * model_n],
+                       "futures_net": sum(r.get("futures_pnl", 0) for r in tr if "futures_pnl" in r)},
+           "months": months_out, "days": rows}
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    with open(OUT, "w", encoding="utf-8") as fh:
+        json.dump(doc, fh, separators=(",", ":"))
+    s = doc["summary"]
+    log("backtest %s to %s: %d trades, win %s%%, net Rs %s, worst fall Rs %s -> %s" % (
+        doc["from"], doc["to"], s["trades"], s["win_pct"], s["net"], s["max_drawdown"], OUT))
+    return doc
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--months", type=int, default=6)
+    build(ap.parse_args().months)
