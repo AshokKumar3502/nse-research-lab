@@ -1,6 +1,6 @@
 {
  "session": "2026-11-25",
- "made_at": "2026-11-25 17:17 IST",
+ "made_at": "2026-11-25 17:32 IST",
  "status": "VALIDATED",
  "review": {
   "verdict": "KEEP",
@@ -9,9 +9,9 @@
   "t_offset0": 2.3
  },
  "regime": {
-  "nifty_above_ma200": false,
+  "nifty_above_ma200": true,
   "breadth_ma50_pct": 55.9,
-  "exposure": 0.5
+  "exposure": 1.0
  },
  "model_backtest": {
   "mean_pct": 1.0307,
@@ -33,51 +33,79 @@
  "per_capital": 100000.0,
  "picks": [
   {
-   "symbol": "CUPID",
-   "industry": "Financial Services",
-   "score_pct": 2.08,
-   "ref_close": 366.35,
-   "stop": 337.27,
-   "stop_pct": -7.94,
+   "symbol": "KEC",
+   "industry": "Construction",
+   "score_pct": 2.13,
+   "ref_close": 297.65,
+   "stop": 277.02,
+   "stop_pct": -6.93,
    "use_stop": false,
-   "shares_per_lakh": 27,
-   "value_per_lakh": 9891,
+   "shares_per_lakh": 33,
+   "value_per_lakh": 9822,
    "hold_sessions": 10,
-   "ret_20_pct": 15.7,
-   "rs_industry_20_pct": null
+   "ret_20_pct": -10.3,
+   "rs_industry_20_pct": -13.9
   },
   {
-   "symbol": "RATNAVEER",
-   "industry": "Consumer Durables",
-   "score_pct": 2.02,
-   "ref_close": 404.55,
-   "stop": 373.81,
-   "stop_pct": -7.6,
+   "symbol": "INOXWIND",
+   "industry": "Construction",
+   "score_pct": 1.86,
+   "ref_close": 52.36,
+   "stop": 46.86,
+   "stop_pct": -10.5,
    "use_stop": false,
-   "shares_per_lakh": 24,
-   "value_per_lakh": 9709,
+   "shares_per_lakh": 190,
+   "value_per_lakh": 9948,
    "hold_sessions": 10,
-   "ret_20_pct": 16.5,
-   "rs_industry_20_pct": null
+   "ret_20_pct": -10.6,
+   "rs_industry_20_pct": -14.3
   },
   {
-   "symbol": "TFCILTD",
+   "symbol": "PIIND",
    "industry": "Chemicals",
-   "score_pct": 1.63,
-   "ref_close": 173.66,
-   "stop": 165.14,
-   "stop_pct": -4.91,
+   "score_pct": 1.85,
+   "ref_close": 1576.0,
+   "stop": 1437.0,
+   "stop_pct": -8.82,
    "use_stop": false,
-   "shares_per_lakh": 57,
-   "value_per_lakh": 9899,
+   "shares_per_lakh": 6,
+   "value_per_lakh": 9456,
    "hold_sessions": 10,
-   "ret_20_pct": 12.0,
-   "rs_industry_20_pct": null
+   "ret_20_pct": -24.5,
+   "rs_industry_20_pct": -26.6
+  },
+  {
+   "symbol": "THERMAX",
+   "industry": "Construction",
+   "score_pct": 1.66,
+   "ref_close": 2663.4,
+   "stop": 2429.46,
+   "stop_pct": -8.78,
+   "use_stop": false,
+   "shares_per_lakh": 3,
+   "value_per_lakh": 7990,
+   "hold_sessions": 10,
+   "ret_20_pct": -15.5,
+   "rs_industry_20_pct": -19.2
+  },
+  {
+   "symbol": "JSLL",
+   "industry": "Power",
+   "score_pct": 1.6,
+   "ref_close": 303.2,
+   "stop": 256.29,
+   "stop_pct": -15.47,
+   "use_stop": false,
+   "shares_per_lakh": 32,
+   "value_per_lakh": 9702,
+   "hold_sessions": 10,
+   "ret_20_pct": -12.0,
+   "rs_industry_20_pct": -16.6
   },
   {
    "symbol": "SUNSHINE",
    "industry": "UNKNOWN",
-   "score_pct": 1.54,
+   "score_pct": 1.58,
    "ref_close": 522.15,
    "stop": 460.84,
    "stop_pct": -11.74,
@@ -89,22 +117,70 @@
    "rs_industry_20_pct": null
   },
   {
-   "symbol": "RAYMOND",
-   "industry": "Realty",
-   "score_pct": 1.53,
-   "ref_close": 1189.9,
-   "stop": 1076.14,
-   "stop_pct": -9.56,
+   "symbol": "MARSONS",
+   "industry": "Oil Gas & Consumable Fuels",
+   "score_pct": 1.31,
+   "ref_close": 152.03,
+   "stop": 130.65,
+   "stop_pct": -14.06,
    "use_stop": false,
-   "shares_per_lakh": 8,
-   "value_per_lakh": 9519,
+   "shares_per_lakh": 65,
+   "value_per_lakh": 9882,
    "hold_sessions": 10,
-   "ret_20_pct": 10.1,
-   "rs_industry_20_pct": null
+   "ret_20_pct": 21.9,
+   "rs_industry_20_pct": 11.4
+  },
+  {
+   "symbol": "SWIGGY",
+   "industry": "Consumer Services",
+   "score_pct": 1.14,
+   "ref_close": 177.07,
+   "stop": 162.62,
+   "stop_pct": -8.16,
+   "use_stop": false,
+   "shares_per_lakh": 56,
+   "value_per_lakh": 9916,
+   "hold_sessions": 10,
+   "ret_20_pct": -6.3,
+   "rs_industry_20_pct": -11.8
+  },
+  {
+   "symbol": "CUPID",
+   "industry": "Financial Services",
+   "score_pct": 1.14,
+   "ref_close": 366.35,
+   "stop": 337.27,
+   "stop_pct": -7.94,
+   "use_stop": false,
+   "shares_per_lakh": 27,
+   "value_per_lakh": 9891,
+   "hold_sessions": 10,
+   "ret_20_pct": 15.7,
+   "rs_industry_20_pct": 2.6
+  },
+  {
+   "symbol": "MARICO",
+   "industry": "Fast Moving Consumer Goods",
+   "score_pct": 0.96,
+   "ref_close": 935.2,
+   "stop": 902.51,
+   "stop_pct": -3.5,
+   "use_stop": false,
+   "shares_per_lakh": 10,
+   "value_per_lakh": 9352,
+   "hold_sessions": 10,
+   "ret_20_pct": 20.5,
+   "rs_industry_20_pct": 4.6
   }
  ],
  "rules_today": {
-  "sector_leaders": [],
+  "sector_leaders": [
+   "HDFCBANK",
+   "MARICO",
+   "DABUR",
+   "BLUESTARCO",
+   "UNITDSPR"
+  ],
   "results_jump": []
  },
  "universe": 494
