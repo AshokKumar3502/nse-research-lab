@@ -1,0 +1,15 @@
+{
+ "id": "vix_spike_buy",
+ "name": "India VIX spike: buy liquid leaders",
+ "author": "claude",
+ "mode": "cohort",
+ "hypothesis": "After fear spikes (India VIX above 22), liquid stocks in long-term uptrends recover over the next month as fear fades.",
+ "filter": "vix > {v} and ma50_over_ma200 > 0 and not avoid",
+ "rank": "-turnover",
+ "k": 10,
+ "hold": 20,
+ "stop_atr": null,
+ "params": {
+  "v": 22
+ }
+}

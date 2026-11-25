@@ -1,0 +1,16 @@
+{
+ "id": "industry_leader_pullback",
+ "name": "Pullback in the strongest industry",
+ "author": "claude",
+ "mode": "cohort",
+ "hypothesis": "Stocks in a top-ranked industry that dipped 5%+ over a week while staying above the 50-day average resume with the industry.",
+ "filter": "ind_rank_20 <= {r} and ret_5 < -{dip} and dist_ma50 > 0 and not avoid",
+ "rank": "ret_5",
+ "k": 10,
+ "hold": 10,
+ "stop_atr": null,
+ "params": {
+  "r": 5,
+  "dip": 0.05
+ }
+}

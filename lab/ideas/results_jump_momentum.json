@@ -1,0 +1,14 @@
+{
+ "id": "results_jump_momentum",
+ "name": "Results jump in a 6-month leader",
+ "author": "claude",
+ "mode": "event",
+ "hypothesis": "A 4%+ results-day jump on 2x turnover in a stock already up 20%+ over 120 sessions (strong business momentum confirmed by results) drifts further for two weeks.",
+ "filter": "days_since_result == 0 and result_ret >= {jump} and result_turn_mult >= 2 and result_close_loc >= 0.75 and ret_120 > {mom}",
+ "hold": 10,
+ "stop_atr": null,
+ "params": {
+  "jump": 0.04,
+  "mom": 0.2
+ }
+}

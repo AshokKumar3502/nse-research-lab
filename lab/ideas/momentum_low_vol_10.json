@@ -1,0 +1,16 @@
+{
+ "id": "momentum_low_vol_10",
+ "name": "Steady 6-month leaders, low volatility",
+ "author": "claude",
+ "mode": "cohort",
+ "hypothesis": "Combining momentum (top 6-month return) with low volatility selects steady trends that keep going with smaller drawdowns.",
+ "filter": "ret_120 > {mom} and atr_pct < {atr} and ma50_over_ma200 > 0 and nifty_above_ma200 == 1 and not avoid",
+ "rank": "-ret_120",
+ "k": 10,
+ "hold": 20,
+ "stop_atr": null,
+ "params": {
+  "mom": 0.25,
+  "atr": 0.03
+ }
+}

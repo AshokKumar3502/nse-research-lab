@@ -1,0 +1,14 @@
+{
+ "id": "big_volume_gap_up",
+ "name": "Big up-day on huge volume (no results)",
+ "author": "claude",
+ "mode": "event",
+ "hypothesis": "A 5%+ up-day on 3x normal turnover closing near the high, outside results, marks institutional news buying that continues for two weeks.",
+ "filter": "ret_1 > {up} and turn_ratio_5_60 > {vol} and close_loc_1 > 0.8 and days_since_result > 5 and nifty_above_ma200 == 1 and not avoid",
+ "hold": 10,
+ "stop_atr": null,
+ "params": {
+  "up": 0.05,
+  "vol": 2.0
+ }
+}

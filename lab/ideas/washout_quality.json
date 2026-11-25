@@ -1,0 +1,15 @@
+{
+ "id": "washout_quality",
+ "name": "Market washout: buy long-term leaders",
+ "author": "claude",
+ "mode": "cohort",
+ "hypothesis": "When fewer than 25% of stocks are above their 50-day average (a market washout), stocks still above their 200-day average rebound hardest over the next month.",
+ "filter": "breadth_ma50 < {b} and dist_ma200 > 0 and not avoid",
+ "rank": "-rs_nifty_20",
+ "k": 10,
+ "hold": 20,
+ "stop_atr": null,
+ "params": {
+  "b": 0.25
+ }
+}
