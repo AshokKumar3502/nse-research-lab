@@ -260,7 +260,7 @@ h3.month{display:flex;justify-content:space-between;margin:22px 2px 0;font-size:
 .bnav{display:none}
 @media (max-width:760px){nav.tabs{display:none}
  .lastupd{bottom:calc(58px + env(safe-area-inset-bottom));font-size:11.5px}main{padding-bottom:130px}
- .bnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+ .bnav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
  .bnav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;padding:4px}
  .bnav button svg{width:22px;height:22px}.bnav button[aria-current=page]{color:var(--brand)}
  .cols{grid-template-columns:1fr}.brand small{display:none}.kpi .v{font-size:21px}}
@@ -277,6 +277,7 @@ h3.month{display:flex;justify-content:space-between;margin:22px 2px 0;font-size:
 <section class="view" id="v-history"></section>
 <section class="view" id="v-stats"></section>
 <section class="view" id="v-backtest"></section>
+<section class="view" id="v-highs"></section>
 <footer>Paper trading 1 lot of NIFTY options a day on real NSE option prices, after Zerodha charges. For education and research only; not
 investment advice, and the author is not a SEBI-registered adviser. Nothing here places orders.</footer>
 </main>
@@ -299,6 +300,7 @@ const I = {
  portfolio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
  history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>',
  backtest: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v4M7 15v6M17 3v8M17 17v4"/><rect x="4.5" y="7" width="5" height="8" rx="1"/><rect x="14.5" y="11" width="5" height="6" rx="1"/></svg>',
+ highs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M5 16l4-6 4 3 6-9"/><circle cx="19" cy="4" r="1.6"/></svg>',
  stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
@@ -318,7 +320,7 @@ setTheme(cur);
 $("#theme").onclick = () => { cur = themes[(themes.indexOf(cur) + 1) % 3]; setTheme(cur); };
 
 // ---------- navigation
-const views = [["today", "Today"], ["backtest", "Backtest"], ["portfolio", "Portfolio"], ["history", "History"], ["stats", "Stats"]];
+const views = [["today", "Today"], ["backtest", "Backtest"], ["highs", "Exit vs High"], ["portfolio", "Portfolio"], ["history", "History"], ["stats", "Stats"]];
 $("nav.tabs").innerHTML = views.map(([k, l]) => `<button data-v="${k}">${l}</button>`).join("");
 $(".bnav").innerHTML = views.map(([k, l]) => `<button data-v="${k}">${I[k]}<span>${l}</span></button>`).join("");
 function show(v) {
@@ -327,10 +329,64 @@ function show(v) {
   document.querySelectorAll("[data-v]").forEach(b => { if (b.dataset.v === v) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   if (location.hash !== "#" + v) history.replaceState(null, "", "#" + v);
   if (v === "backtest") loadBacktest();
+  if (v === "highs") loadHighs();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("[data-v]").forEach(b => b.onclick = () => show(b.dataset.v));
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+
+// ---------- EXIT VS HIGH: actual exit P&L vs selling at the trade's high (hindsight), from the backtest file
+const HF = {year: "all", limit: 30};
+async function loadHighs() {
+  const box = $("#v-highs");
+  if (!BT) {
+    box.innerHTML = `<h2>Exit vs High</h2><div class="empty" role="status">Loading…</div>`;
+    try { const r = await fetch("data/backtest.json?t=" + Date.now(), {cache: "no-store"}); if (!r.ok) throw new Error("HTTP " + r.status); BT = await r.json(); }
+    catch (e) { box.innerHTML = `<h2>Exit vs High</h2><div class="empty" role="alert">Could not load the data (${esc(String(e.message || e))}).</div>`; return; }
+  }
+  const tr = BT.days.filter(d => d.status === "closed" && d.high_pnl != null);
+  const act = tr.reduce((a, d) => a + d.pnl, 0), hi = tr.reduce((a, d) => a + d.high_pnl, 0);
+  const yrs = {};
+  tr.forEach(d => { const y = d.date.slice(0, 4); yrs[y] = yrs[y] || {n: 0, a: 0, h: 0}; yrs[y].n++; yrs[y].a += d.pnl; yrs[y].h += d.high_pnl; });
+  const hrs = {};
+  tr.forEach(d => { const hh = String(d.high_time || "").slice(0, 2); if (hh) hrs[hh] = (hrs[hh] || 0) + 1; });
+  const hmax = Math.max(1, ...Object.values(hrs));
+  let h = `<h2>Exit vs High<span class="sub">What the rule actually made vs selling each trade at its highest price (hindsight) · ${fdl(BT.from)} – ${fdl(BT.to)} · 1 lot, after charges</span></h2>
+    <details class="why banner warn"><summary><b>Hindsight, not a target.</b> <span class="muted">Why?</span></summary><p style="margin:6px 0 0">Nobody knows the high while the trade is open.
+    Every early-exit rule we tested (20-point targets, trailing exits, earlier exit times) made less than holding to 15:15. Option prices before 20 Nov 2026 are modelled.</p></details>
+    <div class="kpis bt-kpis">
+      <div class="card kpi"><div class="l">Actual exit P&L</div><div class="v ${cl(act)}">${sgn(act)}</div><div class="s">stop-loss or 15:15 · ${tr.length} trades</div></div>
+      <div class="card kpi"><div class="l">If sold at the high</div><div class="v ${cl(hi)}">${sgn(hi)}</div><div class="s">hindsight best</div></div>
+      <div class="card kpi"><div class="l">Left on the table</div><div class="v">${sgn(hi - act)}</div><div class="s">avg ${sgn((hi - act) / Math.max(1, tr.length))} a trade</div></div>
+      <div class="card kpi"><div class="l">Trades that were in profit</div><div class="v">${Math.round(tr.filter(d => d.high_pnl > 0).length / Math.max(1, tr.length) * 100)}%</div><div class="s">at some point after entry</div></div></div>
+    <h2>By year</h2><div class="list"><table><caption class="sr">Actual vs at the high by year</caption><thead><tr><th scope="col">Year</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Actual</th><th scope="col" class="r">At the high</th><th scope="col" class="r">Left</th></tr></thead><tbody>${
+      Object.keys(yrs).sort().map(y => `<tr><td>${y}</td><td class="r">${yrs[y].n}</td><td class="r ${cl(yrs[y].a)}"><b>${sgn(yrs[y].a)}</b></td><td class="r ${cl(yrs[y].h)}">${sgn(yrs[y].h)}</td><td class="r muted">${sgn(yrs[y].h - yrs[y].a)}</td></tr>`).join("")}</tbody></table></div>
+    <h2>When the high came<span class="sub">Number of trades whose best price was in each hour</span></h2>
+    <div class="list">${Object.keys(hrs).sort().map(hh => `<div class="li"><div><b>${hh}:00–${hh}:59</b><div class="prog" style="margin-top:6px"><i style="width:${(hrs[hh] / hmax * 100).toFixed(0)}%"></i></div></div><span class="r">${hrs[hh]}</span></div>`).join("")}</div>
+    <h2>Every trade</h2><div class="tools"><div class="seg" role="group" aria-label="Year">${[["all", "All"], ...Object.keys(yrs).sort().map(y => [y, y])].map(([k, l]) => `<button type="button" data-hy="${k}" aria-pressed="${HF.year === k}">${l}</button>`).join("")}</div></div>
+    <p class="sumline" id="hisum" aria-live="polite" tabindex="-1"></p><div id="hilist"></div>`;
+  box.innerHTML = h;
+  box.querySelectorAll("[data-hy]").forEach(b => b.onclick = () => { HF.year = b.dataset.hy; HF.limit = 30;
+    box.querySelectorAll("[data-hy]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawHighs(tr); });
+  drawHighs(tr);
+}
+function drawHighs(tr) {
+  const rows = tr.filter(d => HF.year === "all" || d.date.startsWith(HF.year)).slice().reverse();
+  const a = rows.reduce((x, d) => x + d.pnl, 0), hh = rows.reduce((x, d) => x + d.high_pnl, 0);
+  $("#hisum").textContent = rows.length + " trades · actual " + sgn(a) + " · at the high " + sgn(hh) + " · left " + sgn(hh - a);
+  let h = `<div class="btlist">` + rows.slice(0, HF.limit).map(d => `<article class="card btday ${d.pnl > 0 ? "win" : "loss"}">
+    <div class="row"><span class="dt">${esc(fdl(d.date))}</span><b>NIFTY ${d.strike} ${d.side}</b></div>
+    <div class="kv kv4"><div>Entry · ${esc(d.entry_time)}<b>${inr(d.entry)}</b></div><div>High · ${esc(d.high_time)}<b>${inr(d.high)}</b></div>
+      <div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div><div>Exit reason<b style="font-size:12px">${/^SL/.test(d.why) ? "Stop-loss" : "15:15"}</b></div></div>
+    <div class="kv kv4"><div>P&L at the high<b class="${cl(d.high_pnl)}">${sgn(d.high_pnl)}</b></div><div>P&L at exit<b class="${cl(d.pnl)}">${sgn(d.pnl)}</b></div>
+      <div>Left on table<b class="muted">${sgn(d.high_pnl - d.pnl)}</b></div><div>Capital<b>${inr(d.capital)}</b></div></div></article>`).join("") + `</div>`;
+  if (!rows.length) h = `<div class="empty">No trades.</div>`;
+  else if (rows.length > HF.limit) h += `<button type="button" class="more-btn" id="himore">Show more (${rows.length - HF.limit} older trades)</button>`;
+  $("#hilist").innerHTML = h;
+  const more = $("#himore");
+  if (more) more.onclick = () => { HF.limit += 30; drawHighs(tr); const n = $("#himore"); (n || $("#hisum")).focus(); };
+}
 
 // ---------- BACKTEST: last 6 months of the NIFTY option rule (docs/data/backtest.json), loaded on first open
 let BT = null;
