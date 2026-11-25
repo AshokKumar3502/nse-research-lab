@@ -338,7 +338,7 @@ const BTF = {month: "all", kind: "all", limit: 30};
 async function loadBacktest() {
   const box = $("#v-backtest");
   if (BT) { renderBacktest(); return; }
-  box.innerHTML = `<h2>Backtest</h2><div class="empty" role="status">Loading 6 months of trades…</div>`;
+  box.innerHTML = `<h2>Backtest</h2><div class="empty" role="status">Loading the backtest…</div>`;
   try {
     const r = await fetch("data/backtest.json?t=" + Date.now(), {cache: "no-store"});
     if (!r.ok) throw new Error("HTTP " + r.status);
@@ -358,7 +358,7 @@ function renderBacktest() {
     ["Avg win / loss", `<span class="nw">${sgn(S.avg_win)}</span> / <span class="nw">${sgn(S.avg_loss)}</span>`, "", "per trade"],
     ["Capital a trade", inr(S.capital_avg), "", "average · highest " + inr(S.capital_max)],
     ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)]];
-  let h = `<h2>Backtest · last 6 months<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · NIFTY 9:45 range breakout · 1 lot (${M.lot || 65}) a day · after charges</span></h2>
+  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · NIFTY 9:45 range breakout · 1 lot (${M.lot || 65}) a day · after charges</span></h2>
     <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
       <p style="margin:6px 0 0">${esc(M.rule || "")}</p><p style="margin:6px 0 0">${esc(M.prices || "")} ${esc(M.bias || "")}
       The same trades in NIFTY futures (real prices) made ${sgn(S.futures_net)}. Capital = the premium paid for 1 lot. Past results are not predictions.</p></details>
@@ -368,16 +368,21 @@ function renderBacktest() {
     const W = 760, H = 190, P = 34, vals = pts.map(d => d.cum), lo = Math.min(0, ...vals), hi = Math.max(0, ...vals), sp = (hi - lo) || 1;
     const x = i => P + i * (W - 2 * P) / (pts.length - 1), y = v => H - 22 - (v - lo) / sp * (H - 44);
     const line = pts.map((d, i) => `${x(i).toFixed(1)},${y(d.cum).toFixed(1)}`).join(" ");
-    const ticks = BT.months.map(m => { const i = pts.findIndex(d => d.date.startsWith(m.month)); return i < 0 ? "" : `<text class="ax" x="${x(i)}" y="${H - 4}" text-anchor="start">${mshort(m.month)}</text>`; }).join("");
+    const many = BT.months.length > 12;
+    const ticks = BT.months.map((m, mi) => { if (many && !m.month.endsWith("-01") && mi !== 0) return "";
+      const i = pts.findIndex(d => d.date.startsWith(m.month));
+      return i < 0 ? "" : `<text class="ax" x="${x(i)}" y="${H - 4}" text-anchor="start">${many ? m.month.slice(0, 4) : mshort(m.month)}</text>`; }).join("");
     h += `<div class="chart" style="margin-top:12px"><div class="row"><b>Running total</b><span class="${cl(vals[vals.length - 1])} num"><b>${sgn(vals[vals.length - 1])}</b></span></div>
       <svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Running total of the backtest, ${esc(sgn(vals[vals.length - 1]))} at the end">
       <line class="g" x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}"/>
       <polygon points="${x(0)},${y(0)} ${line} ${x(pts.length - 1)},${y(0)}" fill="color-mix(in srgb,var(--brand) 16%,transparent)"/>
       <polyline points="${line}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/>${ticks}</svg></div>`;
   }
-  h += `<h2>By month<span class="sub">Tap a month to see its days</span></h2>
-    <div class="tools"><div class="seg" role="group" aria-label="Month">` +
-    [["all", "All", S.net], ...BT.months.map(m => [m.month, mshort(m.month), m.net])].map(([kk, l, n]) =>
+  const yrs = {};
+  BT.months.forEach(m => { const y = m.month.slice(0, 4); yrs[y] = (yrs[y] || 0) + m.net; });
+  h += `<h2>By year<span class="sub">Tap a year to see its days</span></h2>
+    <div class="tools"><div class="seg" role="group" aria-label="Year">` +
+    [["all", "All", S.net], ...Object.keys(yrs).sort().map(y => [y, y, yrs[y]])].map(([kk, l, n]) =>
       `<button type="button" data-btm="${kk}" aria-pressed="${BTF.month === kk}">${l} <span class="n ${cl(n)}">${sgn(n)}</span></button>`).join("") + `</div></div>
     <div class="tools"><div class="seg" role="group" aria-label="Show">` +
     [["all", "All days"], ["win", "Wins"], ["loss", "Losses"], ["none", "No trade"]].map(([kk, l]) =>
