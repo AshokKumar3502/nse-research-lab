@@ -1,0 +1,163 @@
+{
+ "day": "2026-11-25",
+ "decision_time": "09:30",
+ "made_at": "12:01:48 IST",
+ "status": "PAPER ONLY: the walk-forward test has not shown an edge",
+ "model_report": {
+  "from": "2022-01-03",
+  "to": "2026-11-19",
+  "best": {
+   "strategy": "model_short_close",
+   "verdict": "NO EDGE"
+  }
+ },
+ "universe": 218,
+ "missing_keys": [],
+ "long": [
+  {
+   "symbol": "NATIONALUM",
+   "side": "long",
+   "score": 0.389,
+   "ref_price": 286.65,
+   "stop": 285.2,
+   "flat_by": "15:10",
+   "shares_per_lakh": 348,
+   "exposure_per_lakh": 99754,
+   "risk_to_stop_rs_per_lakh": 505,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "NAVINFLUOR",
+   "side": "long",
+   "score": 0.342,
+   "ref_price": 9910.0,
+   "stop": 9910.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 10,
+   "exposure_per_lakh": 99100,
+   "risk_to_stop_rs_per_lakh": 0,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "KEI",
+   "side": "long",
+   "score": 0.239,
+   "ref_price": 3765.0,
+   "stop": 3729.9,
+   "flat_by": "15:10",
+   "shares_per_lakh": 26,
+   "exposure_per_lakh": 97890,
+   "risk_to_stop_rs_per_lakh": 913,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "GVT&D",
+   "side": "long",
+   "score": 0.228,
+   "ref_price": 4092.0,
+   "stop": 4066.5,
+   "flat_by": "15:10",
+   "shares_per_lakh": 24,
+   "exposure_per_lakh": 98208,
+   "risk_to_stop_rs_per_lakh": 612,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "MCX",
+   "side": "long",
+   "score": 0.206,
+   "ref_price": 3478.0,
+   "stop": 3476.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 28,
+   "exposure_per_lakh": 97384,
+   "risk_to_stop_rs_per_lakh": 56,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  }
+ ],
+ "short": [
+  {
+   "symbol": "APLAPOLLO",
+   "side": "short",
+   "score": -1.455,
+   "ref_price": 1419.5,
+   "stop": 1503.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 70,
+   "exposure_per_lakh": 99365,
+   "risk_to_stop_rs_per_lakh": 5845,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "LTF",
+   "side": "short",
+   "score": -0.426,
+   "ref_price": 289.56,
+   "stop": 292.4,
+   "flat_by": "15:10",
+   "shares_per_lakh": 345,
+   "exposure_per_lakh": 99898,
+   "risk_to_stop_rs_per_lakh": 980,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "KALYANKJIL",
+   "side": "short",
+   "score": -0.254,
+   "ref_price": 647.3,
+   "stop": 662.45,
+   "flat_by": "15:10",
+   "shares_per_lakh": 154,
+   "exposure_per_lakh": 99684,
+   "risk_to_stop_rs_per_lakh": 2333,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "RELIANCE",
+   "side": "short",
+   "score": -0.186,
+   "ref_price": 1386.9,
+   "stop": 1387.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 72,
+   "exposure_per_lakh": 99857,
+   "risk_to_stop_rs_per_lakh": 7,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "COFORGE",
+   "side": "short",
+   "score": -0.172,
+   "ref_price": 2115.6,
+   "stop": 2185.6,
+   "flat_by": "15:10",
+   "shares_per_lakh": 47,
+   "exposure_per_lakh": 99433,
+   "risk_to_stop_rs_per_lakh": 3290,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  }
+ ],
+ "blocked": {},
+ "per_capital": 100000.0,
+ "leverage": 5.0,
+ "leverage_effect": {
+  "long": {
+   "backtest_pct_per_day_on_exposure": -0.1823,
+   "pct_per_day_on_capital": -0.911
+  },
+  "short": {
+   "backtest_pct_per_day_on_exposure": -0.0584,
+   "pct_per_day_on_capital": -0.292
+  }
+ }
+}
