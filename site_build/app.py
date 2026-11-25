@@ -364,6 +364,18 @@ async function loadHighs() {
       Object.keys(yrs).sort().map(y => `<tr><td>${y}</td><td class="r">${yrs[y].n}</td><td class="r ${cl(yrs[y].a)}"><b>${sgn(yrs[y].a)}</b></td><td class="r ${cl(yrs[y].h)}">${sgn(yrs[y].h)}</td><td class="r muted">${sgn(yrs[y].h - yrs[y].a)}</td></tr>`).join("")}</tbody></table></div>
     <h2>When the high came<span class="sub">Number of trades whose best price was in each hour</span></h2>
     <div class="list">${Object.keys(hrs).sort().map(hh => `<div class="li"><div><b>${hh}:00–${hh}:59</b><div class="prog" style="margin-top:6px"><i style="width:${(hrs[hh] / hmax * 100).toFixed(0)}%"></i></div></div><span class="r">${hrs[hh]}</span></div>`).join("")}</div>
+    <h2>When the high came · every 15 minutes<span class="sub">Trades whose best price was in each 15-minute slot · bar = all trades · W = winning trades, L = losing trades</span></h2>
+    <div class="list">${(() => {
+      const q = {};
+      tr.forEach(d => { const t = String(d.high_time || ""); if (!t) return; const mm = Math.floor(+t.slice(3, 5) / 15) * 15;
+        const k = t.slice(0, 2) + ":" + String(mm).padStart(2, "0"); q[k] = q[k] || {a: 0, w: 0, l: 0}; q[k].a++; if (d.pnl > 0) q[k].w++; else q[k].l++; });
+      const qmax = Math.max(1, ...Object.values(q).map(v => v.a));
+      let cum = 0;
+      return Object.keys(q).sort().map(k => { cum += q[k].a; const [hh, mm] = k.split(":"); const end = new Date(2000, 0, 1, +hh, +mm + 14);
+        return `<div class="li"><div><b>${k}–${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}</b>
+          <span class="muted" style="font-size:12px"> · W ${q[k].w} · L ${q[k].l} · ${(q[k].a / tr.length * 100).toFixed(1)}% · cumulative ${(cum / tr.length * 100).toFixed(0)}%</span>
+          <div class="prog" style="margin-top:6px"><i style="width:${(q[k].a / qmax * 100).toFixed(0)}%"></i></div></div><span class="r">${q[k].a}</span></div>`; }).join("");
+    })()}</div>
     <h2>Every trade</h2><div class="tools"><div class="seg" role="group" aria-label="Year">${[["all", "All"], ...Object.keys(yrs).sort().map(y => [y, y])].map(([k, l]) => `<button type="button" data-hy="${k}" aria-pressed="${HF.year === k}">${l}</button>`).join("")}</div></div>
     <p class="sumline" id="hisum" aria-live="polite" tabindex="-1"></p><div id="hilist"></div>`;
   box.innerHTML = h;
