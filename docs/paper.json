@@ -1,5 +1,5 @@
 {
- "built": "2026-11-25 18:23 IST",
+ "built": "2026-11-25 19:59 IST",
  "stake": 50000.0,
  "last_session": "2026-11-25",
  "summary": {
@@ -1729,16 +1729,16 @@
    "flag": null
   },
   {
-   "id": "S-2026-11-25-MARICO",
+   "id": "S-2026-11-25-RAYMOND",
    "kind": "swing",
    "side": "long",
-   "symbol": "MARICO",
-   "industry": "Fast Moving Consumer Goods",
+   "symbol": "RAYMOND",
+   "industry": "Realty",
    "rank": 10,
    "signal_date": "2026-11-25",
    "hold": 10,
    "sl": null,
-   "ref_close": 935.2,
+   "ref_close": 1189.9,
    "status": "pending",
    "entry_date": null,
    "entry": null,

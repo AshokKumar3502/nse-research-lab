@@ -1,6 +1,6 @@
 {
  "session": "2026-11-25",
- "made_at": "2026-11-25 18:23 IST",
+ "made_at": "2026-11-25 19:59 IST",
  "status": "VALIDATED",
  "review": {
   "verdict": "KEEP",
@@ -49,7 +49,7 @@
   {
    "symbol": "INOXWIND",
    "industry": "Construction",
-   "score_pct": 1.86,
+   "score_pct": 2.09,
    "ref_close": 52.36,
    "stop": 46.86,
    "stop_pct": -10.5,
@@ -63,7 +63,7 @@
   {
    "symbol": "PIIND",
    "industry": "Chemicals",
-   "score_pct": 1.85,
+   "score_pct": 1.92,
    "ref_close": 1576.0,
    "stop": 1437.0,
    "stop_pct": -8.82,
@@ -133,7 +133,7 @@
   {
    "symbol": "SWIGGY",
    "industry": "Consumer Services",
-   "score_pct": 1.14,
+   "score_pct": 1.21,
    "ref_close": 177.07,
    "stop": 162.62,
    "stop_pct": -8.16,
@@ -159,18 +159,18 @@
    "rs_industry_20_pct": 2.6
   },
   {
-   "symbol": "MARICO",
-   "industry": "Fast Moving Consumer Goods",
-   "score_pct": 0.96,
-   "ref_close": 935.2,
-   "stop": 902.51,
-   "stop_pct": -3.5,
+   "symbol": "RAYMOND",
+   "industry": "Realty",
+   "score_pct": 0.94,
+   "ref_close": 1189.9,
+   "stop": 1076.14,
+   "stop_pct": -9.56,
    "use_stop": false,
-   "shares_per_lakh": 10,
-   "value_per_lakh": 9352,
+   "shares_per_lakh": 8,
+   "value_per_lakh": 9519,
    "hold_sessions": 10,
-   "ret_20_pct": 20.5,
-   "rs_industry_20_pct": 4.6
+   "ret_20_pct": 10.1,
+   "rs_industry_20_pct": -8.4
   }
  ],
  "rules_today": {
