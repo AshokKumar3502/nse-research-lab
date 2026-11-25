@@ -1,6 +1,6 @@
 {
- "built": "25 Nov 2026, 12:01 IST",
- "last_session": "2026-11-23",
+ "built": "25 Nov 2026, 17:17 IST",
+ "last_session": "2026-11-25",
  "intraday": {
   "created_at": "2026-11-19 21:00",
   "decision_time": "09:30",
@@ -828,32 +828,32 @@
   }
  },
  "monitor": {
-  "built": "2026-11-25 12:01 IST",
+  "built": "2026-11-25 17:17 IST",
   "strategies": [
    {
-    "n": 3,
-    "live_mean_pct": 1.374,
+    "n": 4,
+    "live_mean_pct": 0.926,
     "bt_mean_pct": -0.182,
-    "live_total_pct": 4.12,
-    "live_win_pct": 66.7,
-    "live_max_dd_pct": -0.31,
+    "live_total_pct": 3.7,
+    "live_win_pct": 50.0,
+    "live_max_dd_pct": -0.73,
     "status": "WARMING UP",
     "reasons": [
-     "3 of 10 periods needed before judging"
+     "4 of 10 periods needed before judging"
     ],
     "strategy": "intraday_long",
     "blocked": null
    },
    {
-    "n": 3,
-    "live_mean_pct": 0.645,
+    "n": 4,
+    "live_mean_pct": 0.519,
     "bt_mean_pct": -0.058,
-    "live_total_pct": 1.93,
-    "live_win_pct": 66.7,
+    "live_total_pct": 2.08,
+    "live_win_pct": 75.0,
     "live_max_dd_pct": -0.91,
     "status": "WARMING UP",
     "reasons": [
-     "3 of 10 periods needed before judging"
+     "4 of 10 periods needed before judging"
     ],
     "strategy": "intraday_short",
     "blocked": null

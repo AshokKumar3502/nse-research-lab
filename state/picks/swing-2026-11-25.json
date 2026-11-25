@@ -1,0 +1,111 @@
+{
+ "session": "2026-11-25",
+ "made_at": "2026-11-25 17:17 IST",
+ "status": "VALIDATED",
+ "review": {
+  "verdict": "KEEP",
+  "problems": [],
+  "mean_pct": 0.907,
+  "t_offset0": 2.3
+ },
+ "regime": {
+  "nifty_above_ma200": false,
+  "breadth_ma50_pct": 55.9,
+  "exposure": 0.5
+ },
+ "model_backtest": {
+  "mean_pct": 1.0307,
+  "t": 2.3,
+  "win_days_pct": 57.4,
+  "verdict": "EDGE",
+  "years": {
+   "2019": 0.051,
+   "2020": 2.203,
+   "2021": 2.208,
+   "2022": -0.254,
+   "2023": 1.75,
+   "2024": 1.409,
+   "2025": -0.385,
+   "2026": 1.342
+  }
+ },
+ "tested_rule": "Buy at the next open, sell at the close of the 10th session. The 2-ATR stop is shown for reference only: in the test it lowered results (+0.66% vs +1.03% a period).",
+ "per_capital": 100000.0,
+ "picks": [
+  {
+   "symbol": "CUPID",
+   "industry": "Financial Services",
+   "score_pct": 2.08,
+   "ref_close": 366.35,
+   "stop": 337.27,
+   "stop_pct": -7.94,
+   "use_stop": false,
+   "shares_per_lakh": 27,
+   "value_per_lakh": 9891,
+   "hold_sessions": 10,
+   "ret_20_pct": 15.7,
+   "rs_industry_20_pct": null
+  },
+  {
+   "symbol": "RATNAVEER",
+   "industry": "Consumer Durables",
+   "score_pct": 2.02,
+   "ref_close": 404.55,
+   "stop": 373.81,
+   "stop_pct": -7.6,
+   "use_stop": false,
+   "shares_per_lakh": 24,
+   "value_per_lakh": 9709,
+   "hold_sessions": 10,
+   "ret_20_pct": 16.5,
+   "rs_industry_20_pct": null
+  },
+  {
+   "symbol": "TFCILTD",
+   "industry": "Chemicals",
+   "score_pct": 1.63,
+   "ref_close": 173.66,
+   "stop": 165.14,
+   "stop_pct": -4.91,
+   "use_stop": false,
+   "shares_per_lakh": 57,
+   "value_per_lakh": 9899,
+   "hold_sessions": 10,
+   "ret_20_pct": 12.0,
+   "rs_industry_20_pct": null
+  },
+  {
+   "symbol": "SUNSHINE",
+   "industry": "UNKNOWN",
+   "score_pct": 1.54,
+   "ref_close": 522.15,
+   "stop": 460.84,
+   "stop_pct": -11.74,
+   "use_stop": false,
+   "shares_per_lakh": 19,
+   "value_per_lakh": 9921,
+   "hold_sessions": 10,
+   "ret_20_pct": 30.5,
+   "rs_industry_20_pct": null
+  },
+  {
+   "symbol": "RAYMOND",
+   "industry": "Realty",
+   "score_pct": 1.53,
+   "ref_close": 1189.9,
+   "stop": 1076.14,
+   "stop_pct": -9.56,
+   "use_stop": false,
+   "shares_per_lakh": 8,
+   "value_per_lakh": 9519,
+   "hold_sessions": 10,
+   "ret_20_pct": 10.1,
+   "rs_industry_20_pct": null
+  }
+ ],
+ "rules_today": {
+  "sector_leaders": [],
+  "results_jump": []
+ },
+ "universe": 494
+}
