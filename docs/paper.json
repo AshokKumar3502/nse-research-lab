@@ -1,5 +1,5 @@
 {
- "built": "2026-11-25 13:40 IST",
+ "built": "2026-11-25 13:50 IST",
  "stake": 50000.0,
  "last_session": "2026-11-23",
  "summary": {
@@ -9,7 +9,7 @@
    "open": 29,
    "pending": 0,
    "realised": -4814.51,
-   "unrealised": -8447.95,
+   "unrealised": -9301.34,
    "invested_open": 1435870.42,
    "win_pct": 0.0
   },
@@ -19,7 +19,7 @@
    "open": 4,
    "pending": 0,
    "realised": 12544.21,
-   "unrealised": 3876.98,
+   "unrealised": 3786.36,
    "invested_open": 198143.8,
    "win_pct": 33.3
   },
@@ -29,7 +29,7 @@
    "open": 1,
    "pending": 0,
    "realised": 17902.62,
-   "unrealised": -1894.75,
+   "unrealised": -1498.25,
    "invested_open": 15743.0,
    "win_pct": 100.0
   },
@@ -49,7 +49,7 @@
    "open": 10,
    "pending": 0,
    "realised": 0,
-   "unrealised": -1965.5,
+   "unrealised": -2115.78,
    "invested_open": 489740.33,
    "win_pct": null
   },
@@ -59,7 +59,7 @@
    "open": 44,
    "pending": 0,
    "realised": 25632.32,
-   "unrealised": -8431.22,
+   "unrealised": -9129.01,
    "invested_open": 2139497.55,
    "win_pct": 35.9
   }
@@ -100,14 +100,14 @@
   },
   {
    "date": "2026-11-25",
-   "swing": -13763.98,
-   "intraday": 195.88,
-   "option": -1894.75,
+   "swing": -14617.37,
+   "intraday": 105.26,
+   "option": -1498.25,
    "results": 0.0,
-   "momentum": -1965.5,
+   "momentum": -2115.78,
    "charges": 313.76,
-   "net": -17742.11,
-   "cumulative": 17201.1
+   "net": -18439.9,
+   "cumulative": 16503.31
   }
  ],
  "trades": [
@@ -129,9 +129,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -864.0,
+   "gross": -862.2,
    "charges": 61.81,
-   "net": -925.81,
+   "net": -924.01,
    "marks": [
     {
      "date": "2026-11-20",
@@ -154,18 +154,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 2659.0,
-     "mark": 2659.0,
-     "at": "13:40",
-     "day_pnl": -837.0,
-     "total_pnl": -864.0
+     "close": 2659.1,
+     "mark": 2659.1,
+     "at": "13:50",
+     "day_pnl": -835.2,
+     "total_pnl": -862.2
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 2695.1,
-   "last": 2659.0,
-   "last_at": "2026-11-25 13:40"
+   "last": 2659.1,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-19-KEC",
@@ -185,9 +185,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -959.4,
+   "gross": -926.6,
    "charges": 63.07,
-   "net": -1022.47,
+   "net": -989.67,
    "marks": [
     {
      "date": "2026-11-20",
@@ -210,18 +210,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 298.15,
-     "mark": 298.15,
-     "at": "13:40",
-     "day_pnl": 475.6,
-     "total_pnl": -959.4
+     "close": 298.35,
+     "mark": 298.35,
+     "at": "13:50",
+     "day_pnl": 508.4,
+     "total_pnl": -926.6
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 299.0,
-   "last": 298.15,
-   "last_at": "2026-11-25 13:40"
+   "last": 298.35,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-19-SSWL",
@@ -288,9 +288,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -1290.0,
+   "gross": -1362.0,
    "charges": 61.55,
-   "net": -1351.55,
+   "net": -1423.55,
    "marks": [
     {
      "date": "2026-11-20",
@@ -313,18 +313,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 1573.1,
-     "mark": 1573.1,
-     "at": "13:40",
-     "day_pnl": 63.0,
-     "total_pnl": -1290.0
+     "close": 1570.7,
+     "mark": 1570.7,
+     "at": "13:50",
+     "day_pnl": -9.0,
+     "total_pnl": -1362.0
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 1595.0,
-   "last": 1573.1,
-   "last_at": "2026-11-25 13:40"
+   "last": 1570.7,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-19-DIACABS",
@@ -344,9 +344,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -1458.0,
+   "gross": -1795.5,
    "charges": 62.99,
-   "net": -1520.99,
+   "net": -1858.49,
    "marks": [
     {
      "date": "2026-11-20",
@@ -369,18 +369,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 357.95,
-     "mark": 357.95,
-     "at": "13:40",
-     "day_pnl": -823.5,
-     "total_pnl": -1458.0
+     "close": 355.45,
+     "mark": 355.45,
+     "at": "13:50",
+     "day_pnl": -1161.0,
+     "total_pnl": -1795.5
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 360.0,
-   "last": 357.95,
-   "last_at": "2026-11-25 13:40"
+   "last": 355.45,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-19-MARSONS",
@@ -400,9 +400,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 146.08,
+   "gross": 109.56,
    "charges": 63.14,
-   "net": 82.94,
+   "net": 46.42,
    "marks": [
     {
      "date": "2026-11-20",
@@ -425,18 +425,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 150.8,
-     "mark": 150.8,
-     "at": "13:40",
-     "day_pnl": -2619.48,
-     "total_pnl": 146.08
+     "close": 150.69,
+     "mark": 150.69,
+     "at": "13:50",
+     "day_pnl": -2656.0,
+     "total_pnl": 109.56
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 148.0,
-   "last": 150.8,
-   "last_at": "2026-11-25 13:40"
+   "last": 150.69,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-19-RAYMOND",
@@ -456,9 +456,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -537.6,
+   "gross": -533.4,
    "charges": 62.95,
-   "net": -600.55,
+   "net": -596.35,
    "marks": [
     {
      "date": "2026-11-20",
@@ -481,18 +481,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 1171.6,
-     "mark": 1171.6,
-     "at": "13:40",
-     "day_pnl": -1411.2,
-     "total_pnl": -537.6
+     "close": 1171.7,
+     "mark": 1171.7,
+     "at": "13:50",
+     "day_pnl": -1407.0,
+     "total_pnl": -533.4
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 1138.0,
-   "last": 1171.6,
-   "last_at": "2026-11-25 13:40"
+   "last": 1171.7,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-19-SYMBIOTEC",
@@ -512,9 +512,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -2565.0,
+   "gross": -2490.0,
    "charges": 62.15,
-   "net": -2627.15,
+   "net": -2552.15,
    "marks": [
     {
      "date": "2026-11-20",
@@ -537,18 +537,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 1548.6,
-     "mark": 1548.6,
-     "at": "13:40",
-     "day_pnl": -420.0,
-     "total_pnl": -2565.0
+     "close": 1551.1,
+     "mark": 1551.1,
+     "at": "13:50",
+     "day_pnl": -345.0,
+     "total_pnl": -2490.0
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 1588.0,
-   "last": 1548.6,
-   "last_at": "2026-11-25 13:40"
+   "last": 1551.1,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-19-POLICYBZR",
@@ -568,9 +568,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 5850.6,
+   "gross": 5968.2,
    "charges": 62.17,
-   "net": 5788.43,
+   "net": 5906.03,
    "marks": [
     {
      "date": "2026-11-20",
@@ -593,18 +593,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 1120.4,
-     "mark": 1120.4,
-     "at": "13:40",
-     "day_pnl": 1533.7,
-     "total_pnl": 5850.6
+     "close": 1122.8,
+     "mark": 1122.8,
+     "at": "13:50",
+     "day_pnl": 1651.3,
+     "total_pnl": 5968.2
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 1001.0,
-   "last": 1120.4,
-   "last_at": "2026-11-25 13:40"
+   "last": 1122.8,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-19-STYLEBAAZA",
@@ -624,9 +624,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -1311.0,
+   "gross": -1268.25,
    "charges": 63.06,
-   "net": -1374.06,
+   "net": -1331.31,
    "marks": [
     {
      "date": "2026-11-20",
@@ -649,18 +649,18 @@
     {
      "date": "2026-11-25",
      "session": 3,
-     "close": 510.9,
-     "mark": 510.9,
-     "at": "13:40",
-     "day_pnl": 717.25,
-     "total_pnl": -1311.0
+     "close": 511.35,
+     "mark": 511.35,
+     "at": "13:50",
+     "day_pnl": 760.0,
+     "total_pnl": -1268.25
     }
    ],
    "flag": null,
    "entry_at": "2026-11-20 09:30",
    "entry_low": 498.05,
-   "last": 510.9,
-   "last_at": "2026-11-25 13:40"
+   "last": 511.35,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-KEC",
@@ -680,9 +680,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -58.45,
+   "gross": -25.05,
    "charges": 63.06,
-   "net": -121.51,
+   "net": -88.11,
    "marks": [
     {
      "date": "2026-11-23",
@@ -696,18 +696,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 298.15,
-     "mark": 298.15,
-     "at": "13:40",
-     "day_pnl": 484.3,
-     "total_pnl": -58.45
+     "close": 298.35,
+     "mark": 298.35,
+     "at": "13:50",
+     "day_pnl": 517.7,
+     "total_pnl": -25.05
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 294.55,
-   "last": 298.15,
-   "last_at": "2026-11-25 13:40"
+   "last": 298.35,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-PIIND",
@@ -727,9 +727,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -424.7,
+   "gross": -499.1,
    "charges": 62.33,
-   "net": -487.03,
+   "net": -561.43,
    "marks": [
     {
      "date": "2026-11-23",
@@ -743,18 +743,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 1573.1,
-     "mark": 1573.1,
-     "at": "13:40",
-     "day_pnl": 65.1,
-     "total_pnl": -424.7
+     "close": 1570.7,
+     "mark": 1570.7,
+     "at": "13:50",
+     "day_pnl": -9.3,
+     "total_pnl": -499.1
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 1570.1,
-   "last": 1573.1,
-   "last_at": "2026-11-25 13:40"
+   "last": 1570.7,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-THERMAX",
@@ -774,9 +774,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -840.6,
+   "gross": -838.8,
    "charges": 61.79,
-   "net": -902.39,
+   "net": -900.59,
    "marks": [
     {
      "date": "2026-11-23",
@@ -790,18 +790,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 2659.0,
-     "mark": 2659.0,
-     "at": "13:40",
-     "day_pnl": -837.0,
-     "total_pnl": -840.6
+     "close": 2659.1,
+     "mark": 2659.1,
+     "at": "13:50",
+     "day_pnl": -835.2,
+     "total_pnl": -838.8
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 2680.3,
-   "last": 2659.0,
-   "last_at": "2026-11-25 13:40"
+   "last": 2659.1,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-INOXWIND",
@@ -821,9 +821,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -2437.14,
+   "gross": -2409.96,
    "charges": 63.2,
-   "net": -2500.34,
+   "net": -2473.16,
    "marks": [
     {
      "date": "2026-11-23",
@@ -837,18 +837,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 52.46,
-     "mark": 52.46,
-     "at": "13:40",
-     "day_pnl": -1123.44,
-     "total_pnl": -2437.14
+     "close": 52.49,
+     "mark": 52.49,
+     "at": "13:50",
+     "day_pnl": -1096.26,
+     "total_pnl": -2409.96
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 53.54,
-   "last": 52.46,
-   "last_at": "2026-11-25 13:40"
+   "last": 52.49,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-SUNSHINE",
@@ -868,9 +868,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 417.1,
+   "gross": 407.4,
    "charges": 63.02,
-   "net": 354.08,
+   "net": 344.38,
    "marks": [
     {
      "date": "2026-11-23",
@@ -884,18 +884,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 517.8,
-     "mark": 517.8,
-     "at": "13:40",
-     "day_pnl": -1813.9,
-     "total_pnl": 417.1
+     "close": 517.7,
+     "mark": 517.7,
+     "at": "13:50",
+     "day_pnl": -1823.6,
+     "total_pnl": 407.4
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 501.0,
-   "last": 517.8,
-   "last_at": "2026-11-25 13:40"
+   "last": 517.7,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-CUPID",
@@ -915,9 +915,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 472.65,
+   "gross": 465.8,
    "charges": 63.02,
-   "net": 409.63,
+   "net": 402.78,
    "marks": [
     {
      "date": "2026-11-23",
@@ -931,18 +931,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 367.05,
-     "mark": 367.05,
-     "at": "13:40",
-     "day_pnl": 671.3,
-     "total_pnl": 472.65
+     "close": 367.0,
+     "mark": 367.0,
+     "at": "13:50",
+     "day_pnl": 664.45,
+     "total_pnl": 465.8
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 357.75,
-   "last": 367.05,
-   "last_at": "2026-11-25 13:40"
+   "last": 367.0,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-RAYMOND",
@@ -962,9 +962,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -667.8,
+   "gross": -663.6,
    "charges": 63.09,
-   "net": -730.89,
+   "net": -726.69,
    "marks": [
     {
      "date": "2026-11-23",
@@ -978,18 +978,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 1171.6,
-     "mark": 1171.6,
-     "at": "13:40",
-     "day_pnl": -1411.2,
-     "total_pnl": -667.8
+     "close": 1171.7,
+     "mark": 1171.7,
+     "at": "13:50",
+     "day_pnl": -1407.0,
+     "total_pnl": -663.6
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 1174.1,
-   "last": 1171.6,
-   "last_at": "2026-11-25 13:40"
+   "last": 1171.7,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-DIACABS",
@@ -1009,9 +1009,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -296.7,
+   "gross": -641.7,
    "charges": 62.89,
-   "net": -359.59,
+   "net": -704.59,
    "marks": [
     {
      "date": "2026-11-23",
@@ -1025,18 +1025,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 357.95,
-     "mark": 357.95,
-     "at": "13:40",
-     "day_pnl": -841.8,
-     "total_pnl": -296.7
+     "close": 355.45,
+     "mark": 355.45,
+     "at": "13:50",
+     "day_pnl": -1186.8,
+     "total_pnl": -641.7
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 353.0,
-   "last": 357.95,
-   "last_at": "2026-11-25 13:40"
+   "last": 355.45,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-MARSONS",
@@ -1056,9 +1056,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -1088.64,
+   "gross": -1124.28,
    "charges": 63.17,
-   "net": -1151.81,
+   "net": -1187.45,
    "marks": [
     {
      "date": "2026-11-23",
@@ -1072,18 +1072,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 150.8,
-     "mark": 150.8,
-     "at": "13:40",
-     "day_pnl": -2556.36,
-     "total_pnl": -1088.64
+     "close": 150.69,
+     "mark": 150.69,
+     "at": "13:50",
+     "day_pnl": -2592.0,
+     "total_pnl": -1124.28
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 154.16,
-   "last": 150.8,
-   "last_at": "2026-11-25 13:40"
+   "last": 150.69,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-20-POLICYBZR",
@@ -1103,9 +1103,9 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 4046.4,
+   "gross": 4161.6,
    "charges": 62.94,
-   "net": 3983.46,
+   "net": 4098.66,
    "marks": [
     {
      "date": "2026-11-23",
@@ -1119,18 +1119,18 @@
     {
      "date": "2026-11-25",
      "session": 2,
-     "close": 1120.4,
-     "mark": 1120.4,
-     "at": "13:40",
-     "day_pnl": 1502.4,
-     "total_pnl": 4046.4
+     "close": 1122.8,
+     "mark": 1122.8,
+     "at": "13:50",
+     "day_pnl": 1617.6,
+     "total_pnl": 4161.6
     }
    ],
    "flag": null,
    "entry_at": "2026-11-23 09:30",
    "entry_low": 1030.4,
-   "last": 1120.4,
-   "last_at": "2026-11-25 13:40"
+   "last": 1122.8,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-INDIAGLYCO",
@@ -1150,25 +1150,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -1343.9,
+   "gross": -1326.1,
    "charges": 63.2,
-   "net": -1407.1,
+   "net": -1389.3,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 273.2,
-     "mark": 273.2,
-     "at": "13:40",
-     "day_pnl": -1343.9,
-     "total_pnl": -1343.9
+     "close": 273.3,
+     "mark": 273.3,
+     "at": "13:50",
+     "day_pnl": -1326.1,
+     "total_pnl": -1326.1
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 272.25,
-   "last": 273.2,
-   "last_at": "2026-11-25 13:40"
+   "last": 273.3,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-KEC",
@@ -1188,25 +1188,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 285.6,
+   "gross": 319.2,
    "charges": 63.02,
-   "net": 222.58,
+   "net": 256.18,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 298.15,
-     "mark": 298.15,
-     "at": "13:40",
-     "day_pnl": 285.6,
-     "total_pnl": 285.6
+     "close": 298.35,
+     "mark": 298.35,
+     "at": "13:50",
+     "day_pnl": 319.2,
+     "total_pnl": 319.2
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 295.05,
-   "last": 298.15,
-   "last_at": "2026-11-25 13:40"
+   "last": 298.35,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-THERMAX",
@@ -1226,25 +1226,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -333.0,
+   "gross": -331.2,
    "charges": 61.23,
-   "net": -394.23,
+   "net": -392.43,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 2659.0,
-     "mark": 2659.0,
-     "at": "13:40",
-     "day_pnl": -333.0,
-     "total_pnl": -333.0
+     "close": 2659.1,
+     "mark": 2659.1,
+     "at": "13:50",
+     "day_pnl": -331.2,
+     "total_pnl": -331.2
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 2652.0,
-   "last": 2659.0,
-   "last_at": "2026-11-25 13:40"
+   "last": 2659.1,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-PIIND",
@@ -1264,25 +1264,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -21.7,
+   "gross": -96.1,
    "charges": 61.88,
-   "net": -83.58,
+   "net": -157.98,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 1573.1,
-     "mark": 1573.1,
-     "at": "13:40",
-     "day_pnl": -21.7,
-     "total_pnl": -21.7
+     "close": 1570.7,
+     "mark": 1570.7,
+     "at": "13:50",
+     "day_pnl": -96.1,
+     "total_pnl": -96.1
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 1568.7,
-   "last": 1573.1,
-   "last_at": "2026-11-25 13:40"
+   "last": 1570.7,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-INOXWIND",
@@ -1302,25 +1302,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -1379.74,
+   "gross": -1351.96,
    "charges": 63.19,
-   "net": -1442.93,
+   "net": -1415.15,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 52.46,
-     "mark": 52.46,
-     "at": "13:40",
-     "day_pnl": -1379.74,
-     "total_pnl": -1379.74
+     "close": 52.49,
+     "mark": 52.49,
+     "at": "13:50",
+     "day_pnl": -1351.96,
+     "total_pnl": -1351.96
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 52.22,
-   "last": 52.46,
-   "last_at": "2026-11-25 13:40"
+   "last": 52.49,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-RAYMOND",
@@ -1340,25 +1340,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -963.5,
+   "gross": -959.4,
    "charges": 62.12,
-   "net": -1025.62,
+   "net": -1021.52,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 1171.6,
-     "mark": 1171.6,
-     "at": "13:40",
-     "day_pnl": -963.5,
-     "total_pnl": -963.5
+     "close": 1171.7,
+     "mark": 1171.7,
+     "at": "13:50",
+     "day_pnl": -959.4,
+     "total_pnl": -959.4
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 1163.5,
-   "last": 1171.6,
-   "last_at": "2026-11-25 13:40"
+   "last": 1171.7,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-CUPID",
@@ -1378,25 +1378,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 244.8,
+   "gross": 238.0,
    "charges": 62.87,
-   "net": 181.93,
+   "net": 175.13,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 367.05,
-     "mark": 367.05,
-     "at": "13:40",
-     "day_pnl": 244.8,
-     "total_pnl": 244.8
+     "close": 367.0,
+     "mark": 367.0,
+     "at": "13:50",
+     "day_pnl": 238.0,
+     "total_pnl": 238.0
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 364.4,
-   "last": 367.05,
-   "last_at": "2026-11-25 13:40"
+   "last": 367.0,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-SUNSHINE",
@@ -1416,25 +1416,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -991.7,
+   "gross": -1001.1,
    "charges": 62.86,
-   "net": -1054.56,
+   "net": -1063.96,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 517.8,
-     "mark": 517.8,
-     "at": "13:40",
-     "day_pnl": -991.7,
-     "total_pnl": -991.7
+     "close": 517.7,
+     "mark": 517.7,
+     "at": "13:50",
+     "day_pnl": -1001.1,
+     "total_pnl": -1001.1
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 495.0,
-   "last": 517.8,
-   "last_at": "2026-11-25 13:40"
+   "last": 517.7,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-DIACABS",
@@ -1454,25 +1454,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 280.0,
+   "gross": -70.0,
    "charges": 63.05,
-   "net": 216.95,
+   "net": -133.05,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 357.95,
-     "mark": 357.95,
-     "at": "13:40",
-     "day_pnl": 280.0,
-     "total_pnl": 280.0
+     "close": 355.45,
+     "mark": 355.45,
+     "at": "13:50",
+     "day_pnl": -70.0,
+     "total_pnl": -70.0
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 351.9,
-   "last": 357.95,
-   "last_at": "2026-11-25 13:40"
+   "last": 355.45,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "S-2026-11-23-MARSONS",
@@ -1492,25 +1492,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -358.61,
+   "gross": -394.8,
    "charges": 63.2,
-   "net": -421.81,
+   "net": -458.0,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 150.8,
-     "mark": 150.8,
-     "at": "13:40",
-     "day_pnl": -358.61,
-     "total_pnl": -358.61
+     "close": 150.69,
+     "mark": 150.69,
+     "at": "13:50",
+     "day_pnl": -394.8,
+     "total_pnl": -394.8
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 148.09,
-   "last": 150.8,
-   "last_at": "2026-11-25 13:40"
+   "last": 150.69,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-CUPID",
@@ -1530,25 +1530,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 244.8,
+   "gross": 238.0,
    "charges": 62.87,
-   "net": 181.93,
+   "net": 175.13,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 367.05,
-     "mark": 367.05,
-     "at": "13:40",
-     "day_pnl": 244.8,
-     "total_pnl": 244.8
+     "close": 367.0,
+     "mark": 367.0,
+     "at": "13:50",
+     "day_pnl": 238.0,
+     "total_pnl": 238.0
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 364.4,
-   "last": 367.05,
-   "last_at": "2026-11-25 13:40"
+   "last": 367.0,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-WELCORP",
@@ -1577,7 +1577,7 @@
      "session": 1,
      "close": 2124.2,
      "mark": 2124.2,
-     "at": "13:40",
+     "at": "13:50",
      "day_pnl": -64.4,
      "total_pnl": -64.4
     }
@@ -1586,7 +1586,7 @@
    "entry_at": "2026-11-25 09:30",
    "entry_low": 2095.6,
    "last": 2124.2,
-   "last_at": "2026-11-25 13:40"
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-MTARTECH",
@@ -1606,25 +1606,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -992.0,
+   "gross": -1092.0,
    "charges": 57.95,
-   "net": -1049.95,
+   "net": -1149.95,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 5532.5,
-     "mark": 5532.5,
-     "at": "13:40",
-     "day_pnl": -992.0,
-     "total_pnl": -992.0
+     "close": 5520.0,
+     "mark": 5520.0,
+     "at": "13:50",
+     "day_pnl": -1092.0,
+     "total_pnl": -1092.0
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
-   "entry_low": 5530.0,
-   "last": 5532.5,
-   "last_at": "2026-11-25 13:40"
+   "entry_low": 5510.5,
+   "last": 5520.0,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-SHREEJISPG",
@@ -1644,25 +1644,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -383.4,
+   "gross": -359.1,
    "charges": 62.7,
-   "net": -446.1,
+   "net": -421.8,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 909.9,
-     "mark": 909.9,
-     "at": "13:40",
-     "day_pnl": -383.4,
-     "total_pnl": -383.4
+     "close": 910.35,
+     "mark": 910.35,
+     "at": "13:50",
+     "day_pnl": -359.1,
+     "total_pnl": -359.1
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 906.0,
-   "last": 909.9,
-   "last_at": "2026-11-25 13:40"
+   "last": 910.35,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-AEROFLEX",
@@ -1682,25 +1682,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 307.8,
+   "gross": 264.6,
    "charges": 63.12,
-   "net": 244.68,
+   "net": 201.48,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 464.85,
-     "mark": 464.85,
-     "at": "13:40",
-     "day_pnl": 307.8,
-     "total_pnl": 307.8
+     "close": 464.45,
+     "mark": 464.45,
+     "at": "13:50",
+     "day_pnl": 264.6,
+     "total_pnl": 264.6
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 461.65,
-   "last": 464.85,
-   "last_at": "2026-11-25 13:40"
+   "last": 464.45,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-SBC",
@@ -1720,25 +1720,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 146.2,
+   "gross": 453.22,
    "charges": 63.17,
-   "net": 83.03,
+   "net": 390.05,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 68.53,
-     "mark": 68.53,
-     "at": "13:40",
-     "day_pnl": 146.2,
-     "total_pnl": 146.2
+     "close": 68.95,
+     "mark": 68.95,
+     "at": "13:50",
+     "day_pnl": 453.22,
+     "total_pnl": 453.22
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 67.82,
-   "last": 68.53,
-   "last_at": "2026-11-25 13:40"
+   "last": 68.95,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-WHEELS",
@@ -1758,25 +1758,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -906.2,
+   "gross": -956.8,
    "charges": 61.52,
-   "net": -967.72,
+   "net": -1018.32,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 2067.5,
-     "mark": 2067.5,
-     "at": "13:40",
-     "day_pnl": -906.2,
-     "total_pnl": -906.2
+     "close": 2065.3,
+     "mark": 2065.3,
+     "at": "13:50",
+     "day_pnl": -956.8,
+     "total_pnl": -956.8
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 2039.9,
-   "last": 2067.5,
-   "last_at": "2026-11-25 13:40"
+   "last": 2065.3,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-KMEW",
@@ -1796,25 +1796,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -788.1,
+   "gross": -802.3,
    "charges": 62.6,
-   "net": -850.7,
+   "net": -864.9,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 685.2,
-     "mark": 685.2,
-     "at": "13:40",
-     "day_pnl": -788.1,
-     "total_pnl": -788.1
+     "close": 685.0,
+     "mark": 685.0,
+     "at": "13:50",
+     "day_pnl": -802.3,
+     "total_pnl": -802.3
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 681.9,
-   "last": 685.2,
-   "last_at": "2026-11-25 13:40"
+   "last": 685.0,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-SHILPAMED",
@@ -1834,25 +1834,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": -678.6,
+   "gross": -597.4,
    "charges": 62.6,
-   "net": -741.2,
+   "net": -660.0,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 840.55,
-     "mark": 840.55,
-     "at": "13:40",
-     "day_pnl": -678.6,
-     "total_pnl": -678.6
+     "close": 841.95,
+     "mark": 841.95,
+     "at": "13:50",
+     "day_pnl": -597.4,
+     "total_pnl": -597.4
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 829.45,
-   "last": 840.55,
-   "last_at": "2026-11-25 13:40"
+   "last": 841.95,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "M-2026-11-23-CPPLUS",
@@ -1872,25 +1872,25 @@
    "exit_date": null,
    "exit": null,
    "exit_reason": null,
-   "gross": 1148.4,
+   "gross": 800.4,
    "charges": 62.34,
-   "net": 1086.06,
+   "net": 738.06,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 4196.0,
-     "mark": 4196.0,
-     "at": "13:40",
-     "day_pnl": 1148.4,
-     "total_pnl": 1148.4
+     "close": 4167.0,
+     "mark": 4167.0,
+     "at": "13:50",
+     "day_pnl": 800.4,
+     "total_pnl": 800.4
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
    "entry_low": 4086.8,
-   "last": 4196.0,
-   "last_at": "2026-11-25 13:40"
+   "last": 4167.0,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "I-2026-11-19-L-POLICYBZR",
@@ -2925,26 +2925,26 @@
    "entry": 286.5,
    "qty": 174,
    "exit_date": null,
-   "exit": 287.05,
+   "exit": 287.1,
    "exit_reason": null,
-   "exit_time": "13:39",
-   "gross": 95.7,
+   "exit_time": "13:49",
+   "gross": 104.4,
    "charges": 0.0,
-   "net": 95.7,
+   "net": 104.4,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 287.05,
-     "mark": 287.05,
-     "day_pnl": 95.7,
-     "total_pnl": 95.7
+     "close": 287.1,
+     "mark": 287.1,
+     "day_pnl": 104.4,
+     "total_pnl": 104.4
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
-   "last": 287.05,
-   "last_at": "2026-11-25 13:40"
+   "last": 287.1,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "I-2026-11-25-L-NAVINFLUOR",
@@ -3129,26 +3129,26 @@
    "entry": 289.55,
    "qty": 172,
    "exit_date": null,
-   "exit": 283.36,
+   "exit": 283.52,
    "exit_reason": null,
-   "exit_time": "13:39",
-   "gross": 1064.68,
+   "exit_time": "13:48",
+   "gross": 1037.16,
    "charges": 0.0,
-   "net": 1064.68,
+   "net": 1037.16,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 283.36,
-     "mark": 283.36,
-     "day_pnl": 1064.68,
-     "total_pnl": 1064.68
+     "close": 283.52,
+     "mark": 283.52,
+     "day_pnl": 1037.16,
+     "total_pnl": 1037.16
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
-   "last": 283.36,
-   "last_at": "2026-11-25 13:40"
+   "last": 283.52,
+   "last_at": "2026-11-25 13:49"
   },
   {
    "id": "I-2026-11-25-S-KALYANKJIL",
@@ -3163,26 +3163,26 @@
    "entry": 647.4,
    "qty": 77,
    "exit_date": null,
-   "exit": 625.8,
+   "exit": 627.3,
    "exit_reason": null,
-   "exit_time": "13:39",
-   "gross": 1663.2,
+   "exit_time": "13:49",
+   "gross": 1547.7,
    "charges": 0.0,
-   "net": 1663.2,
+   "net": 1547.7,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 625.8,
-     "mark": 625.8,
-     "day_pnl": 1663.2,
-     "total_pnl": 1663.2
+     "close": 627.3,
+     "mark": 627.3,
+     "day_pnl": 1547.7,
+     "total_pnl": 1547.7
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
-   "last": 625.8,
-   "last_at": "2026-11-25 13:40"
+   "last": 627.3,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "I-2026-11-25-S-RELIANCE",
@@ -3231,26 +3231,26 @@
    "entry": 2114.8,
    "qty": 23,
    "exit_date": null,
-   "exit": 2069.0,
+   "exit": 2067.1,
    "exit_reason": null,
-   "exit_time": "13:39",
-   "gross": 1053.4,
+   "exit_time": "13:49",
+   "gross": 1097.1,
    "charges": 0.0,
-   "net": 1053.4,
+   "net": 1097.1,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 2069.0,
-     "mark": 2069.0,
-     "day_pnl": 1053.4,
-     "total_pnl": 1053.4
+     "close": 2067.1,
+     "mark": 2067.1,
+     "day_pnl": 1097.1,
+     "total_pnl": 1097.1
     }
    ],
    "flag": null,
    "entry_at": "2026-11-25 09:30",
-   "last": 2069.0,
-   "last_at": "2026-11-25 13:40"
+   "last": 2067.1,
+   "last_at": "2026-11-25 13:50"
   },
   {
    "id": "O-2026-11-20",
@@ -3342,21 +3342,21 @@
    "exit": null,
    "exit_reason": null,
    "exit_time": null,
-   "last": 213.05,
-   "last_at": "2026-11-25 13:40",
-   "gross": -1894.75,
+   "last": 219.15,
+   "last_at": "2026-11-25 13:50",
+   "gross": -1498.25,
    "charges": 0.0,
-   "net": -1894.75,
+   "net": -1498.25,
    "flag": null,
    "marks": [
     {
      "date": "2026-11-25",
      "session": 1,
-     "close": 213.05,
-     "mark": 213.05,
-     "at": "13:40",
-     "day_pnl": -1894.75,
-     "total_pnl": -1894.75
+     "close": 219.15,
+     "mark": 219.15,
+     "at": "13:50",
+     "day_pnl": -1498.25,
+     "total_pnl": -1498.25
     }
    ]
   }
