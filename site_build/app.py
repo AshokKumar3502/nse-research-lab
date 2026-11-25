@@ -533,7 +533,7 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
       <div class="kv"><div>Entry · ${esc(when(op.entry_at))}<b>${inr(op.entry)}</b></div><div>${op.status === "closed" ? "Exit" : "Now"} · ${esc(tm(op.last_at))}<b>${inr(op.last)}</b></div><div>SL<b class="dn" style="font-size:12.5px">${esc(op.sl_note)}</b></div></div>
       <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}</div>
       <div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${op.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:12.5px">${pct(v, op.entry * op.qty)}</span></span></div></div></div>`; }
-  sec("option", "NIFTY option", "9:15–9:45 range breakout · ATM call or put · SL = other side of the range · exit 15:15 · 1 lot · paper only", op ? 1 : 0, ob);
+  sec("option", "NIFTY option", "9:15–9:45 range breakout · ATM call or put · SL = the option's own 9:15–9:45 low · exit 15:15 · 1 lot · paper only", op ? 1 : 0, ob);
   const multi = (kind, label) => {
     const ts = (D.trades || []).filter(t => t.kind === kind && t.status !== "closed").sort((a, b) => b.signal_date.localeCompare(a.signal_date) || (b.gross || 0) - (a.gross || 0));
     return [ts.length, ts.length ? `<div class="list">` + ts.map(t => {

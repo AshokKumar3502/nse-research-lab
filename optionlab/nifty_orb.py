@@ -23,6 +23,9 @@ from warehouse.loaders import minute
 
 STEP = 50
 RANGE_END, LAST_ENTRY, EXIT = dt.time(9, 45), dt.time(13, 0), dt.time(15, 15)
+# from this day the stop-loss is the bought option's own 9:15-9:45 low (real 1-minute prices) instead of NIFTY
+# crossing back through its range (6-month replay: +Rs 66,114 vs +Rs 62,653, slightly smaller losses)
+OPTION_SL_FROM = dt.date(2026, 11, 26)
 INDEX_KEY = "NSE_INDEX|Nifty 50"
 CANDLES = "https://api.upstox.com/v3/historical-candle/intraday/%s/minutes/1"
 PICKS = os.path.join(config.DATA, "picks")
@@ -84,7 +87,7 @@ def run(day=None, log=print):
         if old.get("status") in ("closed", "no trade"):
             return old
     doc = {"day": str(day), "status": "waiting", "updated": now.strftime("%H:%M"),
-           "rule": "NIFTY 9:15-9:45 range breakout, ATM option, SL = other side of the range, exit 15:15"}
+           "rule": "NIFTY 9:15-9:45 range breakout, ATM option, SL = the option's own 9:15-9:45 low, exit 15:15"}
     if day.weekday() >= 5:
         doc["status"] = "no market"
         return _save(doc, p)
@@ -127,20 +130,27 @@ def run(day=None, log=print):
         return _save(doc, p)
     entry = ob[1]
     sl_level = lo if side == "CE" else hi
+    pre = [b for t, b in opt.items() if t.time() < RANGE_END]
+    opt_low = min(b[3] for b in pre) if (day >= OPTION_SL_FROM and pre) else None
+    if opt_low is not None and opt_low >= entry:
+        opt_low = None                       # no room below the entry: keep the NIFTY range stop
     doc.update(side=side, strike=strike, expiry=c["expiry"], symbol="NIFTY %d %s" % (strike, side), lot=c["lot"],
                key=c["key"], signal_at="%s %s" % (day, sig_ts.strftime("%H:%M")),
-               entry_at="%s %s" % (day, ob[0].strftime("%H:%M")), entry=entry, sl_index=round(sl_level, 2),
+               entry_at="%s %s" % (day, ob[0].strftime("%H:%M")), entry=entry, sl_index=round(sl_level, 2), sl_option=opt_low,
                status="open")
-    for b in idx[j:]:
-        hit = (side == "CE" and b[3] <= sl_level) or (side == "PE" and b[2] >= sl_level)
+    for b in (idx[j:] if opt_low is None else [opt[t] for t in sorted(opt) if t >= ob[0]]):
+        if opt_low is None:
+            hit = (side == "CE" and b[3] <= sl_level) or (side == "PE" and b[2] >= sl_level)
+        else:
+            hit = b[3] <= opt_low
         if hit or b[0].time() >= EXIT:
             o = at_or_after(b[0])
             if o is None:
                 break
-            px = o[4] if hit else o[1]
+            px = (min(o[1], opt_low) if opt_low is not None else o[4]) if hit else o[1]
             stamp = "%s %s" % (day, b[0].strftime("%H:%M"))
             doc.update(status="closed", exit=px, exit_at=stamp, last=px, last_at=stamp,
-                       why="SL: NIFTY back to the other side of the range" if hit else "15:15 exit")
+                       why=("SL: option back to its 9:15-9:45 low" if opt_low is not None else "SL: NIFTY back to the other side of the range") if hit else "15:15 exit")
             break
     if doc["status"] == "open":
         last = opt[max(opt)]
@@ -164,7 +174,7 @@ def trades():
         out.append({"id": "O-%s" % d["day"], "kind": "option", "side": "long", "symbol": d["symbol"],
                     "industry": "NIFTY option · expiry %s" % d["expiry"], "signal_date": d["day"],
                     "entry_date": d["day"], "entry_at": d["entry_at"], "entry": d["entry"], "qty": d["lot"],
-                    "sl": None, "sl_note": "NIFTY %s %s" % ("below" if d["side"] == "CE" else "above",
+                    "sl": None, "sl_note": ("Option below Rs %s" % d["sl_option"]) if d.get("sl_option") else "NIFTY %s %s" % ("below" if d["side"] == "CE" else "above",
                                                             format(d["sl_index"], ",.2f")),
                     "status": d["status"], "exit_date": d["day"] if d["status"] == "closed" else None,
                     "exit": d.get("exit"), "exit_reason": d.get("why"),

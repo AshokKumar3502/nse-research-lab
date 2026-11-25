@@ -109,15 +109,20 @@ def replay(con, start, end):
             continue
         sg = float(np.mean(ivs))
         K = round(op[j] / STEP) * STEP
-        hit = np.nonzero((lo[j:k_end + 1] <= rl) if call else (hi[j:k_end + 1] >= rh))[0]
-        kx = j + int(hit[0]) if len(hit) else k_end
-        s_exit = (rl if call else rh) if len(hit) else float(op[k_end])
         entry = _bs(float(op[j]), K, _years(ts[j], exp), sg, call)
-        exitp = _bs(s_exit, K, _years(ts[kx], exp), sg, call)
+        # stop-loss: the option's own 9:15-9:45 low (as the live rule from 26 Nov 2026)
+        opt_low = min(_bs(lo[k] if call else hi[k], K, _years(ts[k], exp), sg, call) for k in range(0, j0))
+        hit, kx, exitp, s_exit = [], k_end, None, float(op[k_end])
+        for k in range(j, k_end + 1):
+            if opt_low < entry and _bs(lo[k] if call else hi[k], K, _years(ts[k], exp), sg, call) <= opt_low:
+                hit, kx, exitp, s_exit = [k], k, opt_low, float(lo[k] if call else hi[k])
+                break
+        if exitp is None:
+            exitp = _bs(s_exit, K, _years(ts[kx], exp), sg, call)
         pts = (s_exit - float(op[j])) * (1 if call else -1)
         rows.append(dict(row, status="closed", side="CE" if call else "PE", strike=int(K), expiry=str(exp),
                          expiry_day=bool(d == exp), entry_time=ts[j].strftime("%H:%M"), exit_time=ts[kx].strftime("%H:%M"),
-                         why="SL: NIFTY back through the range" if len(hit) else "15:15 exit",
+                         why="SL: option back to its 9:15-9:45 low" if len(hit) else "15:15 exit", sl_option=round(opt_low, 2),
                          nifty_entry=round(float(op[j]), 1), nifty_exit=round(s_exit, 1), nifty_pts=round(pts, 1),
                          entry=round(entry, 2), exit=round(exitp, 2),
                          pnl=round((exitp - entry) * LOT - charges(entry, exitp, LOT)),
@@ -175,7 +180,8 @@ def build(months=6, log=print):
            "from": rows[0]["date"] if rows else None, "to": rows[-1]["date"] if rows else None,
            "method": {"rule": "9:15-9:45 range breakout; first 1-minute close outside it by 13:00 buys the ATM call (up) "
                               "or put (down) at the next minute; SL when NIFTY crosses back to the other side of the "
-                              "range; otherwise exit at 15:15. 1 lot, nearest expiry.",
+                              "range; otherwise exit at 15:15. 1 lot, nearest expiry. Stop-loss: the bought option's own 9:15-9:45 low "
+                              "(live from 26 Nov 2026; earlier real days used NIFTY crossing back through the range).",
                       "prices": "Times and levels: real NIFTY 1-minute prices. Option prices: a model set each day from "
                                 "NSE's real option prices; 'real' days are the app's own paper trades on real option prices.",
                       "bias": "The model flatters option buyers by about Rs %d-%d a trade (checked on real prices)." % BIAS,
