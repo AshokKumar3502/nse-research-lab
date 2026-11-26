@@ -1,7 +1,7 @@
 {
  "day": "2026-11-26",
  "decision_time": "09:30",
- "made_at": "09:30:58 IST",
+ "made_at": "10:31:54 IST",
  "status": "PAPER ONLY: the walk-forward test has not shown an edge",
  "model_report": {
   "from": "2022-01-03",
@@ -69,7 +69,7 @@
   {
    "symbol": "DMART",
    "side": "long",
-   "score": 0.193,
+   "score": 0.19,
    "ref_price": 3563.1,
    "stop": 3555.0,
    "flat_by": "15:10",
@@ -84,7 +84,7 @@
   {
    "symbol": "KFINTECH",
    "side": "short",
-   "score": -0.316,
+   "score": -0.306,
    "ref_price": 966.95,
    "stop": 967.3,
    "flat_by": "15:10",
@@ -97,7 +97,7 @@
   {
    "symbol": "AXISBANK",
    "side": "short",
-   "score": -0.198,
+   "score": -0.199,
    "ref_price": 1430.2,
    "stop": 1445.0,
    "flat_by": "15:10",
@@ -136,13 +136,13 @@
   {
    "symbol": "POLICYBZR",
    "side": "short",
-   "score": -0.155,
-   "ref_price": 1149.0,
+   "score": -0.156,
+   "ref_price": 1148.7,
    "stop": 1151.0,
    "flat_by": "15:10",
    "shares_per_lakh": 87,
-   "exposure_per_lakh": 99963,
-   "risk_to_stop_rs_per_lakh": 174,
+   "exposure_per_lakh": 99937,
+   "risk_to_stop_rs_per_lakh": 200,
    "verdict": "NO EDGE",
    "backtest_mean_net_pct": -0.0584
   }
