@@ -507,7 +507,7 @@ function renderBacktest() {
     ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)],
     ["If sold at the high", S.high_net != null ? sgn(S.high_net) : "–", cl(S.high_net), "hindsight best · vs actual " + sgn(S.net)],
     ["Targets reached", (() => { const r = tgRates(BT.days); return r ? r.map((v, i) => "T" + (i + 1) + " " + v + "%").join(" · ") : "–"; })(), "",
-     "before the stop · T = entry + 1/2/3 × risk"]];
+     "before the stop · T = entry + 0.75 / 1.5 / 2.25 × risk"]];
   let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(IXN[BT.index] || BT.index || "NIFTY")} 9:45 range breakout · 1 lot (${M.lot || 65}${["BSE", "ADANIENT", "DIXON", "PNB"].includes(BT.index) ? " shares" : ""}) a day · after charges</span></h2>${ixSeg()}
     <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
       <p style="margin:6px 0 0">${esc(M.rule || "")}</p><p style="margin:6px 0 0">${esc(M.prices || "")} ${esc(M.bias || "")}
@@ -598,8 +598,9 @@ function drawBacktest() {
 }
 
 
-// ---------- TARGETS (information only): T1/T2/T3 = entry + 1/2/3 x (entry - the option's 9:15-9:45 low)
-const tgOf = d => d.status === "closed" && d.high != null && d.sl_option != null && d.sl_option < d.entry ? [1, 2, 3].map(k => d.entry + k * (d.entry - d.sl_option)) : null;
+// ---------- TARGETS (information only): T1/T2/T3 = entry + 0.75/1.5/2.25 x (entry - the option's 9:15-9:45 low)
+const TGR = [0.75, 1.5, 2.25];
+const tgOf = d => d.status === "closed" && d.high != null && d.sl_option != null && d.sl_option < d.entry ? TGR.map(k => d.entry + k * (d.entry - d.sl_option)) : null;
 function tgRates(days) {
   const ok = days.filter(tgOf);
   return ok.length ? [0, 1, 2].map(i => Math.round(ok.filter(d => d.high >= tgOf(d)[i]).length / ok.length * 100)) : null;

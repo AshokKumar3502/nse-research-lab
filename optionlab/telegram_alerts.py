@@ -93,7 +93,7 @@ def hit_rates(index):
                     and d.get("sl_option") is not None and d["sl_option"] < d["entry"]]
         if days:
             out = [round(sum(1 for d in days if d["high"] >= d["entry"] + k * (d["entry"] - d["sl_option"])) / len(days) * 100)
-                   for k in (1, 2, 3)]
+                   for k in __import__("optionlab.nifty_orb", fromlist=["TARGET_R"]).TARGET_R]
     except (OSError, ValueError, KeyError):
         pass
     _RATES[index] = out
@@ -217,8 +217,8 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
         print("sent" if ok else "NOT sent")
         sys.exit(0 if ok else 1)
     if "--sample-targets" in sys.argv:   # entry with T1/T2/T3, the three target-hit cards, a status card (made-up numbers)
-        tg = [285.5, 329.0, 372.5]
-        hits = [{"t": 1, "at": "10:48", "price": 285.5}, {"t": 2, "at": "11:52", "price": 329.0}, {"t": 3, "at": "13:40", "price": 372.5}]
+        tg = [274.63, 307.25, 339.88]
+        hits = [{"t": 1, "at": "10:48", "price": tg[0]}, {"t": 2, "at": "11:52", "price": tg[1]}, {"t": 3, "at": "13:40", "price": tg[2]}]
         b = {"day": "SAMPLE", "index": "NIFTY", "range_high": 25850.5, "range_low": 25760.2, "symbol": "NIFTY 25800 CE",
              "side": "CE", "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "SAMPLE 10:19",
              "sl_option": 198.5, "sl_index": 25760.2, "status": "open", "targets": tg}

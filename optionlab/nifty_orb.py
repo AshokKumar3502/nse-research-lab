@@ -27,6 +27,8 @@ RANGE_END, LAST_ENTRY, EXIT = dt.time(9, 45), dt.time(13, 0), dt.time(15, 15)
 # crossing back through its range (6-month replay: +Rs 66,114 vs +Rs 62,653, slightly smaller losses)
 OPTION_SL_FROM = dt.date(2026, 11, 26)
 INDEX_KEY = "NSE_INDEX|Nifty 50"
+# T1/T2/T3 = entry + these multiples of the risk (entry - stop); 25% closer than 1/2/3 from 26 Nov 2026
+TARGET_R = (0.75, 1.5, 2.25)
 CANDLES = "https://api.upstox.com/v3/historical-candle/intraday/%s/minutes/1"
 PICKS = os.path.join(config.DATA, "picks")
 # the same rule on SENSEX (BSE weekly options), paper traded from 26 Nov 2026
@@ -188,9 +190,9 @@ def run(day=None, log=print, index="NIFTY"):
     if doc["status"] == "open":
         last = opt[max(opt)]
         doc.update(last=last[4], last_at="%s %s" % (day, (last[0] + dt.timedelta(minutes=1)).strftime("%H:%M")))
-    # T1/T2/T3 = entry + 1/2/3 x risk (information only: the paper trade still exits at the stop-loss or 15:15)
+    # T1/T2/T3 = entry + TARGET_R x risk (information only: the paper trade still exits at the stop-loss or 15:15)
     risk = (entry - opt_low) if opt_low is not None else entry * 0.3
-    tg = [round(entry + k * risk, 2) for k in (1, 2, 3)]
+    tg = [round(entry + k * risk, 2) for k in TARGET_R]
     end = doc.get("exit_at") or "%s 23:59" % day
     hits, best, best_at = [], entry, doc["entry_at"][11:]
     for t in sorted(opt):
