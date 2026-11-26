@@ -302,6 +302,17 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
         print("\n".join(lines))
         print("sent" if ok else "NOT sent")
         sys.exit(0 if ok else 1)
+    if "--sample-instant" in sys.argv:   # the two instant alerts: GET READY (text) and the entry card (made-up numbers)
+        w = {"day": "SAMPLE", "index": "NIFTY", "status": "waiting", "range_high": 25978.0, "range_low": 25890.0, "step": 50,
+             "index_last": 25960.5, "index_last_at": "10:12"}
+        e = dict(w, status="open", symbol="NIFTY 26000 CE", side="CE", strike=26000, expiry="2026-12-01", lot=65, entry=210.0,
+                 entry_at="SAMPLE 10:19", sl_option=165.0, sl_index=25890.0, last=210.0, last_at="SAMPLE 10:19", gross=0.0,
+                 targets=[243.75, 277.5, 311.25], target_hits=[])
+        send("SAMPLE INSTANT ALERTS (made-up numbers): these two come at once; everything else is on the 10-minute live board.")
+        m1 = dict(messages(w, set())).get("near_high", "")
+        ok = send(m1) + deliver("entry", dict(messages(e, set())).get("entry", ""), e)
+        print("sent %d of 2 instant samples" % ok)
+        sys.exit(0 if ok == 2 else 1)
     if "--board" in sys.argv:          # today's live board for every instrument, computed now from real prices
         import datetime as _dt
         import tempfile
