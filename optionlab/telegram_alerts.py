@@ -123,8 +123,8 @@ def messages(doc, sent):
         for ev, edge, side, gap in (("near_high", doc["range_high"], "CE", doc["range_high"] - last),
                                     ("near_low", doc["range_low"], "PE", last - doc["range_low"])):
             if ev not in sent and 0 <= gap <= last * NEAR:
-                out.append((ev, "GET READY: %s %s at %s, %s pts from the range %s %s.\nA 1-minute close %s it buys the %d %s (about).\n%s"
-                            % (ix, format(last, ",.2f"), at, format(gap, ",.1f"), "high" if side == "CE" else "low",
+                out.append((ev, "🟡 GET READY: %s %s at %s, %s pts from the range %s %s.\nA 1-minute close %s it buys the %d %s (about).\n%s"
+                            % (ix, format(last, ",.2f"), at, format(gap, ",.2f"), "high" if side == "CE" else "low",
                                format(edge, ",.2f"), "above" if side == "CE" else "below", round(edge / step) * step, side, FOOT)))
     if st == "no trade" and "no trade" not in sent:
         out.append(("no trade", "%s option: no trade today. %s.\n%s" % (ix, doc.get("note") or "No breakout by 13:00", FOOT)))
@@ -240,9 +240,10 @@ def board(docs, log=print, force=False, every_min=10):
     return ok
 
 
-def notify(doc, log=print, status=True):
+def notify(doc, log=print, status=True, only=None, text_only=()):
     """Send what is due for today's trade document and remember it. Safe to call every cycle.
-    status=False (the 1-minute watcher): everything except the 10-minute P&L status card."""
+    status=False: everything except the 10-minute P&L status card. only: send just these events (the 1-minute watcher
+    sends only GET READY and the entry; everything else is on the 10-minute live board). text_only: as plain text."""
     if not (os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")) or not doc or not doc.get("day"):
         return 0
     p = os.path.join(STATE, "telegram-%s-%s.json" % (doc.get("index", "NIFTY").lower(), doc["day"]))
@@ -252,9 +253,9 @@ def notify(doc, log=print, status=True):
             sent = json.load(fh).get("sent", [])
     n = 0
     for event, text in messages(doc, set(sent)):
-        if event == "status" and not status:
+        if (event == "status" and not status) or (only is not None and event not in only):
             continue
-        if deliver(event, text, doc):
+        if (send(text) if event in text_only else deliver(event, text, doc)):
             n += 1
             if event != "status":
                 sent.append(event)

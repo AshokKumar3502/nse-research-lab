@@ -341,6 +341,9 @@ def live(every_min=10, until=(15, 20)):
         for index in nifty_orb.INDEXES:
             try:
                 doc = nifty_orb.run(log=lambda *a: None, index=index)
+                # instant Telegram: "ready to enter" near the range edge, and the entry card; the rest is on the board
+                telegram_alerts.notify(doc, log=log, status=False, only=("near_high", "near_low", "entry"),
+                                       text_only=("near_high", "near_low"))
                 if seen.get(index) not in (None, doc.get("status")) and doc.get("status") in ("open", "closed"):
                     log("%s: %s -> %s" % (index, seen[index], doc["status"]))
                     changed = True
