@@ -35,6 +35,9 @@ INDEXES = {
               "list": minute.INSTRUMENTS_URL, "id": "O"},
     "SENSEX": {"key": "BSE_INDEX|SENSEX", "step": 100, "segment": "BSE_FO", "name": "SENSEX", "sl_from": dt.date(2026, 11, 26),
                "file": "sensex", "list": "https://assets.upstox.com/market-quote/instruments/exchange/BSE.json.gz", "id": "OX"},
+    # BSE Ltd stock options (monthly expiry): the only F&O stock whose 2024-2026 backtest beat a random side
+    "BSE": {"key": "NSE_EQ|INE118H01025", "step": 50, "segment": "NSE_FO", "name": "BSE LIMITED", "sl_from": dt.date(2026, 11, 27),
+            "start": dt.date(2026, 11, 27), "file": "bse", "list": minute.INSTRUMENTS_URL, "id": "OB"},
 }
 
 
@@ -100,6 +103,9 @@ def run(day=None, log=print, index="NIFTY"):
     if day.weekday() >= 5:
         doc["status"] = "no market"
         return _save(doc, p)
+    if day < ix.get("start", day):
+        doc.update(status="not started", note="%s paper trading starts on %s" % (index, ix["start"]))
+        return doc                           # not saved: no trade before the start day
     idx = [b for b in candles(ix["key"], day) if b[0] + dt.timedelta(minutes=1) <= now]
     if not idx or idx[-1][0].time() < RANGE_END:
         doc["note"] = "The range builds from 9:15 to 9:45"
@@ -126,6 +132,12 @@ def run(day=None, log=print, index="NIFTY"):
     entry_bar = idx[j]
     strike = round(entry_bar[1] / ix["step"]) * ix["step"]
     cs = [c for c in contracts(day, index) if c["type"] == side and c["strike"] == strike and c["expiry"] >= str(day)]
+    if not cs:                               # stock strikes are not always on the grid: the nearest listed strike
+        live_ = [c for c in contracts(day, index) if c["type"] == side and c["expiry"] >= str(day)]
+        if live_:
+            e0 = min(c["expiry"] for c in live_)
+            strike = min({c["strike"] for c in live_ if c["expiry"] == e0}, key=lambda k: abs(k - entry_bar[1]))
+            cs = [c for c in live_ if c["expiry"] == e0 and c["strike"] == strike]
     if not cs:
         doc.update(status="error", note="No %s %d contract in the instrument list" % (side, strike))
         return _save(doc, p)
