@@ -55,7 +55,7 @@ def send_photo(png, caption):
         return False
 
 
-CAPTION = {"range": "🔵 NIFTY 9:45 range set: waiting for a breakout", "no trade": "⚪ NIFTY: no trade today",
+CAPTION = {"range": "🔵 {ix} 9:45 range set: waiting for a breakout", "no trade": "⚪ {ix}: no trade today",
            "status": "🔵 Live update", "entry": "{dot} NEW SIGNAL: BUY {sym}", "exit": "{dot} CLOSED {sym}: {res}"}
 
 
@@ -64,7 +64,7 @@ def deliver(event, text, doc):
     try:
         from .telegram_cards import card
         dot = "🟢" if (doc.get("side") == "CE" if event == "entry" else (doc.get("net") or 0) > 0) else "🔴"
-        cap = CAPTION[event].format(dot=dot, sym=doc.get("symbol", ""), res="PROFIT" if (doc.get("net") or 0) > 0 else "LOSS")
+        cap = CAPTION[event].format(ix=doc.get("index", "NIFTY"), dot=dot, sym=doc.get("symbol", ""), res="PROFIT" if (doc.get("net") or 0) > 0 else "LOSS")
         if event == "status":
             cap = "%s %s · P&L %s" % (cap, doc["symbol"], _rs(doc["gross"]))
         if send_photo(card(event, doc), cap + "\n" + FOOT):
@@ -82,16 +82,17 @@ def messages(doc, sent):
     """The messages due for this trade document, given the event names already sent. Returns [(event, text)]."""
     out = []
     st = doc.get("status")
+    ix = doc.get("index", "NIFTY")
     if doc.get("range_high") and "range" not in sent and st in ("waiting", "open", "closed", "no trade"):
-        out.append(("range", "NIFTY 9:15-9:45 range: high %s, low %s.\nWatching for a 1-minute close outside it until 13:00.\n%s"
+        out.append(("range", ix + " 9:15-9:45 range: high %s, low %s.\nWatching for a 1-minute close outside it until 13:00.\n%s"
                     % (format(doc["range_high"], ",.2f"), format(doc["range_low"], ",.2f"), FOOT)))
     if st == "no trade" and "no trade" not in sent:
-        out.append(("no trade", "NIFTY option: no trade today. %s.\n%s" % (doc.get("note") or "No breakout by 13:00", FOOT)))
+        out.append(("no trade", "%s option: no trade today. %s.\n%s" % (ix, doc.get("note") or "No breakout by 13:00", FOOT)))
     if st not in ("open", "closed"):
         return out
     sym, lot = doc["symbol"], doc.get("lot") or 0
     sl = ("option below Rs %s" % doc["sl_option"]) if doc.get("sl_option") else \
-        "NIFTY %s %s" % ("below" if doc["side"] == "CE" else "above", format(doc["sl_index"], ",.2f"))
+        "%s %s %s" % (ix, "below" if doc["side"] == "CE" else "above", format(doc["sl_index"], ",.2f"))
     if "entry" not in sent:
         out.append(("entry", "BUY %s (expiry %s)\nEntry Rs %s at %s, 1 lot (%d qty)\nCapital about Rs %s\nStop-loss: %s\nExit: 15:15 if the stop-loss is not hit\n%s"
                     % (sym, doc["expiry"], doc["entry"], doc["entry_at"][11:], lot, format(round(doc["entry"] * lot), ","), sl, FOOT)))
@@ -109,7 +110,7 @@ def notify(doc, log=print):
     """Send what is due for today's trade document and remember it. Safe to call every cycle."""
     if not (os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")) or not doc or not doc.get("day"):
         return 0
-    p = os.path.join(STATE, "telegram-nifty-%s.json" % doc["day"])
+    p = os.path.join(STATE, "telegram-%s-%s.json" % (doc.get("index", "NIFTY").lower(), doc["day"]))
     sent = []
     if os.path.exists(p):
         with open(p, encoding="utf-8") as fh:

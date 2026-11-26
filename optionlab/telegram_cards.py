@@ -83,18 +83,19 @@ class Card:
 def _sl(doc):
     if doc.get("sl_option"):
         return px(doc["sl_option"])
-    return "NIFTY %s %s" % ("<" if doc["side"] == "CE" else ">", format(doc["sl_index"], ",.0f"))
+    return "%s %s %s" % (doc.get("index", "NIFTY"), "<" if doc["side"] == "CE" else ">", format(doc["sl_index"], ",.0f"))
 
 
 def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
     day = doc.get("day", "")
+    name = {"NIFTY": "NIFTY 50"}.get(doc.get("index", "NIFTY"), doc.get("index", "NIFTY"))
     if event == "range":
-        c = Card(BLUE, "NIFTY 50 · %s" % day, "9:45 RANGE SET", "Waiting for a 1-minute close outside the range (until 13:00)")
+        c = Card(BLUE, "%s · %s" % (name, day), "9:45 RANGE SET", "Waiting for a 1-minute close outside the range (until 13:00)")
         c.boxes([("Range HIGH  →  close above = BUY CALL", format(doc["range_high"], ",.2f"), LGREEN),
                  ("Range LOW  →  close below = BUY PUT", format(doc["range_low"], ",.2f"), LRED)], cols=1, h=120)
         return c.png(foot)
     if event == "no trade":
-        c = Card(GREY, "NIFTY 50 · %s" % day, "NO TRADE TODAY", None)
+        c = Card(GREY, "%s · %s" % (name, day), "NO TRADE TODAY", None)
         c.line(doc.get("note") or "No breakout of the 9:15-9:45 range by 13:00", TEXT, 34, True)
         c.line("No position taken. Nothing to do.", MUTED, 30)
         return c.png(foot)

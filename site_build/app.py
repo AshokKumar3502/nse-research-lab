@@ -135,12 +135,16 @@ def build():
         msgs.append({"id": "intraday-%s" % it.get("day"), "ts": now, "title": "Intraday picks (paper only)",
                      "text": "Buy: %s" % names_i})
     msgs = []                     # option-only app: no stock-pick messages
-    ops = sorted((t for t in data.get("trades", []) if t.get("kind") == "option"), key=lambda t: t["signal_date"])
-    if ops:
+    for ixn in ("NIFTY", "SENSEX"):
+        ops = sorted((t for t in data.get("trades", []) if t.get("kind") == "option"
+                      and (t.get("index") or ("SENSEX" if str(t.get("symbol", "")).startswith("SENSEX") else "NIFTY")) == ixn),
+                     key=lambda t: t["signal_date"])
+        if not ops:
+            continue
         o = ops[-1]
         v = o["net"] if o["status"] == "closed" else (o.get("gross") or 0)
-        msgs.append({"id": "option-%s-%s" % (o["signal_date"], o["status"]), "ts": now,
-                     "title": "NIFTY option %s" % ("closed" if o["status"] == "closed" else "open"),
+        msgs.append({"id": "%s-%s-%s" % ("option" if ixn == "NIFTY" else "sensex", o["signal_date"], o["status"]), "ts": now,
+                     "title": "%s option %s" % (ixn, "closed" if o["status"] == "closed" else "open"),
                      "text": "%s · entry Rs %s · %s Rs %s" % (o["symbol"], o["entry"], "net" if o["status"] == "closed" else "now",
                                                           format(int(round(v)), ","))})
     notify = {"built": data["built"], "messages": msgs}
@@ -340,11 +344,12 @@ window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 const HF = {year: "all", limit: 30};
 async function loadHighs() {
   const box = $("#v-highs");
-  if (!BT) {
-    box.innerHTML = `<h2>Exit vs High</h2><div class="empty" role="status">Loading…</div>`;
-    try { const r = await fetch("data/backtest.json?t=" + Date.now(), {cache: "no-store"}); if (!r.ok) throw new Error("HTTP " + r.status); BT = await r.json(); }
+  if (!BTS[BTI]) {
+    box.innerHTML = `<h2>Exit vs High</h2>${ixSeg()}<div class="empty" role="status">Loading…</div>`;
+    try { await getBT(); }
     catch (e) { box.innerHTML = `<h2>Exit vs High</h2><div class="empty" role="alert">Could not load the data (${esc(String(e.message || e))}).</div>`; return; }
   }
+  BT = BTS[BTI];
   const tr = BT.days.filter(d => d.status === "closed" && d.high_pnl != null);
   const act = tr.reduce((a, d) => a + d.pnl, 0), hi = tr.reduce((a, d) => a + d.high_pnl, 0);
   const yrs = {};
@@ -352,7 +357,7 @@ async function loadHighs() {
   const hrs = {};
   tr.forEach(d => { const hh = String(d.high_time || "").slice(0, 2); if (hh) hrs[hh] = (hrs[hh] || 0) + 1; });
   const hmax = Math.max(1, ...Object.values(hrs));
-  let h = `<h2>Exit vs High<span class="sub">What the rule actually made vs selling each trade at its highest price (hindsight) · ${fdl(BT.from)} – ${fdl(BT.to)} · 1 lot, after charges</span></h2>
+  let h = `<h2>Exit vs High<span class="sub">What the rule actually made vs selling each trade at its highest price (hindsight) · ${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(BT.index || "NIFTY")} · 1 lot, after charges</span></h2>${ixSeg()}
     <details class="why banner warn"><summary><b>Hindsight, not a target.</b> <span class="muted">Why?</span></summary><p style="margin:6px 0 0">Nobody knows the high while the trade is open.
     Every early-exit rule we tested (20-point targets, trailing exits, earlier exit times) made less than holding to 15:15. Option prices before 20 Nov 2026 are modelled.</p></details>
     <div class="kpis bt-kpis">
@@ -379,6 +384,7 @@ async function loadHighs() {
     <h2>Every trade</h2><div class="tools"><div class="seg" role="group" aria-label="Year">${[["all", "All"], ...Object.keys(yrs).sort().map(y => [y, y])].map(([k, l]) => `<button type="button" data-hy="${k}" aria-pressed="${HF.year === k}">${l}</button>`).join("")}</div></div>
     <p class="sumline" id="hisum" aria-live="polite" tabindex="-1"></p><div id="hilist"></div>`;
   box.innerHTML = h;
+  wireIx(box, loadHighs);
   box.querySelectorAll("[data-hy]").forEach(b => b.onclick = () => { HF.year = b.dataset.hy; HF.limit = 30;
     box.querySelectorAll("[data-hy]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawHighs(tr); });
   drawHighs(tr);
@@ -388,7 +394,7 @@ function drawHighs(tr) {
   const a = rows.reduce((x, d) => x + d.pnl, 0), hh = rows.reduce((x, d) => x + d.high_pnl, 0);
   $("#hisum").textContent = rows.length + " trades · actual " + sgn(a) + " · at the high " + sgn(hh) + " · left " + sgn(hh - a);
   let h = `<div class="btlist">` + rows.slice(0, HF.limit).map(d => `<article class="card btday ${d.pnl > 0 ? "win" : "loss"}">
-    <div class="row"><span class="dt">${esc(fdl(d.date))}</span><b>NIFTY ${d.strike} ${d.side}</b></div>
+    <div class="row"><span class="dt">${esc(fdl(d.date))}</span><b>${esc(BT.index || "NIFTY")} ${d.strike} ${d.side}</b></div>
     <div class="kv kv4"><div>Entry · ${esc(d.entry_time)}<b>${inr(d.entry)}</b></div><div>High · ${esc(d.high_time)}<b>${inr(d.high)}</b></div>
       <div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div><div>Exit reason<b style="font-size:12px">${/^SL/.test(d.why) ? "Stop-loss" : "15:15"}</b></div></div>
     <div class="kv kv4"><div>P&L at the high<b class="${cl(d.high_pnl)}">${sgn(d.high_pnl)}</b></div><div>P&L at exit<b class="${cl(d.pnl)}">${sgn(d.pnl)}</b></div>
@@ -400,17 +406,32 @@ function drawHighs(tr) {
   if (more) more.onclick = () => { HF.limit += 30; drawHighs(tr); const n = $("#himore"); (n || $("#hisum")).focus(); };
 }
 
-// ---------- BACKTEST: last 6 months of the NIFTY option rule (docs/data/backtest.json), loaded on first open
-let BT = null;
+// ---------- BACKTEST: the option rule replayed day by day, NIFTY (docs/data/backtest.json, 2022-) or SENSEX
+// (docs/data/backtest-sensex.json, Jun 2023-), each loaded on first open
+let BT = null, BTI = "NIFTY";
+const BTS = {};
 const BTF = {month: "all", kind: "all", limit: 30};
+const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX"].map(i =>
+  `<button type="button" data-bti="${i}" aria-pressed="${BTI === i}">${i}</button>`).join("")}</div></div>`;
+async function getBT() {
+  if (BTS[BTI]) return BTS[BTI];
+  const r = await fetch((BTI === "SENSEX" ? "data/backtest-sensex.json" : "data/backtest.json") + "?t=" + Date.now(), {cache: "no-store"});
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return (BTS[BTI] = await r.json());
+}
+function wireIx(box, reload) {
+  box.querySelectorAll("[data-bti]").forEach(b => b.onclick = () => {
+    if (BTI === b.dataset.bti) return;
+    BTI = b.dataset.bti; BT = BTS[BTI] || null; BTF.month = "all"; BTF.limit = 30; HF.year = "all"; HF.limit = 30; reload();
+  });
+}
 async function loadBacktest() {
   const box = $("#v-backtest");
-  if (BT) { renderBacktest(); return; }
-  box.innerHTML = `<h2>Backtest</h2><div class="empty" role="status">Loading the backtest…</div>`;
+  if (BTS[BTI]) { BT = BTS[BTI]; renderBacktest(); return; }
+  box.innerHTML = `<h2>Backtest</h2>${ixSeg()}<div class="empty" role="status">Loading the backtest…</div>`;
+  wireIx(box, loadBacktest);
   try {
-    const r = await fetch("data/backtest.json?t=" + Date.now(), {cache: "no-store"});
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    BT = await r.json();
+    BT = await getBT();
   } catch (e) {
     box.innerHTML = `<h2>Backtest</h2><div class="empty" role="alert">Could not load the backtest (${esc(String(e.message || e))}). Check the connection and open this tab again.</div>`;
     return;
@@ -427,10 +448,10 @@ function renderBacktest() {
     ["Capital a trade", inr(S.capital_avg), "", "average · highest " + inr(S.capital_max)],
     ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)],
     ["If sold at the high", S.high_net != null ? sgn(S.high_net) : "–", cl(S.high_net), "hindsight best · vs actual " + sgn(S.net)]];
-  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · NIFTY 9:45 range breakout · 1 lot (${M.lot || 65}) a day · after charges</span></h2>
+  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(BT.index || "NIFTY")} 9:45 range breakout · 1 lot (${M.lot || 65}) a day · after charges</span></h2>${ixSeg()}
     <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
       <p style="margin:6px 0 0">${esc(M.rule || "")}</p><p style="margin:6px 0 0">${esc(M.prices || "")} ${esc(M.bias || "")}
-      The same trades in NIFTY futures (real prices) made ${sgn(S.futures_net)}. Capital = the premium paid for 1 lot. Past results are not predictions.</p></details>
+      ${(BT.index || "NIFTY") === "NIFTY" ? "The same trades in NIFTY futures (real prices) made " + sgn(S.futures_net) + "." : ""} Capital = the premium paid for 1 lot. Past results are not predictions.</p></details>
     <div class="kpis bt-kpis">` + k.map(([l, v, c, s2]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}${v.length > 11 ? " sm" : ""}">${v}</div><div class="s">${esc(s2)}</div></div>`).join("") + `</div>`;
   const pts = BT.days.filter(d => d.status !== "holiday");
   if (pts.length > 1) {
@@ -458,6 +479,7 @@ function renderBacktest() {
       `<button type="button" data-btk="${kk}" aria-pressed="${BTF.kind === kk}">${l}</button>`).join("") + `</div></div>
     <p class="sumline" id="btsum" aria-live="polite" tabindex="-1"></p><div id="btlist"></div>`;
   box.innerHTML = h;
+  wireIx(box, loadBacktest);
   box.querySelectorAll("[data-btm]").forEach(b => b.onclick = () => { BTF.month = b.dataset.btm; BTF.limit = 30;
     box.querySelectorAll("[data-btm]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawBacktest(); });
   box.querySelectorAll("[data-btk]").forEach(b => b.onclick = () => { BTF.kind = b.dataset.btk; BTF.limit = 30;
@@ -494,14 +516,14 @@ function drawBacktest() {
     const id = "btd-" + d.date, sl = /^SL/.test(d.why || "");
     h += `<article class="card btday ${d.pnl > 0 ? "win" : "loss"}">
       <div class="row"><span class="dt">${esc(fdl(d.date))}</span><span class="pnl ${cl(d.pnl)}">${sgn(d.pnl)}</span></div>
-      <div class="btmeta"><span class="pill ${d.side === "CE" ? "p-up" : "p-dn"}">${d.side === "CE" ? "Call" : "Put"}</span><b>NIFTY ${d.strike} ${d.side}</b>
+      <div class="btmeta"><span class="pill ${d.side === "CE" ? "p-up" : "p-dn"}">${d.side === "CE" ? "Call" : "Put"}</span><b>${esc(BT.index || "NIFTY")} ${d.strike} ${d.side}</b>
         <span class="pill ${sl ? "p-dn" : "p-mute"}">${sl ? "Stop-loss" : "15:15 exit"}</span>${d.source === "real" ? `<span class="pill p-info">Real prices</span>` : ""}${d.expiry_day ? `<span class="pill p-warn">Expiry day</span>` : ""}</div>
       <div class="kv kv4"><div>Entry · ${esc(d.entry_time)}<b>${inr(d.entry)}</b></div><div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div>
         <div>Capital<b>${inr(d.capital)}</b></div><div>Total so far<b class="${cl(d.cum)}">${sgn(d.cum)}</b></div></div>
       ${d.high != null ? `<div class="kv kv4"><div>High · ${esc(d.high_time)}<b>${inr(d.high)}</b></div><div>P&L at the high<b class="${cl(d.high_pnl)}">${sgn(d.high_pnl)}</b></div>
         <div>P&L at exit<b class="${cl(d.pnl)}">${sgn(d.pnl)}</b></div><div>Left on table<b class="muted">${sgn(d.high_pnl - d.pnl)}</b></div></div>` : ""}
       <button type="button" class="linkbtn" data-btd aria-expanded="false" aria-controls="${id}">Details</button>
-      <div class="btd" id="${id}" hidden>9:15–9:45 range ${d.range_low ?? "–"} – ${d.range_high ?? "–"}${d.nifty_entry ? `<br>NIFTY ${d.nifty_entry} → ${d.nifty_exit} (${d.nifty_pts >= 0 ? d.nifty_pts + " pts in the trade's favour" : Math.abs(d.nifty_pts) + " pts against the trade"})` : ""}
+      <div class="btd" id="${id}" hidden>9:15–9:45 range ${d.range_low ?? "–"} – ${d.range_high ?? "–"}${d.nifty_entry ? `<br>${esc(BT.index || "NIFTY")} ${d.nifty_entry} → ${d.nifty_exit} (${d.nifty_pts >= 0 ? d.nifty_pts + " pts in the trade's favour" : Math.abs(d.nifty_pts) + " pts against the trade"})` : ""}
         <br>Expiry ${esc(d.expiry || "–")} · exit reason: ${esc(d.why || "")}${d.futures_pnl != null ? `<br>Same trade in NIFTY futures: ${sgn(d.futures_pnl)}` : ""}</div></article>`;
   });
   if (last) h += `</div>`;
@@ -524,6 +546,7 @@ let ODAILY = [];
 const kindPill = t => t.kind === "momentum" ? `<span class="pill p-info">Momentum</span>` : t.kind === "results" ? `<span class="pill p-info">Results</span>`
   : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>`
   : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
+const ixOf = t => t.index || (/^SENSEX/.test(t.symbol || "") ? "SENSEX" : "NIFTY");
 const reduceMotion = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.addEventListener("click", e => {
   if (e.target.closest(".skip")) { e.preventDefault(); $("#main").focus(); return; }
@@ -600,16 +623,23 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
       why("Paper only — no proven edge.", `In the 2022–2026 test the long picks averaged ${lo.backtest_pct_per_day_on_exposure ?? "–"}% a day after charges; at ${it.leverage}x leverage that is about ${lo.pct_per_day_on_capital ?? "–"}% of capital a day. Leverage multiplies losses as well as gains.`)
       + `<div class="cols">${side("long")}${side("short")}</div>`);
   }
-  const op = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date))[0];
-  let ob = why("Unproven — paper only.", "The 2022–2026 backtest looked strong, but buying a random call or put at 9:45 did just as well in the same price model, and real NSE option prices showed the model flatters option buyers by about ₹160–330 a trade. On real prices a random buyer loses a little. This paper trade, on real prices, is the test.");
-  if (!op) ob += `<div class="empty">No option trade yet. The rule watches NIFTY from 9:45 to 13:00 each trading day.</div>`;
-  else { const v = op.status === "closed" ? op.net : op.gross;
-    ob += `<div class="grid"><div class="card pick ${v >= 0 ? "win" : "loss"}"><div class="row"><div><span class="sym">${esc(op.symbol)}</span><div class="ind">${esc(op.industry)}</div></div>
-      <span class="pill ${op.status === "open" ? "p-warn" : v >= 0 ? "p-up" : "p-dn"}">${op.status === "open" ? "Open" : "Closed"}</span></div>
-      <div class="kv"><div>Entry · ${esc(when(op.entry_at))}<b>${inr(op.entry)}</b></div><div>${op.status === "closed" ? "Exit" : "Now"} · ${esc(tm(op.last_at))}<b>${inr(op.last)}</b></div><div>SL<b class="dn" style="font-size:12.5px">${esc(op.sl_note)}</b></div></div>
-      <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}</div>
-      <div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${op.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:12.5px">${pct(v, op.entry * op.qty)}</span></span></div></div></div>`; }
-  sec("option", "NIFTY option", "9:15–9:45 range breakout · ATM call or put · SL = the option's own 9:15–9:45 low · exit 15:15 · 1 lot · paper only", op ? 1 : 0, ob);
+  const optSec = (ix, id, text, none) => {
+    const op = (D.trades || []).filter(t => t.kind === "option" && ixOf(t) === ix).sort((a, b) => b.signal_date.localeCompare(a.signal_date))[0];
+    let ob = why("Unproven — paper only.", text);
+    if (!op) ob += `<div class="empty">${none}</div>`;
+    else { const v = op.status === "closed" ? op.net : op.gross;
+      ob += `<div class="grid"><div class="card pick ${v >= 0 ? "win" : "loss"}"><div class="row"><div><span class="sym">${esc(op.symbol)}</span><div class="ind">${esc(op.industry)}</div></div>
+        <span class="pill ${op.status === "open" ? "p-warn" : v >= 0 ? "p-up" : "p-dn"}">${op.status === "open" ? "Open" : "Closed"}</span></div>
+        <div class="kv"><div>Entry · ${esc(when(op.entry_at))}<b>${inr(op.entry)}</b></div><div>${op.status === "closed" ? "Exit" : "Now"} · ${esc(tm(op.last_at))}<b>${inr(op.last)}</b></div><div>SL<b class="dn" style="font-size:12.5px">${esc(op.sl_note)}</b></div></div>
+        <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}</div>
+        <div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${op.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:12.5px">${pct(v, op.entry * op.qty)}</span></span></div></div></div>`; }
+    sec(id, ix + " option", "9:15–9:45 range breakout · ATM call or put · SL = the option's own 9:15–9:45 low · exit 15:15 · 1 lot"
+      + (ix === "SENSEX" ? " (20 qty) · BSE weekly options" : "") + " · paper only", op ? 1 : 0, ob);
+  };
+  optSec("NIFTY", "option", "The 2022–2026 backtest looked strong, but buying a random call or put at 9:45 did just as well in the same price model, and real NSE option prices showed the model flatters option buyers by about ₹160–330 a trade. On real prices a random buyer loses a little. This paper trade, on real prices, is the test.",
+    "No option trade yet. The rule watches NIFTY from 9:45 to 13:00 each trading day.");
+  optSec("SENSEX", "sensex", "The same rule on SENSEX, paper traded on real BSE option prices from 26 Nov 2026. Its Jun 2023 – Nov 2026 backtest returned more per rupee than NIFTY, but it did not beat a random call or put by a significant margin, and its option prices are modelled from NIFTY's volatility. This paper trade, on real prices, is the test.",
+    "No SENSEX trade yet. The rule watches SENSEX from 9:45 to 13:00 each trading day.");
   const multi = (kind, label) => {
     const ts = (D.trades || []).filter(t => t.kind === kind && t.status !== "closed").sort((a, b) => b.signal_date.localeCompare(a.signal_date) || (b.gross || 0) - (a.gross || 0));
     return [ts.length, ts.length ? `<div class="list">` + ts.map(t => {
@@ -627,9 +657,9 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
   sec("momentum", "12-1 momentum", "10 strongest 12-month gainers (skipping the last month) · rebalanced every 20 sessions · buy 9:30 · no stop-loss · ₹50,000 each · paper test", nm,
     why("Promising, not proven.", "2017–2026: +22% a year vs NIFTY +12%, but it fell up to 45% from a peak (NIFTY 30%) and lost 25% in 2018 and 16% in 2022. A few big winners made the profit. This paper trade on real prices is the test.")
     + (mb || `<div class="empty">No open momentum trades yet. New picks come every 20 sessions.</div>`));
-  const keep = secs.filter(s => s.id === "option");
+  const keep = secs.filter(s => s.id === "option" || s.id === "sensex");
   const recent = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date)).slice(0, 15);
-  keep.push({id: "recent", title: "Recent option trades", sub: "Last 15 paper trades on real option prices · 1 lot each, after charges", count: recent.length,
+  keep.push({id: "recent", title: "Recent option trades", sub: "Last 15 paper trades on real option prices (NIFTY and SENSEX) · 1 lot each, after charges", count: recent.length,
     body: recent.length ? `<div class="list">` + recent.map(t => {
       const v = t.status === "closed" ? t.net : t.gross;
       return `<div class="li"><div><b>${esc(t.symbol)}</b> <span class="muted">${esc(fdl(t.signal_date))}</span>
@@ -665,8 +695,12 @@ ODAILY = (() => {
     ["Latest day", last ? sgn(last.net) : "–", last ? cl(last.net) : "", last ? fdl(last.date) : "no trades yet"],
     ["Trades", T.filter(t => t.status !== "pending").length + "", "", closed.length ? "avg " + sgn(closed.reduce((a, t) => a + t.net, 0) / closed.length) + " a trade" : "none closed yet"],
     ["Win rate", closed.length ? Math.round(wins.length / closed.length * 100) + "%" : "–", "", closed.length + " closed trades"]];
-  let h = `<h2>NIFTY option paper trading<span class="sub">1 lot a day on real option prices, after Zerodha charges</span></h2><div class="kpis">` +
+  let h = `<h2>Option paper trading<span class="sub">NIFTY and SENSEX · 1 lot each a day on real option prices, after charges</span></h2><div class="kpis">` +
     k.map(([l, v, c, s]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div><div class="s">${esc(s)}</div></div>`).join("") + `</div>`;
+  h += `<h2>By index<span class="sub">Closed trades plus any open one</span></h2><div class="list"><table><caption class="sr">P&L by index</caption><thead><tr><th scope="col">Index</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Won</th><th scope="col" class="r">Net</th></tr></thead><tbody>${
+    ["NIFTY", "SENSEX"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
+      n = ts.reduce((a, t) => a + (t.status === "closed" ? t.net : (t.gross || 0)), 0);
+      return `<tr><td>${ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
   if (!MULTI.length) {
     const mon = {};
     T.filter(t => t.status === "closed").forEach(t => { const k = String(t.signal_date).slice(0, 7); (mon[k] = mon[k] || []).push(t.net); });
@@ -789,8 +823,9 @@ ODAILY = (() => {
   const closed = T.filter(t => t.status === "closed");
   const grp = (name, f) => { const ts = closed.filter(f), w = ts.filter(t => t.net > 0).length, tot = ts.reduce((a, t) => a + t.net, 0);
     return [name, ts.length, ts.length ? Math.round(w / ts.length * 100) + "%" : "–", ts.length ? sgn(tot / ts.length) : "–", tot, ts.length]; };
-  const g = [grp("NIFTY option, calls (CE)", t => / CE$/.test(t.symbol)), grp("NIFTY option, puts (PE)", t => / PE$/.test(t.symbol)), grp("All option trades", t => true)];
-  h += `<h2>Calls vs puts</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
+  const g = [grp("NIFTY", t => ixOf(t) === "NIFTY"), grp("SENSEX", t => ixOf(t) === "SENSEX"), grp("Calls (CE)", t => / CE$/.test(t.symbol)),
+    grp("Puts (PE)", t => / PE$/.test(t.symbol)), grp("All option trades", t => true)];
+  h += `<h2>NIFTY vs SENSEX · calls vs puts</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
     g.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td class="r">${r[2]}</td><td class="r">${r[3]}</td><td class="r ${cl(r[4])}"><b>${r[5] ? sgn(r[4]) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;
   const bySym = {}; closed.forEach(t => { const k = fd(t.signal_date) + " · " + t.symbol; bySym[k] = (bySym[k] || 0) + t.net; });
   const ranked = Object.entries(bySym).sort((a, b) => b[1] - a[1]);
