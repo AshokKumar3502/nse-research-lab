@@ -58,9 +58,9 @@ def send_photo(png, caption):
         return False
 
 
-CAPTION = {"t1": "🎯 T1 HIT: {sym}", "t2": "🎯🎯 T2 HIT: {sym}", "t3": "🎯🎯🎯 T3 HIT: {sym}", "near_high": "🟡 GET READY: {ix} near its range HIGH (call side)", "near_low": "🟡 GET READY: {ix} near its range LOW (put side)",
+CAPTION = {"t1": "🎯 T1 HIT: {sym}", "t2": "🎯🎯 T2 HIT: {sym}", "t3": "🎯🎯🎯 T3 HIT: {sym}", "near_high": "🟡 BE READY: {ix} near its range HIGH (call side), not entered yet", "near_low": "🟡 BE READY: {ix} near its range LOW (put side), not entered yet",
            "range": "🔵 {ix} 9:45 range set: waiting for a breakout", "no trade": "⚪ {ix}: no trade today",
-           "status": "🔵 Live update", "entry": "{dot} NEW SIGNAL: BUY {sym}", "exit": "{dot} CLOSED {sym}: {res}"}
+           "status": "🔵 Live update", "entry": "{dot} ENTRY TAKEN: BUY {sym}", "exit": "{dot} CLOSED {sym}: {res}"}
 
 
 def deliver(event, text, doc):
@@ -123,7 +123,7 @@ def messages(doc, sent):
         for ev, edge, side, gap in (("near_high", doc["range_high"], "CE", doc["range_high"] - last),
                                     ("near_low", doc["range_low"], "PE", last - doc["range_low"])):
             if ev not in sent and 0 <= gap <= last * NEAR:
-                out.append((ev, "🟡 GET READY: %s %s at %s, %s pts from the range %s %s.\nA 1-minute close %s it buys the %d %s (about).\n%s"
+                out.append((ev, "🟡 BE READY: %s %s at %s, %s pts from the range %s %s.\nA 1-minute close %s it buys the %d %s (about).\n%s"
                             % (ix, format(last, ",.2f"), at, format(gap, ",.2f"), "high" if side == "CE" else "low",
                                format(edge, ",.2f"), "above" if side == "CE" else "below", round(edge / step) * step, side, FOOT)))
     if st == "no trade" and "no trade" not in sent:
@@ -306,11 +306,11 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
         w = {"day": "SAMPLE", "index": "NIFTY", "status": "waiting", "range_high": 25978.0, "range_low": 25890.0, "step": 50,
              "index_last": 25960.5, "index_last_at": "10:12"}
         e = dict(w, status="open", symbol="NIFTY 26000 CE", side="CE", strike=26000, expiry="2026-12-01", lot=65, entry=210.0,
-                 entry_at="SAMPLE 10:19", sl_option=165.0, sl_index=25890.0, last=210.0, last_at="SAMPLE 10:19", gross=0.0,
+                 entry_at="2026-11-27 10:19", sl_option=165.0, sl_index=25890.0, last=210.0, last_at="2026-11-27 10:19", gross=0.0,
                  targets=[243.75, 277.5, 311.25], target_hits=[])
         send("SAMPLE INSTANT ALERTS (made-up numbers): these two come at once; everything else is on the 10-minute live board.")
         m1 = dict(messages(w, set())).get("near_high", "")
-        ok = send(m1) + deliver("entry", dict(messages(e, set())).get("entry", ""), e)
+        ok = deliver("near_high", m1, w) + deliver("entry", dict(messages(e, set())).get("entry", ""), e)
         print("sent %d of 2 instant samples" % ok)
         sys.exit(0 if ok == 2 else 1)
     if "--board" in sys.argv:          # today's live board for every instrument, computed now from real prices
@@ -340,12 +340,12 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
         tg = [274.63, 307.25, 339.88]
         hits = [{"t": 1, "at": "10:48", "price": tg[0]}, {"t": 2, "at": "11:52", "price": tg[1]}, {"t": 3, "at": "13:40", "price": tg[2]}]
         b = {"day": "SAMPLE", "index": "NIFTY", "range_high": 25850.5, "range_low": 25760.2, "symbol": "NIFTY 25800 CE",
-             "side": "CE", "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "SAMPLE 10:19",
+             "side": "CE", "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "2026-11-27 10:19",
              "sl_option": 198.5, "sl_index": 25760.2, "status": "open", "targets": tg}
-        docs = [("entry", dict(b, target_hits=[], last=242.0, last_at="SAMPLE 10:19", gross=0.0))]
-        docs += [("t%d" % k, dict(b, target_hits=hits[:k], last=tg[k - 1], last_at="SAMPLE " + hits[k - 1]["at"],
+        docs = [("entry", dict(b, target_hits=[], last=242.0, last_at="2026-11-27 10:19", gross=0.0))]
+        docs += [("t%d" % k, dict(b, target_hits=hits[:k], last=tg[k - 1], last_at="2026-11-27 " + hits[k - 1]["at"],
                                   gross=(tg[k - 1] - 242) * 65)) for k in (1, 2, 3)]
-        docs.append(("status", dict(b, target_hits=hits[:2], last=318.0, last_at="SAMPLE 12:30", gross=(318 - 242) * 65)))
+        docs.append(("status", dict(b, target_hits=hits[:2], last=318.0, last_at="2026-11-27 12:30", gross=(318 - 242) * 65)))
         send("SAMPLE TARGET ALERTS (made-up numbers): entry with T1/T2/T3, a card when each target is reached, and the "
              "10-minute status with targets marked HIT. Targets are information only: the paper trade still exits at the "
              "stop-loss or 15:15.")
@@ -356,12 +356,12 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
         sys.exit(0 if ok == len(docs) else 1)
     if "--sample" in sys.argv:        # the five alert cards with made-up numbers, marked SAMPLE
         b = {"day": "SAMPLE", "range_high": 25850.5, "range_low": 25760.2, "symbol": "NIFTY 25800 CE", "side": "CE",
-             "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "SAMPLE 10:19",
+             "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "2026-11-27 10:19",
              "sl_option": 198.5, "sl_index": 25760.2}
-        docs = [("range", dict(b, status="waiting")), ("entry", dict(b, status="open", last=242.0, last_at="SAMPLE 10:19", gross=0.0)),
-                ("status", dict(b, status="open", last=301.4, last_at="SAMPLE 12:30", gross=(301.4 - 242) * 65)),
-                ("exit", dict(b, status="closed", exit=240.0, exit_at="SAMPLE 15:15", why="15:15 exit", net=-213.4,
-                              charges=83.4, last=240.0, last_at="SAMPLE 15:15", gross=-130.0)),
+        docs = [("range", dict(b, status="waiting")), ("entry", dict(b, status="open", last=242.0, last_at="2026-11-27 10:19", gross=0.0)),
+                ("status", dict(b, status="open", last=301.4, last_at="2026-11-27 12:30", gross=(301.4 - 242) * 65)),
+                ("exit", dict(b, status="closed", exit=240.0, exit_at="2026-11-27 15:15", why="15:15 exit", net=-213.4,
+                              charges=83.4, last=240.0, last_at="2026-11-27 15:15", gross=-130.0)),
                 ("no trade", dict(b, status="no trade", note="No breakout of the 9:15-9:45 range by 13:00"))]
         send("SAMPLE ALERTS (made-up numbers): this is how each NIFTY option message will look.")
         ok = 0

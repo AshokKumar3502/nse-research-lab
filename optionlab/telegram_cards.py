@@ -98,12 +98,12 @@ def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
         up = event == "near_high"
         edge = doc["range_high"] if up else doc["range_low"]
         last, step = doc["index_last"], doc.get("step") or 50
-        c = Card(AMBER, "GET READY · %s · %s" % (name, doc.get("index_last_at", "")),
-                 "%s NEAR RANGE %s" % ("▲" if up else "▼", "HIGH" if up else "LOW"),
-                 "A 1-minute close %s %s takes the trade" % ("above" if up else "below", format(edge, ",.2f")))
+        c = Card(AMBER, "%s · %s · NEAR RANGE %s" % (name, doc.get("index_last_at", ""), "HIGH" if up else "LOW"),
+                 "BE READY %s %s SIDE" % ("▲" if up else "▼", "CALL" if up else "PUT"),
+                 "Not entered yet: a 1-minute close %s %s takes the trade" % ("above" if up else "below", format(edge, ",.2f")))
         c.boxes([("%s now" % name, format(last, ",.2f"), TEXT),
                  ("Range %s" % ("high" if up else "low"), format(edge, ",.2f"), LGREEN if up else LRED),
-                 ("Distance", "%s pts" % format(abs(edge - last), ",.1f"), AMBER),
+                 ("Distance", "%s pts" % format(abs(edge - last), ",.2f"), AMBER),
                  ("If it breaks", "BUY %d %s" % (round(edge / step) * step, "CE" if up else "PE"), LGREEN if up else LRED)])
         return c.png(foot)
     if event == "no trade":
@@ -114,7 +114,7 @@ def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
     call = doc["side"] == "CE"
     lot = doc.get("lot") or 0
     if event == "entry":
-        c = Card(GREEN if call else RED, "SIGNAL · %s · %s" % (day, doc["entry_at"][11:]),
+        c = Card(GREEN if call else RED, "ENTRY TAKEN · %s · %s" % (day, doc["entry_at"][11:]),
                  "BUY %s %s" % ("▲" if call else "▼", doc["symbol"]),
                  "%s breakout · expiry %s · 1 lot = %d qty" % ("Upside" if call else "Downside", doc["expiry"], lot))
         c.boxes([("Entry price", px(doc["entry"]), TEXT),
