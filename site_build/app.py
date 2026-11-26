@@ -50,7 +50,7 @@ def updated_by():
     t = now
     for _ in range(8):
         if t.weekday() < 5:
-            for hh, mm, label in ((9, 46, "NIFTY option watch (9:45 range set)"), (18, 55, "the day's final option result")):
+            for hh, mm, label in ((9, 46, "the morning option watch"), (18, 55, "the day's final option result")):
                 slot = t.replace(hour=hh, minute=mm, second=0, microsecond=0)
                 if slot > now:
                     when = ("today" if slot.date() == now.date() else slot.strftime("%a %d %b"))
@@ -163,7 +163,7 @@ def build():
 
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>NIFTY Option Lab</title><meta name="description" content="NIFTY 9:45 range-breakout option rule, paper traded every day on real option prices, with every result kept.">
+<title>NIFTY Option Lab</title><meta name="description" content="Paper-trading dashboard: live option trades, results and backtests.">
 <meta name="theme-color" content="#0a0f1d"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"><link rel="icon" href="logo.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem("theme");if(t&&t!=="system")document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -286,6 +286,17 @@ h3.month{display:flex;justify-content:space-between;margin:24px 2px 2px;font-siz
 .kv.kv4{grid-template-columns:repeat(4,1fr)}
 .btmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
 .btd{margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.6;background:var(--surface2);border-radius:12px;padding:9px 11px}
+/* trade screen */
+dialog#tradedlg{border:1px solid var(--line);border-radius:22px;padding:0;width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 40px);background:var(--surface);color:var(--text);box-shadow:var(--shadow2)}
+dialog#tradedlg::backdrop{background:rgba(3,6,15,.55);backdrop-filter:blur(3px)}
+.tdh{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 18px;background:var(--grad);color:#fff}
+.tdh h3{margin:0;font-size:18px;letter-spacing:-.01em}.tdh .x{border:0;background:rgba(255,255,255,.18);color:#fff;width:36px;height:36px;border-radius:10px;font-size:20px;cursor:pointer}
+.tdb{padding:16px 18px 20px}.tdkv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.tdkv div{background:var(--surface2);border-radius:12px;padding:9px 11px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.tdkv b{display:block;font-family:var(--mono);font-size:15px;color:var(--text);text-transform:none;letter-spacing:0;margin-top:3px}
+.tl{list-style:none;margin:10px 0 0;padding:0}.tl li{display:grid;grid-template-columns:62px 14px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.tl li:last-child{border-bottom:0}.tl .tm{font-family:var(--mono);color:var(--muted)}.tl i{width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.tl i.up{background:var(--up)}.tl i.dn{background:var(--dn)}.tl i.br{background:var(--brand)}.tl .r{font-family:var(--mono);font-weight:700}
+@media (max-width:520px){.tdkv{grid-template-columns:repeat(2,1fr)}}
 /* live board */
 .board{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));margin:6px 0 4px}
 .tile{cursor:pointer;padding:14px 14px 10px;overflow:hidden}.tile:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
@@ -315,7 +326,7 @@ background:var(--grad);color:#fff;border-radius:18px;box-shadow:0 10px 30px var(
 .bnav{display:none}
 @media (max-width:820px){nav.tabs{display:none}nav.tabs+.iconbtn{margin-left:auto}
  .lastupd{bottom:calc(62px + env(safe-area-inset-bottom));font-size:11.5px}main{padding-bottom:136px}
- .bnav{display:grid;grid-template-columns:repeat(7,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--surface) 90%,transparent);
+ .bnav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--surface) 90%,transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 2px calc(6px + env(safe-area-inset-bottom))}
  .bnav button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:5px 1px;border-radius:12px;margin:0 2px}
  .bnav button svg{width:21px;height:21px}.bnav button[aria-current=page]{color:var(--brand);background:color-mix(in srgb,var(--brand) 13%,transparent)}
@@ -329,15 +340,16 @@ background:var(--grad);color:#fff;border-radius:18px;box-shadow:0 10px 30px var(
 </div></header>
 <main id="main" tabindex="-1">
 <section class="view" id="v-today"></section>
-<section class="view" id="v-portfolio"></section>
+
 <section class="view" id="v-history"></section>
-<section class="view" id="v-stats"></section>
+<section class="view" id="v-stats"><div id="v-portfolio"></div><div id="v-stats-in"></div></section>
 <section class="view" id="v-backtest"></section>
 <section class="view" id="v-compare"></section>
 <section class="view" id="v-highs"></section>
 <footer>Paper trading 1 lot of NIFTY options a day on real NSE option prices, after Zerodha charges. For education and research only; not
 investment advice, and the author is not a SEBI-registered adviser. Nothing here places orders.</footer>
 </main>
+<dialog id="tradedlg" aria-labelledby="tdh"><div id="tdbody"></div></dialog>
 <div class="lastupd" id="lastupd" role="status"></div>
 <nav class="bnav" aria-label="Sections"></nav>
 <script>
@@ -378,9 +390,9 @@ setTheme(cur);
 $("#theme").onclick = () => { cur = themes[(themes.indexOf(cur) + 1) % 3]; setTheme(cur); };
 
 // ---------- navigation
-const views = [["today", "Today"], ["backtest", "Backtest"], ["compare", "Compare"], ["highs", "Exit vs High"], ["portfolio", "Portfolio"], ["history", "History"], ["stats", "Stats"]];
+const views = [["today", "Dashboard"], ["backtest", "Backtest"], ["compare", "Compare"], ["highs", "Exit vs High"], ["history", "History"], ["stats", "Stats"]];
 $("nav.tabs").innerHTML = views.map(([k, l]) => `<button data-v="${k}">${l}</button>`).join("");
-$(".bnav").innerHTML = views.map(([k, l]) => `<button data-v="${k}" aria-label="${l}">${I[k]}<span>${{highs: "Highs", portfolio: "Portfolio"}[k] || l}</span></button>`).join("");
+$(".bnav").innerHTML = views.map(([k, l]) => `<button data-v="${k}" aria-label="${l}">${I[k]}<span>${{highs: "Highs", today: "Home"}[k] || l}</span></button>`).join("");
 function show(v) {
   if (!views.some(x => x[0] === v)) v = "today";
   document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + v));
@@ -412,11 +424,10 @@ async function loadHighs() {
   const hrs = {};
   tr.forEach(d => { const hh = String(d.high_time || "").slice(0, 2); if (hh) hrs[hh] = (hrs[hh] || 0) + 1; });
   const hmax = Math.max(1, ...Object.values(hrs));
-  let h = `<h2>Exit vs High<span class="sub">What the rule actually made vs selling each trade at its highest price (hindsight) · ${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(BT.index || "NIFTY")} · 1 lot, after charges</span></h2>${ixSeg()}
-    <details class="why banner warn"><summary><b>Hindsight, not a target.</b> <span class="muted">Why?</span></summary><p style="margin:6px 0 0">Nobody knows the high while the trade is open.
-    Every early-exit rule we tested (20-point targets, trailing exits, earlier exit times) made less than holding to 15:15. Option prices before 20 Nov 2026 are modelled.</p></details>
+  let h = `<h2>Exit vs High<span class="sub">What each trade made at exit vs at its highest price (hindsight) · ${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(BT.index || "NIFTY")} · 1 lot, after charges</span></h2>${ixSeg()}
+    <details class="why banner warn"><summary><b>Hindsight, not a target.</b> <span class="muted">Why?</span></summary><p style="margin:6px 0 0">Nobody knows the high while a trade is open. Option prices before the paper trades are modelled.</p></details>
     <div class="kpis bt-kpis">
-      <div class="card kpi"><div class="l">Actual exit P&L</div><div class="v ${cl(act)}">${sgn(act)}</div><div class="s">stop-loss or 15:15 · ${tr.length} trades</div></div>
+      <div class="card kpi"><div class="l">Actual exit P&L</div><div class="v ${cl(act)}">${sgn(act)}</div><div class="s">at exit · ${tr.length} trades</div></div>
       <div class="card kpi"><div class="l">If sold at the high</div><div class="v ${cl(hi)}">${sgn(hi)}</div><div class="s">hindsight best</div></div>
       <div class="card kpi"><div class="l">Left on the table</div><div class="v">${sgn(hi - act)}</div><div class="s">avg ${sgn((hi - act) / Math.max(1, tr.length))} a trade</div></div>
       <div class="card kpi"><div class="l">Trades that were in profit</div><div class="v">${Math.round(tr.filter(d => d.high_pnl > 0).length / Math.max(1, tr.length) * 100)}%</div><div class="s">at some point after entry</div></div></div>
@@ -451,7 +462,7 @@ function drawHighs(tr) {
   let h = `<div class="btlist">` + rows.slice(0, HF.limit).map(d => `<article class="card btday ${d.pnl > 0 ? "win" : "loss"}">
     <div class="row"><span class="dt">${esc(fdl(d.date))}</span><b>${esc(BT.index || "NIFTY")} ${d.strike} ${d.side}</b></div>
     <div class="kv kv4"><div>Entry · ${esc(d.entry_time)}<b>${inr(d.entry)}</b></div><div>High · ${esc(d.high_time)}<b>${inr(d.high)}</b></div>
-      <div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div><div>Exit reason<b style="font-size:12px">${/^SL/.test(d.why) ? "Stop-loss" : "15:15"}</b></div></div>
+      <div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div><div>Exit reason<b style="font-size:12px">${esc(d.why || "–")}</b></div></div>
     <div class="kv kv4"><div>P&L at the high<b class="${cl(d.high_pnl)}">${sgn(d.high_pnl)}</b></div><div>P&L at exit<b class="${cl(d.pnl)}">${sgn(d.pnl)}</b></div>
       <div>Left on table<b class="muted">${sgn(d.high_pnl - d.pnl)}</b></div><div>Capital<b>${inr(d.capital)}</b></div></div></article>`).join("") + `</div>`;
   if (!rows.length) h = `<div class="empty">No trades.</div>`;
@@ -507,11 +518,10 @@ function renderBacktest() {
     ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)],
     ["If sold at the high", S.high_net != null ? sgn(S.high_net) : "–", cl(S.high_net), "hindsight best · vs actual " + sgn(S.net)],
     ["Targets reached", (() => { const r = tgRates(BT.days); return r ? r.map((v, i) => "T" + (i + 1) + " " + v + "%").join(" · ") : "–"; })(), "",
-     "before the stop · T = entry + 0.75 / 1.5 / 2.25 × risk"]];
-  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(IXN[BT.index] || BT.index || "NIFTY")} 9:45 range breakout · 1 lot (${M.lot || 65}${["BSE", "ADANIENT", "DIXON", "PNB"].includes(BT.index) ? " shares" : ""}) a day · after charges</span></h2>${ixSeg()}
+     "before the stop-loss"]];
+  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(IXN[BT.index] || BT.index || "NIFTY")} · 1 lot (${M.lot || 65}${["BSE", "ADANIENT", "DIXON", "PNB"].includes(BT.index) ? " shares" : ""}) a day · after charges</span></h2>${ixSeg()}
     <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
-      <p style="margin:6px 0 0">${esc(M.rule || "")}</p><p style="margin:6px 0 0">${esc(M.prices || "")} ${esc(M.bias || "")}
-      ${(BT.index || "NIFTY") === "NIFTY" ? "The same trades in NIFTY futures (real prices) made " + sgn(S.futures_net) + "." : ""} Capital = the premium paid for 1 lot. Past results are not predictions.</p></details>
+      <p style="margin:6px 0 0">${esc(M.note || "")} Capital = the premium paid for 1 lot. Past results are not predictions.</p></details>
     <div class="kpis bt-kpis">` + k.map(([l, v, c, s2]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}${v.length > 11 ? " sm" : ""}">${v}</div><div class="s">${esc(s2)}</div></div>`).join("") + `</div>`;
   const pts = BT.days.filter(d => d.status !== "holiday");
   if (pts.length > 1) {
@@ -538,7 +548,7 @@ function renderBacktest() {
     [["all", "All days"], ["win", "Wins"], ["loss", "Losses"], ["none", "No trade"]].map(([kk, l]) =>
       `<button type="button" data-btk="${kk}" aria-pressed="${BTF.kind === kk}">${l}</button>`).join("") + `</div></div>
     <div id="btcal"></div>${weekdayTable()}
-    <h2>Every day<span class="sub">Newest first · tap Details for the range, the index move and the expiry</span></h2>
+    <h2>Every day<span class="sub">Newest first · tap Details for the expiry</span></h2>
     <p class="sumline" id="btsum" aria-live="polite" tabindex="-1"></p><div id="btlist"></div>`;
   box.innerHTML = h;
   wireIx(box, loadBacktest);
@@ -573,21 +583,20 @@ function drawBacktest() {
     }
     if (d.status !== "closed") {
       h += `<article class="card btday"><div class="row"><span class="dt">${esc(fdl(d.date))}</span><span class="pill p-mute">No trade</span></div>
-        <div class="ind" style="margin-top:6px">${esc(d.why || "")}${d.range_low ? " · range " + d.range_low + "–" + d.range_high : ""}</div></article>`;
+        <div class="ind" style="margin-top:6px">${esc(d.why || "No signal")}</div></article>`;
       return;
     }
     const id = "btd-" + d.date, sl = /^SL/.test(d.why || "");
     h += `<article class="card btday ${d.pnl > 0 ? "win" : "loss"}">
       <div class="row"><span class="dt">${esc(fdl(d.date))}</span><span class="pnl ${cl(d.pnl)}">${sgn(d.pnl)}</span></div>
       <div class="btmeta"><span class="pill ${d.side === "CE" ? "p-up" : "p-dn"}">${d.side === "CE" ? "Call" : "Put"}</span><b>${esc(BT.index || "NIFTY")} ${d.strike} ${d.side}</b>
-        <span class="pill ${sl ? "p-dn" : "p-mute"}">${sl ? "Stop-loss" : "15:15 exit"}</span>${d.source === "real" ? `<span class="pill p-info">Real prices</span>` : ""}${d.expiry_day ? `<span class="pill p-warn">Expiry day</span>` : ""}</div>
+        <span class="pill ${sl ? "p-dn" : "p-mute"}">${sl ? "Stop-loss" : "Time exit"}</span>${d.source === "real" ? `<span class="pill p-info">Real prices</span>` : ""}${d.expiry_day ? `<span class="pill p-warn">Expiry day</span>` : ""}</div>
       <div class="kv kv4"><div>Entry · ${esc(d.entry_time)}<b>${inr(d.entry)}</b></div><div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div>
         <div>Capital<b>${inr(d.capital)}</b></div><div>Total so far<b class="${cl(d.cum)}">${sgn(d.cum)}</b></div></div>
       ${tgRow(d)}${d.high != null ? `<div class="kv kv4"><div>High · ${esc(d.high_time)}<b>${inr(d.high)}</b></div><div>P&L at the high<b class="${cl(d.high_pnl)}">${sgn(d.high_pnl)}</b></div>
         <div>P&L at exit<b class="${cl(d.pnl)}">${sgn(d.pnl)}</b></div><div>Left on table<b class="muted">${sgn(d.high_pnl - d.pnl)}</b></div></div>` : ""}
       <button type="button" class="linkbtn" data-btd aria-expanded="false" aria-controls="${id}">Details</button>
-      <div class="btd" id="${id}" hidden>9:15–9:45 range ${d.range_low ?? "–"} – ${d.range_high ?? "–"}${d.nifty_entry ? `<br>${esc(BT.index || "NIFTY")} ${d.nifty_entry} → ${d.nifty_exit} (${d.nifty_pts >= 0 ? d.nifty_pts + " pts in the trade's favour" : Math.abs(d.nifty_pts) + " pts against the trade"})` : ""}
-        <br>Expiry ${esc(d.expiry || "–")} · exit reason: ${esc(d.why || "")}${d.futures_pnl != null ? `<br>Same trade in NIFTY futures: ${sgn(d.futures_pnl)}` : ""}</div></article>`;
+      <div class="btd" id="${id}" hidden>Expiry ${esc(d.expiry || "–")} · exit reason: ${esc(d.why || "")}${d.sl_option != null ? " · stop-loss " + inr(d.sl_option) : ""}</div></article>`;
   });
   if (last) h += `</div>`;
   if (!rows.length) h = `<div class="empty">No days match.</div>`;
@@ -598,7 +607,7 @@ function drawBacktest() {
 }
 
 
-// ---------- TARGETS (information only): T1/T2/T3 = entry + 0.75/1.5/2.25 x (entry - the option's 9:15-9:45 low)
+// ---------- TARGETS (information only)
 const TGR = [0.75, 1.5, 2.25];
 const tgOf = d => d.status === "closed" && d.high != null && d.sl_option != null && d.sl_option < d.entry ? TGR.map(k => d.entry + k * (d.entry - d.sl_option)) : null;
 function tgRates(days) {
@@ -608,6 +617,86 @@ function tgRates(days) {
 function tgRow(d) {
   const tg = tgOf(d); if (!tg) return "";
   return `<div class="kv">${tg.map((v, i) => `<div>T${i + 1}${d.high >= v ? " ✓" : ""}<b class="${d.high >= v ? "up" : ""}">${inr(Math.round(v * 100) / 100)}</b></div>`).join("")}</div>`;
+}
+
+
+// ---------- TRADE SCREEN: one paper trade, its price since entry, stop-loss, targets and timeline
+function tradeChart(t) {
+  const pts = (t.path || []).map(([hm, v]) => [+hm.slice(0, 2) * 60 + +hm.slice(3, 5), v]);
+  if (pts.length < 2) return `<div class="empty" style="margin-top:12px">The minute-by-minute chart is kept for paper trades from 27 Nov 2026.</div>`;
+  const tg = t.targets || [], hits = t.target_hits || [];
+  const nxt = tg.find((v, i) => !hits.some(h => h.t === i + 1));
+  const lv = [t.entry, t.sl_price, ...tg.filter((v, i) => hits.some(h => h.t === i + 1)), nxt].filter(v => v != null);
+  const vals = pts.map(p => p[1]).concat(lv), lo = Math.min(...vals), hi = Math.max(...vals), sp = (hi - lo) || 1;
+  const small = innerWidth < 560, W = small ? 420 : 720, H = small ? 260 : 300, L = 10, R = small ? 84 : 92, T = 14, B = 26;
+  const x0 = pts[0][0], x1 = Math.max(pts[pts.length - 1][0], x0 + 30);
+  const x = m => L + (m - x0) / (x1 - x0) * (W - L - R), y = v => T + (hi - v) / sp * (H - T - B);
+  const v = t.status === "closed" ? t.net : t.gross, col = v >= 0 ? "var(--up)" : "var(--dn)";
+  const line = (val, color, label, dash) => val == null ? "" : `<line x1="${L}" x2="${W - R}" y1="${y(val).toFixed(1)}" y2="${y(val).toFixed(1)}" stroke="${color}" stroke-width="1.5" ${dash ? 'stroke-dasharray="5 4"' : ""}/>
+    <text x="${W - R + 6}" y="${(y(val) + 4).toFixed(1)}" fill="${color}" font-size="11.5" font-weight="700" font-family="var(--mono)">${label} ${Number(val).toFixed(2)}</text>`;
+  const st = small ? 60 : 30, ticks = []; for (let m = Math.ceil(x0 / st) * st; m <= x1; m += st) ticks.push(m);
+  const poly = pts.map(p => `${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(" ");
+  const mk = hm => +hm.slice(0, 2) * 60 + +hm.slice(3, 5);
+  return `<div class="chart" style="margin-top:12px"><svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Option price since entry">
+    ${ticks.map(m => `<line class="g" x1="${x(m)}" x2="${x(m)}" y1="${T}" y2="${H - B}" stroke-dasharray="2 5"/><text class="ax" x="${x(m)}" y="${H - 8}" text-anchor="middle">${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}</text>`).join("")}
+    ${line(t.sl_price, "var(--dn)", "SL", true)}${line(t.entry, "var(--muted)", "Entry", false)}
+    ${tg.map((val, i) => (hits.some(h => h.t === i + 1) || val === nxt) ? line(val, "var(--up)", "T" + (i + 1), !hits.some(h => h.t === i + 1)) : "").join("")}
+    <polygon points="${x(pts[0][0])},${y(t.entry)} ${poly} ${x(pts[pts.length - 1][0])},${y(t.entry)}" fill="${col}" opacity=".10"/>
+    <polyline points="${poly}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
+    ${hits.map(h => `<circle cx="${x(mk(h.at))}" cy="${y(h.price)}" r="5" fill="var(--up)" stroke="var(--surface)" stroke-width="2"><title>T${h.t} at ${h.at}</title></circle>`).join("")}
+    <circle cx="${x(pts[pts.length - 1][0])}" cy="${y(pts[pts.length - 1][1])}" r="5.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/></svg></div>`;
+}
+function openTrade(id) {
+  const t = (D.trades || []).find(x => x.id === id); if (!t) return;
+  const v = t.status === "closed" ? t.net : (t.gross || 0), cap = t.entry * t.qty;
+  const hits = t.target_hits || [], tg = t.targets || [];
+  const ev = [[tm(t.entry_at), "br", "Entry", inr(t.entry)]];
+  hits.forEach(h => ev.push([h.at, "up", "Target " + h.t + " reached", inr(h.price)]));
+  if (t.status === "closed") ev.push([t.exit_time || tm(t.last_at), v >= 0 ? "up" : "dn", t.exit_reason || "Exit", inr(t.exit)]);
+  else ev.push([tm(t.last_at), "", "Now (open)", inr(t.last)]);
+  $("#tdbody").innerHTML = `<div class="tdh"><div><h3 id="tdh">${esc(t.symbol)}</h3><div style="font-size:12.5px;opacity:.9">${esc(fdl(t.signal_date))}${t.expiry ? " · expiry " + esc(fd(t.expiry)) : ""} · ${t.qty} qty (1 lot)</div></div>
+      <button class="x" type="button" aria-label="Close" data-close>×</button></div>
+    <div class="tdb"><div class="row"><span class="pill ${t.status === "open" ? "p-warn" : v > 0 ? "p-up" : "p-dn"}">${t.status === "open" ? "Open" : v > 0 ? "Won" : "Lost"}</span>
+      <span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:13px">${pct(v, cap)}</span></span></div>
+    <div class="tdkv" style="margin-top:12px"><div>Entry · ${esc(tm(t.entry_at))}<b>${inr(t.entry)}</b></div><div>${t.status === "closed" ? "Exit" : "Now"} · ${esc(t.status === "closed" ? (t.exit_time || "") : tm(t.last_at))}<b class="${cl(v)}">${inr(t.status === "closed" ? t.exit : t.last)}</b></div>
+      <div>Stop-loss<b class="dn">${t.sl_price != null ? inr(t.sl_price) : esc(t.sl_note || "–")}</b></div><div>Capital<b>${inr(Math.round(cap))}</b></div></div>
+    ${tg.length ? `<div class="tdkv" style="margin-top:8px;grid-template-columns:repeat(3,1fr)">${tg.map((val, i) => { const h = hits.find(z => z.t === i + 1);
+      return `<div>T${i + 1}${h ? " ✓ " + esc(h.at) : ""}<b class="${h ? "up" : ""}">${inr(val)}</b></div>`; }).join("")}</div>` : ""}
+    ${tradeChart(t)}
+    <h3 style="margin:16px 0 0;font-size:14px">Timeline</h3><ul class="tl">${ev.map(([a, c, l, r]) => `<li><span class="tm">${esc(a || "–")}</span><i class="${c}"></i><span>${esc(l)}</span><span class="r">${r}</span></li>`).join("")}</ul>
+    <p class="muted" style="font-size:12px;margin:12px 0 0">Paper trade on real option prices · after ₹${Math.round(t.charges || 0).toLocaleString("en-IN")} charges · targets are information only.</p></div>`;
+  const dlg = $("#tradedlg"); if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+  location.hash.includes("trade=") || history.replaceState(null, "", location.hash + "");
+}
+document.addEventListener("click", e => {
+  const tr = e.target.closest("[data-trade]"); if (tr) { openTrade(tr.dataset.trade); return; }
+  if (e.target.closest("[data-close]") || e.target.id === "tradedlg") $("#tradedlg").close();
+});
+document.addEventListener("keydown", e => { const tr = e.target.closest && e.target.closest("[data-trade]"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openTrade(tr.dataset.trade); } });
+
+// ---------- REAL VS BACKTEST: each real paper trade next to the backtest model for the same day (docs/data/realcheck.json)
+async function realVsModel() {
+  let doc;
+  try { const r = await fetch("data/realcheck.json?t=" + Date.now(), {cache: "no-store"}); if (!r.ok) throw 0; doc = await r.json(); }
+  catch (e) { return `<h2>Real vs backtest<span class="sub">Real paper trades next to the backtest model for the same days</span></h2><div class="empty">The comparison appears after the evening run.</div>`; }
+  const rows = (doc.rows || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const both = rows.filter(r => r.model), same = both.filter(r => r.model.side === r.real.side);
+  const rt = rows.reduce((a, r) => a + r.real.pnl, 0), mt = both.reduce((a, r) => a + r.model.pnl, 0), rtb = both.reduce((a, r) => a + r.real.pnl, 0);
+  const per = {};
+  rows.forEach(r => { const k = r.index; per[k] = per[k] || {n: 0, real: 0, model: 0, m: 0}; per[k].n++; per[k].real += r.real.pnl; if (r.model) { per[k].m++; per[k].model += r.model.pnl; } });
+  return `<h2>Real vs backtest<span class="sub">Each real paper trade next to what the backtest model gives for the same day · built ${esc(doc.built || "")}</span></h2>
+    <div class="kpis"><div class="card kpi"><div class="l">Real paper trades</div><div class="v ${cl(rt)}">${sgn(rt)}</div><div class="s">${rows.length} trades</div></div>
+      <div class="card kpi"><div class="l">Model, same days</div><div class="v ${cl(mt)}">${both.length ? sgn(mt) : "–"}</div><div class="s">${both.length} days with a model result</div></div>
+      <div class="card kpi"><div class="l">Real minus model</div><div class="v ${cl(rtb - mt)}">${both.length ? sgn(rtb - mt) : "–"}</div><div class="s">same days only</div></div>
+      <div class="card kpi"><div class="l">Same call / put</div><div class="v">${both.length ? Math.round(same.length / both.length * 100) + "%" : "–"}</div><div class="s">${same.length} of ${both.length} days</div></div></div>
+    <div class="list" style="margin-top:12px"><table><caption class="sr">Real vs model by instrument</caption><thead><tr><th scope="col">Instrument</th><th scope="col" class="r">Real trades</th><th scope="col" class="r">Real P&L</th><th scope="col" class="r">Model P&L</th><th scope="col" class="r">Difference</th></tr></thead><tbody>${
+      Object.keys(per).map(k => `<tr><td><b>${esc(IXN[k] || k)}</b></td><td class="r">${per[k].n}</td><td class="r ${cl(per[k].real)}">${sgn(per[k].real)}</td><td class="r ${cl(per[k].model)}">${per[k].m ? sgn(per[k].model) : "–"}</td><td class="r ${cl(per[k].real - per[k].model)}">${per[k].m ? sgn(per[k].real - per[k].model) : "–"}</td></tr>`).join("")
+      || `<tr><td colspan="5" class="muted">No real trades yet.</td></tr>`}</tbody></table></div>
+    <div class="list" style="margin-top:12px"><table><caption class="sr">Real vs model by day</caption><thead><tr><th scope="col">Date</th><th scope="col">Instrument</th><th scope="col">Real</th><th scope="col" class="r">Real P&L</th><th scope="col">Model</th><th scope="col" class="r">Model P&L</th><th scope="col" class="r">Match</th></tr></thead><tbody>${
+      rows.map(r => `<tr><td>${esc(fd(r.date))}</td><td>${esc(IXN[r.index] || r.index)}</td><td>${esc(r.real.strike + " " + r.real.side)} · ${esc(r.real.entry_time)}→${esc(r.real.exit_time)}</td>
+        <td class="r ${cl(r.real.pnl)}"><b>${sgn(r.real.pnl)}</b></td><td>${r.model ? esc(r.model.strike + " " + r.model.side) + " · " + esc(r.model.entry_time) + "→" + esc(r.model.exit_time) : `<span class="muted">not available</span>`}</td>
+        <td class="r ${r.model ? cl(r.model.pnl) : ""}">${r.model ? sgn(r.model.pnl) : "–"}</td><td class="r">${r.model ? (r.model.side === r.real.side ? `<span class="pill p-up">same</span>` : `<span class="pill p-dn">differs</span>`) : "–"}</td></tr>`).join("")
+      || `<tr><td colspan="7" class="muted">No real trades yet.</td></tr>`}</tbody></table></div>`;
 }
 
 // ---------- LIVE BOARD (Today): one tile per instrument from the paper-trade data already in the app
@@ -631,7 +720,7 @@ function liveBoard() {
     <div><div class="k">All paper trades</div><div class="v">${sgn(allTot)}</div></div>
     <div><div class="k">Open now</div><div class="v">${open}</div></div>
     <div><div class="k">Trades</div><div class="v">${ops.length}</div></div></div>
-    <h2 style="margin-top:14px">Live board<span class="sub">Latest paper trade for each instrument · tap a tile for its details</span></h2><div class="board">`;
+    <h2 style="margin-top:14px">Live board<span class="sub">Latest paper trade for each instrument · tap a tile to open the trade</span></h2><div class="board">`;
   BOARD.forEach(([ix, name, id]) => {
     const ts = ops.filter(t => ixOf(t) === ix).sort((a, b) => a.signal_date.localeCompare(b.signal_date));
     const t = ts[ts.length - 1];
@@ -639,7 +728,7 @@ function liveBoard() {
     const v = t ? val(t) : null;
     const st = !t ? (STARTS[ix] && STARTS[ix] > (D.last_session || "") ? `<span class="pill p-info">Starts ${esc(fd(STARTS[ix]))}</span>` : `<span class="pill p-mute">Watching</span>`)
       : t.status === "open" ? `<span class="pill p-warn">Open</span>` : `<span class="pill ${v > 0 ? "p-up" : "p-dn"}">${v > 0 ? "Won" : "Lost"}</span>`;
-    h += `<div class="card tile ${t ? (v > 0 ? "win" : "loss") : ""}" role="button" tabindex="0" data-jump="${id}" aria-label="${esc(name)} details">
+    h += `<div class="card tile ${t ? (v > 0 ? "win" : "loss") : ""}" role="button" tabindex="0" ${t ? `data-trade="${esc(t.id)}"` : ""} aria-label="${esc(name)}${t ? " trade details" : ""}">
       <div class="row"><span class="nm">${esc(name)}</span>${st}</div>
       <div class="sy">${t ? esc(t.symbol) + " · " + esc(fd(t.signal_date)) : "No trades yet"}</div>
       <div class="pl ${cl(v)}">${t ? sgn(v) : "–"}</div>
@@ -699,7 +788,7 @@ async function loadCompare() {
     const yrs = {}; tr.forEach(x => { const y = x.date.slice(0, 4); yrs[y] = (yrs[y] || 0) + x.pnl; });
     return {i, color, name: IXN[i] || i, d, S, ret, losing: Object.values(yrs).filter(v => v < 0).length, years: Object.keys(yrs).length};
   });
-  let h = `<h2>Compare<span class="sub">The same 9:45 breakout rule on every instrument · 1 lot, after charges · model option prices (they flatter buyers)</span></h2>
+  let h = `<h2>Compare<span class="sub">Same strategy on every instrument · 1 lot, after charges · model option prices (they flatter option buyers)</span></h2>
     <div class="list"><table><caption class="sr">Backtest comparison</caption><thead><tr><th scope="col">Instrument</th><th scope="col">Period</th><th scope="col" class="r">Trades</th>
     <th scope="col" class="r">Won</th><th scope="col" class="r">Net P&L</th><th scope="col" class="r">Avg / trade</th><th scope="col" class="r">Avg capital</th>
     <th scope="col" class="r">Return / trade</th><th scope="col" class="r">Worst fall</th><th scope="col" class="r">Losing years</th></tr></thead><tbody>${
@@ -729,7 +818,7 @@ async function loadCompare() {
     <details class="why banner warn" style="margin-top:14px"><summary><b>How to read this.</b> <span class="muted">Why?</span></summary><p style="margin:6px 0 0">
     The periods differ: NIFTY and the two older stocks start in 2022, SENSEX in June 2023 and BSE Ltd in December 2024, so compare the return per trade and win rate rather than the rupee totals.
     Option prices are modelled and flatter option buyers; stock options also have wider spreads than index options. The real-price paper trades are the test.</p></details>`;
-  box.innerHTML = h;
+  box.innerHTML = (await realVsModel()) + h;
 }
 
 // ---------- shared UI state (kept across the 3-minute live refresh)
@@ -823,33 +912,6 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
       why("Paper only — no proven edge.", `In the 2022–2026 test the long picks averaged ${lo.backtest_pct_per_day_on_exposure ?? "–"}% a day after charges; at ${it.leverage}x leverage that is about ${lo.pct_per_day_on_capital ?? "–"}% of capital a day. Leverage multiplies losses as well as gains.`)
       + `<div class="cols">${side("long")}${side("short")}</div>`);
   }
-  const optSec = (ix, id, text, none) => {
-    const op = (D.trades || []).filter(t => t.kind === "option" && ixOf(t) === ix).sort((a, b) => b.signal_date.localeCompare(a.signal_date))[0];
-    let ob = why("Unproven — paper only.", text);
-    if (!op) ob += `<div class="empty">${none}</div>`;
-    else { const v = op.status === "closed" ? op.net : op.gross;
-      ob += `<div class="grid"><div class="card pick ${v >= 0 ? "win" : "loss"}"><div class="row"><div><span class="sym">${esc(op.symbol)}</span><div class="ind">${esc(op.industry)}</div></div>
-        <span class="pill ${op.status === "open" ? "p-warn" : v >= 0 ? "p-up" : "p-dn"}">${op.status === "open" ? "Open" : "Closed"}</span></div>
-        <div class="kv"><div>Entry · ${esc(when(op.entry_at))}<b>${inr(op.entry)}</b></div><div>${op.status === "closed" ? "Exit" : "Now"} · ${esc(tm(op.last_at))}<b>${inr(op.last)}</b></div><div>SL<b class="dn" style="font-size:12.5px">${esc(op.sl_note)}</b></div></div>
-        ${op.targets ? `<div class="kv">${op.targets.map((v, i) => { const h = (op.target_hits || []).find(x => x.t === i + 1);
-          return `<div>T${i + 1}${h ? " ✓ " + esc(h.at) : ""}<b class="${h ? "up" : ""}">${inr(v)}</b></div>`; }).join("")}</div>` : ""}
-        <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}${op.opt_high ? " · high " + inr(op.opt_high) + " at " + esc(op.opt_high_at) : ""} · targets are information only</div>
-        <div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${op.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:12.5px">${pct(v, op.entry * op.qty)}</span></span></div></div></div>`; }
-    sec(id, (IXT[ix] || ix) + " option", "9:15–9:45 range breakout · ATM call or put · SL = the option's own 9:15–9:45 low · exit 15:15 · 1 lot"
-      + (ix === "SENSEX" ? " (20 qty) · BSE weekly options" : ix !== "NIFTY" ? " · stock options, monthly expiry" : "") + " · paper only", op ? 1 : 0, ob);
-  };
-  optSec("NIFTY", "option", "The 2022–2026 backtest looked strong, but buying a random call or put at 9:45 did just as well in the same price model, and real NSE option prices showed the model flatters option buyers by about ₹160–330 a trade. On real prices a random buyer loses a little. This paper trade, on real prices, is the test.",
-    "No option trade yet. The rule watches NIFTY from 9:45 to 13:00 each trading day.");
-  optSec("SENSEX", "sensex", "The same rule on SENSEX, paper traded on real BSE option prices from 26 Nov 2026. Its Jun 2023 – Nov 2026 backtest returned more per rupee than NIFTY, but it did not beat a random call or put by a significant margin, and its option prices are modelled from NIFTY's volatility. This paper trade, on real prices, is the test.",
-    "No SENSEX trade yet. The rule watches SENSEX from 9:45 to 13:00 each trading day.");
-  optSec("BSE", "bse", "The same rule on BSE Ltd stock options (monthly expiry), paper traded on real prices from 27 Nov 2026. It was the only F&O stock whose 2024–2026 backtest beat a random call or put (t 3.09), but that covers only BSE's strong 2024–26 trend, and many stocks and indices were tested. This paper trade, on real prices, is the test.",
-    "No BSE trade yet. The rule watches BSE Ltd from 9:45 to 13:00 each trading day.");
-  optSec("ADANIENT", "adanient", "The same rule on Adani Enterprises stock options (monthly expiry), paper traded on real prices from 27 Nov 2026. Its 2022–2026 backtest was the strongest of 15 F&O stocks (+₹12.5 lakh a lot, beat a random side with t 2.45), but a few shock days such as the 2023 Hindenburg fall made a large part of it. This paper trade, on real prices, is the test.",
-    "No Adani Enterprises trade yet. The rule watches it from 9:45 to 13:00 each trading day.");
-  optSec("DIXON", "dixon", "The same rule on Dixon Technologies stock options (monthly expiry), paper traded on real prices from 27 Nov 2026. Its 2022–2026 backtest made money in every year (+₹4.6 lakh a lot, beat a random side with t 2.06), short of a proven edge. This paper trade, on real prices, is the test.",
-    "No Dixon trade yet. The rule watches it from 9:45 to 13:00 each trading day.");
-  optSec("PNB", "pnb", "The same rule on Punjab National Bank stock options (monthly expiry, 8,000 shares a lot), paper traded on real prices from 27 Nov 2026. It was the only stock whose rule beat a random call or put in both 2022–2024 and 2025–2026, while random picking lost money in both. Still not proven: this paper trade, on real prices, is the test.",
-    "No PNB trade yet. The rule watches it from 9:45 to 13:00 each trading day.");
   const multi = (kind, label) => {
     const ts = (D.trades || []).filter(t => t.kind === kind && t.status !== "closed").sort((a, b) => b.signal_date.localeCompare(a.signal_date) || (b.gross || 0) - (a.gross || 0));
     return [ts.length, ts.length ? `<div class="list">` + ts.map(t => {
@@ -867,12 +929,12 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
   sec("momentum", "12-1 momentum", "10 strongest 12-month gainers (skipping the last month) · rebalanced every 20 sessions · buy 9:30 · no stop-loss · ₹50,000 each · paper test", nm,
     why("Promising, not proven.", "2017–2026: +22% a year vs NIFTY +12%, but it fell up to 45% from a peak (NIFTY 30%) and lost 25% in 2018 and 16% in 2022. A few big winners made the profit. This paper trade on real prices is the test.")
     + (mb || `<div class="empty">No open momentum trades yet. New picks come every 20 sessions.</div>`));
-  const keep = secs.filter(s => ["option", "sensex", "bse", "adanient", "dixon", "pnb"].includes(s.id));
+  const keep = [];
   const recent = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date)).slice(0, 15);
-  keep.push({id: "recent", title: "Recent option trades", sub: "Last 15 paper trades on real option prices (indices and stocks) · 1 lot each, after charges", count: recent.length,
+  keep.push({id: "recent", title: "Recent trades", sub: "Last 15 paper trades on real option prices · 1 lot each, after charges · tap one to open it", count: recent.length,
     body: recent.length ? `<div class="list">` + recent.map(t => {
       const v = t.status === "closed" ? t.net : t.gross;
-      return `<div class="li"><div><b>${esc(t.symbol)}</b> <span class="muted">${esc(fdl(t.signal_date))}</span>
+      return `<div class="li" role="button" tabindex="0" data-trade="${esc(t.id)}" style="cursor:pointer"><div><b>${esc(t.symbol)}</b> <span class="muted">${esc(fdl(t.signal_date))}</span>
         <div class="d">In ${esc(tm(t.entry_at))} ${inr(t.entry)} → ${t.status === "closed" ? "out" : "now"} ${esc(tm(t.last_at))} ${inr(t.last)}${t.exit_reason ? " · " + esc(t.exit_reason) : ""}</div></div>
         <span class="r ${cl(v)}">${sgn(v)}${t.status === "open" ? ` <span class="pill p-warn">open</span>` : ""}</span></div>`;
     }).join("") + `</div>` : `<div class="empty">No option trades yet.</div>`});
@@ -1043,12 +1105,7 @@ ODAILY = (() => {
   h += `<h2>Best and worst trades</h2><div class="cols">${mini("Best", ranked.filter(x => x[1] > 0).slice(0, 5))}${mini("Worst", ranked.filter(x => x[1] < 0).slice(-5).reverse())}</div>`;
   const V = D.verdicts || {}, sv = V.swing || {}, iv = V.intraday || {};
   const vp = v => `<span class="pill ${/KEEP|EDGE/.test(v || "") && !/NO/.test(v || "") ? "p-up" : /NO/.test(v || "") ? "p-dn" : "p-warn"}">${esc(v || "–")}</span>`;
-  h += `<h2>How it tested<span class="sub">Same rule as the live paper trade, after charges</span></h2><div class="cols">
-    <div class="card"><div class="row"><b>2022–2026 backtest</b>${vp("UNPROVEN")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">Did no better than buying a
-    random call or put in the option price model, and real option prices show that model flatters buyers by ₹160–330 a trade. The same breakout traded as NIFTY futures lost about ₹116 a day.</p></div>
-    <div class="card"><div class="row"><b>Last 3 months (24 Aug – 23 Nov 2026)</b>${vp("GOOD STRETCH")}</div><p class="muted" style="margin:8px 0 0;font-size:13.5px">59 trades, 53% won,
-    about +₹51,000 to +₹61,000 a lot after correcting the model; the same trades in NIFTY futures made +₹58,000. NIFTY trended strongly in these months, which suits a breakout rule.</p></div></div>`;
-  $("#v-stats").innerHTML = h;
+  $("#v-stats-in").innerHTML = h;
 })();
 }
 let T = [], S = {};

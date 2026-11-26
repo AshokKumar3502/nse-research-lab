@@ -204,12 +204,22 @@ def run(day=None, log=print, index="NIFTY"):
         while len(hits) < 3 and b[2] >= tg[len(hits)]:
             hits.append({"t": len(hits) + 1, "at": t.strftime("%H:%M"), "price": tg[len(hits)]})
     doc.update(targets=tg, target_hits=hits, opt_high=best, opt_high_at=best_at)
+    # the option's price minute by minute from entry to exit (or now), for the app's trade screen
+    doc["path"] = [[t.strftime("%H:%M"), round(opt[t][4], 2)] for t in sorted(opt)
+                   if t >= ob[0] and "%s %s" % (day, t.strftime("%H:%M")) <= end]
     doc["gross"] = round((doc["last"] - entry) * c["lot"], 2)
     doc["charges"] = charges(entry, doc["last"], c["lot"]) if doc["status"] == "closed" else 0.0
     doc["net"] = round(doc["gross"] - doc["charges"], 2)
     log(index.lower() + " option: %s (%s) entry %s at %s, now %s, P&L Rs %s, %s" % (
         doc["symbol"], doc["expiry"], entry, doc["entry_at"][11:], doc["last"], doc["net"], doc["status"]))
     return _save(doc, p)
+
+
+def neutral_why(why):
+    """App-facing exit reason without the rule's details."""
+    if not why:
+        return why
+    return "Stop-loss" if str(why).startswith("SL") else "Time exit" if "15:15" in str(why) else str(why)
 
 
 def trades():
@@ -222,12 +232,13 @@ def trades():
         if d.get("status") not in ("open", "closed"):
             continue
         out.append({"id": "%s-%s" % (ix["id"], d["day"]), "kind": "option", "index": index, "side": "long", "symbol": d["symbol"],
-                    "industry": "%s option · expiry %s" % (index, d["expiry"]), "signal_date": d["day"],
+                    "industry": "%s option · expiry %s" % (index, d["expiry"]), "signal_date": d["day"], "expiry": d["expiry"],
+                    "sl_price": d.get("sl_option"), "path": d.get("path") or [],
                     "entry_date": d["day"], "entry_at": d["entry_at"], "entry": d["entry"], "qty": d["lot"],
-                    "sl": None, "sl_note": ("Option below Rs %s" % d["sl_option"]) if d.get("sl_option") else "%s %s %s" % (index, "below" if d["side"] == "CE" else "above",
+                    "sl": None, "sl_note": ("Rs %s" % d["sl_option"]) if d.get("sl_option") else "Index %s %s" % ("below" if d["side"] == "CE" else "above",
                                                             format(d["sl_index"], ",.2f")),
                     "status": d["status"], "exit_date": d["day"] if d["status"] == "closed" else None,
-                    "exit": d.get("exit"), "exit_reason": d.get("why"),
+                    "exit": d.get("exit"), "exit_reason": neutral_why(d.get("why")),
                     "exit_time": (d.get("exit_at") or "")[11:] or None,
                     "last": d["last"], "last_at": d["last_at"], "gross": d["gross"], "charges": d["charges"],
                     "net": d["net"], "flag": None, "targets": d.get("targets"), "target_hits": d.get("target_hits") or [],

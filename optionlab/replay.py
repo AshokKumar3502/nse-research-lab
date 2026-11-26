@@ -310,6 +310,58 @@ def real_trades(after, index="NIFTY"):
     return out
 
 
+APP_DROP = ("range_low", "range_high", "nifty_entry", "nifty_exit", "nifty_pts", "futures_pnl")
+
+
+def sanitize(doc):
+    """App-facing copy of a backtest document: results only, no description of the rule."""
+    for d in doc.get("days", []):
+        for k in APP_DROP:
+            d.pop(k, None)
+        w = str(d.get("why") or "")
+        d["why"] = "Stop-loss" if w.startswith("SL") else "Time exit" if "15:15" in w else "No signal" if d.get("status") == "no trade" else w
+    m = doc.get("method") or {}
+    doc["method"] = {"lot": m.get("lot"), "note": "Option prices before the paper trade are modelled; real paper-trade days use real prices."}
+    doc.get("summary", {}).pop("futures_net", None)
+    return doc
+
+
+def real_vs_model(log=print):
+    """Each real paper-trade day next to what the backtest model gives for the same day -> docs/data/realcheck.json."""
+    from .nifty_orb import INDEXES, PICKS
+    con = db.connect(read_only=True)
+    out = []
+    for index, ix in IX.items():
+        files = sorted(glob.glob(os.path.join(PICKS, "option-%s-*.json" % ix["file"])))
+        for f in files:
+            with open(f, encoding="utf-8") as fh:
+                r = json.load(fh)
+            if r.get("status") != "closed":
+                continue
+            d = dt.date.fromisoformat(r["day"])
+            row = {"index": index, "date": r["day"],
+                   "real": {"side": r["side"], "strike": r["strike"], "entry": r["entry"], "exit": r["exit"],
+                            "entry_time": r["entry_at"][11:], "exit_time": r["exit_at"][11:], "pnl": round(r["net"]),
+                            "why": "Stop-loss" if str(r.get("why", "")).startswith("SL") else "Time exit"}, "model": None}
+            try:
+                m = (replay_stock(con, d, d, index) if "symbol" in ix else replay(con, d, d, index))
+                m = [x for x in m if x["date"] == r["day"] and x["status"] == "closed"]
+                if m:
+                    x = m[0]
+                    row["model"] = {"side": x["side"], "strike": x["strike"], "entry": x["entry"], "exit": x["exit"],
+                                    "entry_time": x["entry_time"], "exit_time": x["exit_time"], "pnl": x["pnl"],
+                                    "why": "Stop-loss" if x["why"].startswith("SL") else "Time exit"}
+            except Exception as e:     # noqa: BLE001
+                log("real vs model %s %s: %s" % (index, r["day"], e))
+            out.append(row)
+    doc = {"built": dt.datetime.now(config.IST).strftime("%d %b %Y, %H:%M IST"), "rows": out}
+    p = os.path.join(config.ROOT, "docs", "data", "realcheck.json")
+    with open(p, "w", encoding="utf-8") as fh:
+        json.dump(doc, fh, separators=(",", ":"))
+    log("real vs model: %d real trades, %d with a model result" % (len(out), sum(1 for x in out if x["model"])))
+    return doc
+
+
 def build(months=6, log=print, index="NIFTY"):
     con = db.connect(read_only=True)
     end = con.execute("SELECT max(date) FROM minute_bars WHERE symbol = 'NIFTY 50'").fetchone()[0]
@@ -369,7 +421,7 @@ def build(months=6, log=print, index="NIFTY"):
     out = IX[index]["out"]
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
-        json.dump(doc, fh, separators=(",", ":"))
+        json.dump(sanitize(doc), fh, separators=(",", ":"))
     s = doc["summary"]
     log("backtest %s to %s: %d trades, win %s%%, net Rs %s, worst fall Rs %s -> %s" % (
         doc["from"], doc["to"], s["trades"], s["win_pct"], s["net"], s["max_drawdown"], out))
