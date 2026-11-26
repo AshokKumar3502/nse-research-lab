@@ -411,11 +411,12 @@ function drawHighs(tr) {
 let BT = null, BTI = "NIFTY";
 const BTS = {};
 const BTF = {month: "all", kind: "all", limit: 30};
-const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX"].map(i =>
-  `<button type="button" data-bti="${i}" aria-pressed="${BTI === i}">${i}</button>`).join("")}</div></div>`;
+const IXN = {NIFTY: "NIFTY", SENSEX: "SENSEX", BSE: "BSE Ltd"};
+const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX", "BSE"].map(i =>
+  `<button type="button" data-bti="${i}" aria-pressed="${BTI === i}">${IXN[i]}</button>`).join("")}</div></div>`;
 async function getBT() {
   if (BTS[BTI]) return BTS[BTI];
-  const r = await fetch((BTI === "SENSEX" ? "data/backtest-sensex.json" : "data/backtest.json") + "?t=" + Date.now(), {cache: "no-store"});
+  const r = await fetch(({SENSEX: "data/backtest-sensex.json", BSE: "data/backtest-bse.json"}[BTI] || "data/backtest.json") + "?t=" + Date.now(), {cache: "no-store"});
   if (!r.ok) throw new Error("HTTP " + r.status);
   return (BTS[BTI] = await r.json());
 }
@@ -448,7 +449,7 @@ function renderBacktest() {
     ["Capital a trade", inr(S.capital_avg), "", "average · highest " + inr(S.capital_max)],
     ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)],
     ["If sold at the high", S.high_net != null ? sgn(S.high_net) : "–", cl(S.high_net), "hindsight best · vs actual " + sgn(S.net)]];
-  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(BT.index || "NIFTY")} 9:45 range breakout · 1 lot (${M.lot || 65}) a day · after charges</span></h2>${ixSeg()}
+  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(IXN[BT.index] || BT.index || "NIFTY")} 9:45 range breakout · 1 lot (${M.lot || 65}${BT.index === "BSE" ? " shares" : ""}) a day · after charges</span></h2>${ixSeg()}
     <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
       <p style="margin:6px 0 0">${esc(M.rule || "")}</p><p style="margin:6px 0 0">${esc(M.prices || "")} ${esc(M.bias || "")}
       ${(BT.index || "NIFTY") === "NIFTY" ? "The same trades in NIFTY futures (real prices) made " + sgn(S.futures_net) + "." : ""} Capital = the premium paid for 1 lot. Past results are not predictions.</p></details>

@@ -3,6 +3,7 @@ Backtest tab.
 
   python -m optionlab.replay --months 6                    -> docs/data/backtest.json
   python -m optionlab.replay --months 60 --index sensex    -> docs/data/backtest-sensex.json (from Jun 2023)
+  python -m optionlab.replay --months 60 --index bse       -> docs/data/backtest-bse.json (BSE Ltd stock options, from Dec 2024)
 
 SENSEX: 1-minute SENSEX candles from Upstox (cached in data/options/sensex-1m.parquet). No BSE option history in
 the warehouse, so the volatility is NIFTY's previous-day ATM IV; weekly expiry Friday to 2024, Tuesday Jan-Aug 2025,
@@ -36,7 +37,103 @@ BIAS = (160, 330)
 OUT = os.path.join(config.ROOT, "docs", "data", "backtest.json")
 IX = {"NIFTY": {"lot": LOT, "step": STEP, "out": OUT, "file": "nifty", "first": dt.date(2022, 1, 3)},
       "SENSEX": {"lot": 20, "step": 100, "out": os.path.join(config.ROOT, "docs", "data", "backtest-sensex.json"),
-                 "file": "sensex", "first": dt.date(2023, 6, 1)}}
+                 "file": "sensex", "first": dt.date(2023, 6, 1)},
+      "BSE": {"lot": 200, "step": 50, "out": os.path.join(config.ROOT, "docs", "data", "backtest-bse.json"),
+              "file": "bse", "first": dt.date(2024, 12, 2), "symbol": "BSE"}}
+SNAP = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10]
+
+
+def replay_stock(con, start, end, index):
+    """The rule on a stock's own options (BSE Ltd). Minute bars are split/bonus adjusted and strikes are not, so each
+    day's bars are scaled back to the traded price (raw close / adjusted close snapped to 1, 1/2, 1/3 ...); the
+    quantity is today's lot in today's shares. Strike = the listed strike nearest the price; nearest monthly expiry;
+    volatility = the stock's own previous-day ATM IV. Same fields as replay()."""
+    sym, lot_now = IX[index]["symbol"], IX[index]["lot"]
+    m = con.execute("SELECT date, ts, open, high, low, close FROM minute_bars WHERE symbol = ? AND date >= ? AND date <= ? ORDER BY ts",
+                    [sym, start, end]).df()
+    m["ts"] = pd.to_datetime(m.ts)
+    m["date"] = m.ts.dt.date
+    raw = con.execute("SELECT date, close FROM eq_daily_raw WHERE symbol = ? AND series = 'EQ' AND date >= ? AND date <= ? ORDER BY date",
+                      [sym, start - dt.timedelta(days=10), end]).df()
+    raw["date"] = pd.to_datetime(raw.date).dt.date
+    rclose, days = dict(zip(raw.date, raw.close)), list(raw.date)
+    opts = con.execute("SELECT date, expiry, strike, option_type, close FROM fo_options WHERE symbol = ? AND instrument = 'OPTSTK' "
+                       "AND date >= ? AND date <= ? AND close > 0", [sym, start - dt.timedelta(days=10), end]).df()
+    opts["date"] = pd.to_datetime(opts.date).dt.date
+    opts["expiry"] = pd.to_datetime(opts.expiry).dt.date
+    og = {d: g for d, g in opts.groupby("date")}
+    byday = {d: g.reset_index(drop=True) for d, g in m.groupby("date")}
+    rows = []
+    for i in range(1, len(days)):
+        d, prev = days[i], days[i - 1]
+        g, po = byday.get(d), og.get(prev)
+        if d < start or g is None or po is None or len(g) < 300:
+            continue
+        r = float(g.close.iloc[-1]) / rclose[d]
+        f = min(SNAP, key=lambda x: abs(x - r))
+        if abs(r / f - 1) > 0.03:
+            continue
+        sc = 1 / f
+        tt = g.ts.dt.time.to_numpy()
+        ts = [x.to_pydatetime() for x in g.ts]
+        hi, lo, op, cl = (g.high.to_numpy() * sc, g.low.to_numpy() * sc, g.open.to_numpy() * sc, g.close.to_numpy() * sc)
+        j0, k_end = int(np.searchsorted(tt, RANGE_END)), int(np.searchsorted(tt, EXIT))
+        if k_end >= len(tt) or j0 < 20 or tt[0] > dt.time(9, 16):
+            continue
+        rh, rl = float(hi[:j0].max()), float(lo[:j0].min())
+        row = {"date": str(d), "range_low": round(rl, 1), "range_high": round(rh, 1)}
+        sig = None
+        for k in range(j0, len(tt) - 1):
+            if tt[k] >= LAST_ENTRY:
+                break
+            if cl[k] > rh or cl[k] < rl:
+                sig = (k + 1, bool(cl[k] > rh))
+                break
+        if sig is None:
+            rows.append(dict(row, status="no trade", why="No breakout of the 9:15-9:45 range by 13:00"))
+            continue
+        j, call = sig
+        exps = sorted(e for e in po.expiry.unique() if e >= d)
+        if not exps:
+            continue
+        exp = exps[0]
+        pe = po[po.expiry == exp]
+        strikes = np.array(sorted(pe.strike.unique()))
+        if len(strikes) < 3:
+            continue
+        K0 = float(strikes[np.abs(strikes - rclose[prev]).argmin()])
+        ivs = [x for x in (_iv(rr.close, rclose[prev], K0, _years(dt.datetime.combine(prev, dt.time(15, 30)), exp),
+                               rr.option_type == "CE") for rr in pe[pe.strike == K0].itertuples()) if x]
+        if not ivs:
+            continue
+        sg = float(np.mean(ivs))
+        K = float(strikes[np.abs(strikes - op[j]).argmin()])
+        qty = int(round(lot_now * f))
+        entry = _bs(float(op[j]), K, _years(ts[j], exp), sg, call)
+        if entry < 0.5:
+            continue
+        opt_low = min(_bs(lo[k] if call else hi[k], K, _years(ts[k], exp), sg, call) for k in range(0, j0))
+        hit, kx, exitp, s_exit = False, k_end, None, float(op[k_end])
+        for k in range(j, k_end + 1):
+            if opt_low < entry and _bs(lo[k] if call else hi[k], K, _years(ts[k], exp), sg, call) <= opt_low:
+                hit, kx, exitp, s_exit = True, k, opt_low, float(lo[k] if call else hi[k])
+                break
+        if exitp is None:
+            exitp = _bs(s_exit, K, _years(ts[kx], exp), sg, call)
+        bests = [_bs(hi[k] if call else lo[k], K, _years(ts[k], exp), sg, call) for k in range(j, kx + 1)]
+        kb = int(np.argmax(bests))
+        peak = max(bests[kb], entry)
+        row.update(high=round(peak, 2), high_time=ts[j + kb].strftime("%H:%M"),
+                   high_pnl=round((peak - entry) * qty - charges(entry, peak, qty)))
+        rows.append(dict(row, status="closed", side="CE" if call else "PE", strike=int(K), expiry=str(exp),
+                         expiry_day=bool(d == exp), entry_time=ts[j].strftime("%H:%M"), exit_time=ts[kx].strftime("%H:%M"),
+                         why="SL: option back to its 9:15-9:45 low" if hit else "15:15 exit", sl_option=round(opt_low, 2),
+                         nifty_entry=round(float(op[j]), 1), nifty_exit=round(s_exit, 1),
+                         nifty_pts=round((s_exit - float(op[j])) * (1 if call else -1), 1),
+                         entry=round(entry, 2), exit=round(exitp, 2), qty=qty,
+                         pnl=round((exitp - entry) * qty - charges(entry, exitp, qty)),
+                         capital=round(entry * qty), source="model"))
+    return rows
 SENSEX_CACHE = os.path.join(config.DATA, "options", "sensex-1m.parquet")
 
 
@@ -211,7 +308,7 @@ def build(months=6, log=print, index="NIFTY"):
     con = db.connect(read_only=True)
     end = con.execute("SELECT max(date) FROM minute_bars WHERE symbol = 'NIFTY 50'").fetchone()[0]
     start = max((pd.Timestamp(end) - pd.DateOffset(months=months)).date(), IX[index]["first"])
-    rows = replay(con, start, end, index) + real_trades(end, index)
+    rows = (replay_stock(con, start, end, index) if index == "BSE" else replay(con, start, end, index)) + real_trades(end, index)
     rows.sort(key=lambda r: r["date"])
     cum = 0
     for r in rows:
@@ -241,7 +338,11 @@ def build(months=6, log=print, index="NIFTY"):
                       "prices": ("Times and levels: real %s 1-minute prices. Option prices: a model set each day from "
                                  "NSE's real NIFTY option prices%s; 'real' days are the app's own paper trades on real option "
                                  "prices." % (index, " (no BSE option history, so SENSEX uses NIFTY's volatility and the "
-                                              "published weekly expiry day)" if index == "SENSEX" else "")),
+                                              "published weekly expiry day)" if index == "SENSEX" else "")) if index != "BSE" else
+                                ("Times and levels: real BSE Ltd 1-minute share prices (adjusted back to the traded price "
+                                 "around its 2025 bonus). Option prices: a model set each day from BSE Ltd's own real option "
+                                 "prices (NSE bhavcopy), nearest monthly expiry and listed strike; 1 lot = 200 shares today "
+                                 "(fewer shares before the bonus, same exposure). 'Real' days are the app's own paper trades."),
                       "bias": "The model flatters option buyers by about Rs %d-%d a trade (checked on real prices)." % BIAS,
                       "lot": IX[index]["lot"]},
            "summary": {"trading_days": sum(1 for r in rows if r["status"] != "holiday"), "trades": len(tr),
@@ -271,6 +372,6 @@ def build(months=6, log=print, index="NIFTY"):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--months", type=int, default=6)
-    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex"])
+    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse"])
     a = ap.parse_args()
     build(a.months, index=a.index.upper())
