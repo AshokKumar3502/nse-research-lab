@@ -293,6 +293,21 @@ h3.month{display:flex;justify-content:space-between;margin:24px 2px 2px;font-siz
 .kv.kv4{grid-template-columns:repeat(4,1fr)}
 .btmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
 .btd{margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.6;background:var(--surface2);border-radius:12px;padding:9px 11px}
+/* market status bar */
+.mkt{max-width:1180px;margin:0 auto;padding:0 16px 8px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.mkt .st{display:inline-flex;align-items:center;gap:7px;font-weight:700;color:var(--text)}.mkt .st .dot{width:9px;height:9px}
+.mkt .st.open .dot{background:var(--up);box-shadow:0 0 0 3px var(--upbg);animation:pulse 1.6s infinite}
+.mkt .sep{opacity:.5}.mkt .ago{margin-left:auto;white-space:nowrap}
+.mkt button{font:inherit;font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:999px;padding:4px 10px;cursor:pointer}
+.mkt button[disabled]{opacity:.6}
+@media (max-width:520px){.mkt .nx{display:none}}
+/* pull to refresh */
+.ptr{position:fixed;left:50%;top:0;z-index:40;transform:translate(-50%,-60px);transition:transform .2s;pointer-events:none}
+.ptr span{display:inline-block;background:var(--surface);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow2);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700}
+.ptr.show{transform:translate(-50%,calc(env(safe-area-inset-top) + 70px))}
+/* instrument colours */
+.ixd{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ix,var(--brand));margin-right:7px;vertical-align:middle;flex:none}
+.tile{border-left:4px solid var(--ix,var(--line))}
 /* trade screen */
 dialog#tradedlg{border:1px solid var(--line);border-radius:22px;padding:0;width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 40px);background:var(--surface);color:var(--text);box-shadow:var(--shadow2)}
 dialog#tradedlg::backdrop{background:rgba(3,6,15,.55);backdrop-filter:blur(3px)}
@@ -304,6 +319,12 @@ dialog#tradedlg::backdrop{background:rgba(3,6,15,.55);backdrop-filter:blur(3px)}
 .tl li:last-child{border-bottom:0}.tl .tm{font-family:var(--mono);color:var(--muted)}.tl i{width:12px;height:12px;border-radius:50%;background:var(--muted)}
 .tl i.up{background:var(--up)}.tl i.dn{background:var(--dn)}.tl i.br{background:var(--brand)}.tl .r{font-family:var(--mono);font-weight:700}
 @media (max-width:520px){.tdkv{grid-template-columns:repeat(2,1fr)}}
+.grab{display:none}
+@media (max-width:560px){
+ dialog#tradedlg{margin:0;position:fixed;inset:auto 0 0 0;width:100%;max-width:100%;max-height:90vh;border-radius:24px 24px 0 0;border-bottom:0;animation:sheetup .28s cubic-bezier(.2,.8,.2,1)}
+ .grab{display:block;position:absolute;left:50%;top:7px;transform:translateX(-50%);width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.55)}
+ .tdh{padding-top:20px;touch-action:none}}
+@keyframes sheetup{from{transform:translateY(100%)}to{transform:none}}
 /* live board */
 .board{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));margin:6px 0 4px}
 .tile{cursor:pointer;padding:14px 14px 10px;overflow:hidden}.tile:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
@@ -344,7 +365,8 @@ background:var(--grad);color:#fff;border-radius:18px;box-shadow:0 10px 30px var(
 <a class="brand" href="#today"><img src="logo.svg" alt=""><span>NIFTY Option Lab<small id="upd"></small></span></a>
 <nav class="tabs" aria-label="Sections"></nav>
 <button class="iconbtn" id="theme" title="Theme" aria-label="Change theme"></button>
-</div></header>
+</div><div class="mkt" id="mkt" role="status" aria-live="polite"></div></header>
+<div class="ptr" id="ptr" aria-hidden="true"><span></span></div>
 <main id="main" tabindex="-1">
 <section class="view" id="v-today"></section>
 
@@ -486,7 +508,7 @@ const BTS = {};
 const BTF = {month: "all", kind: "all", limit: 30};
 const IXN = {NIFTY: "NIFTY", SENSEX: "SENSEX", BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB"};
 const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB"].map(i =>
-  `<button type="button" data-bti="${i}" aria-pressed="${BTI === i}">${IXN[i]}</button>`).join("")}</div></div>`;
+  `<button type="button" data-bti="${i}" aria-pressed="${BTI === i}">${ixDot(i)}${IXN[i]}</button>`).join("")}</div></div>`;
 async function fetchBT(i) {
   if (BTS[i]) return BTS[i];
   const r = await fetch(({SENSEX: "data/backtest-sensex.json", BSE: "data/backtest-bse.json", ADANIENT: "data/backtest-adanient.json",
@@ -661,7 +683,8 @@ function openTrade(id) {
   hits.forEach(h => ev.push([h.at, "up", "Target " + h.t + " reached", inr(h.price)]));
   if (t.status === "closed") ev.push([t.exit_time || tm(t.last_at), v >= 0 ? "up" : "dn", t.exit_reason || "Exit", inr(t.exit)]);
   else ev.push([tm(t.last_at), "", "Now (open)", inr(t.last)]);
-  $("#tdbody").innerHTML = `<div class="tdh"><div><h3 id="tdh">${esc(t.symbol)}</h3><div style="font-size:12.5px;opacity:.9">${esc(fdl(t.signal_date))}${t.expiry ? " · expiry " + esc(fd(t.expiry)) : ""} · ${t.qty} qty (1 lot)</div></div>
+  const ic = IXC[ixOf(t)] || "#6366f1";
+  $("#tdbody").innerHTML = `<div class="tdh" style="background:linear-gradient(135deg,${ic},color-mix(in srgb,${ic} 55%,#0a0f1d))"><span class="grab"></span><div><h3 id="tdh">${esc(t.symbol)}</h3><div style="font-size:12.5px;opacity:.9">${esc(fdl(t.signal_date))}${t.expiry ? " · expiry " + esc(fd(t.expiry)) : ""} · ${t.qty} qty (1 lot)</div></div>
       <button class="x" type="button" aria-label="Close" data-close>×</button></div>
     <div class="tdb"><div class="row"><span class="pill ${t.status === "open" ? "p-warn" : v > 0 ? "p-up" : "p-dn"}">${t.status === "open" ? "Open" : v > 0 ? "Won" : "Lost"}</span>
       <span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:13px">${pct(v, cap)}</span></span></div>
@@ -707,6 +730,8 @@ async function realVsModel() {
 }
 
 // ---------- LIVE BOARD (Today): one tile per instrument from the paper-trade data already in the app
+const IXC = {NIFTY: "#818cf8", SENSEX: "#22d3ee", BSE: "#f472b6", ADANIENT: "#fbbf24", DIXON: "#34d399", PNB: "#f97316"};
+const ixDot = ix => `<span class="ixd" style="--ix:${IXC[ix] || "var(--brand)"}" aria-hidden="true"></span>`;
 const BOARD = [["NIFTY", "NIFTY 50", "option"], ["SENSEX", "SENSEX", "sensex"], ["BSE", "BSE Ltd", "bse"], ["ADANIENT", "Adani Ent", "adanient"], ["DIXON", "Dixon", "dixon"], ["PNB", "PNB", "pnb"]];
 const STARTS = {BSE: "2026-11-27", ADANIENT: "2026-11-27", DIXON: "2026-11-27", PNB: "2026-11-27"};
 function spark(vals, color) {
@@ -735,8 +760,8 @@ function liveBoard() {
     const v = t ? val(t) : null;
     const st = !t ? (STARTS[ix] && STARTS[ix] > (D.last_session || "") ? `<span class="pill p-info">Starts ${esc(fd(STARTS[ix]))}</span>` : `<span class="pill p-mute">Watching</span>`)
       : t.status === "open" ? `<span class="pill p-warn">Open</span>` : `<span class="pill ${v > 0 ? "p-up" : "p-dn"}">${v > 0 ? "Won" : "Lost"}</span>`;
-    h += `<div class="card tile ${t ? (v > 0 ? "win" : "loss") : ""}" role="button" tabindex="0" ${t ? `data-trade="${esc(t.id)}"` : ""} aria-label="${esc(name)}${t ? " trade details" : ""}">
-      <div class="row"><span class="nm">${esc(name)}</span>${st}</div>
+    h += `<div class="card tile ${t ? (v > 0 ? "win" : "loss") : ""}" style="--ix:${IXC[ix]}" role="button" tabindex="0" ${t ? `data-trade="${esc(t.id)}"` : ""} aria-label="${esc(name)}${t ? " trade details" : ""}">
+      <div class="row"><span class="nm">${ixDot(ix)}${esc(name)}</span>${st}</div>
       <div class="sy">${t ? esc(t.symbol) + " · " + esc(fd(t.signal_date)) : "No trades yet"}</div>
       <div class="pl ${cl(v)}">${t ? sgn(v) : "–"}</div>
       ${spark(cum, cum.length && cum[cum.length - 1] < 0 ? "var(--dn)" : "var(--up)")}
@@ -941,7 +966,7 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
   keep.push({id: "recent", title: "Recent trades", sub: "Last 15 paper trades on real option prices · 1 lot each, after charges · tap one to open it", count: recent.length,
     body: recent.length ? `<div class="list">` + recent.map(t => {
       const v = t.status === "closed" ? t.net : t.gross;
-      return `<div class="li" role="button" tabindex="0" data-trade="${esc(t.id)}" style="cursor:pointer"><div><b>${esc(t.symbol)}</b> <span class="muted">${esc(fdl(t.signal_date))}</span>
+      return `<div class="li" role="button" tabindex="0" data-trade="${esc(t.id)}" style="cursor:pointer"><div>${ixDot(ixOf(t))}<b>${esc(t.symbol)}</b> <span class="muted">${esc(fdl(t.signal_date))}</span>
         <div class="d">In ${esc(tm(t.entry_at))} ${inr(t.entry)} → ${t.status === "closed" ? "out" : "now"} ${esc(tm(t.last_at))} ${inr(t.last)}${t.exit_reason ? " · " + esc(t.exit_reason) : ""}</div></div>
         <span class="r ${cl(v)}">${sgn(v)}${t.status === "open" ? ` <span class="pill p-warn">open</span>` : ""}</span></div>`;
     }).join("") + `</div>` : `<div class="empty">No option trades yet.</div>`});
@@ -979,7 +1004,7 @@ ODAILY = (() => {
   h += `<h2>By index<span class="sub">Closed trades plus any open one</span></h2><div class="list"><table><caption class="sr">P&L by index</caption><thead><tr><th scope="col">Index</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Won</th><th scope="col" class="r">Net</th></tr></thead><tbody>${
     ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
       n = ts.reduce((a, t) => a + (t.status === "closed" ? t.net : (t.gross || 0)), 0);
-      return `<tr><td>${IXT[ix] || ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
+      return `<tr><td>${ixDot(ix)}${IXT[ix] || ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
   if (!MULTI.length) {
     const mon = {};
     T.filter(t => t.status === "closed").forEach(t => { const k = String(t.signal_date).slice(0, 7); (mon[k] = mon[k] || []).push(t.net); });
@@ -1124,14 +1149,69 @@ const LIVE = "https://raw.githubusercontent.com/AshokKumar3502/nse-research-lab/
 async function pullLive() {
   try {
     const r = await fetch(LIVE + "?t=" + Date.now(), {cache: "no-store"});
-    if (!r.ok) return;
+    if (!r.ok) return "error";
     const L = await r.json();
     if ((L.updated || {}).ts > ((D.updated || {}).ts || 0)) {
       const keep = location.hash.slice(1) || "today", y = window.scrollY;
-      D = L; renderAll(); show(keep); window.scrollTo(0, y);
+      D = L; renderAll(); show(keep); window.scrollTo(0, y); mkt();
+      return "new";
     }
-  } catch (e) { /* offline: keep what is shown */ }
+    return "same";
+  } catch (e) { return "error"; /* offline: keep what is shown */ }
 }
+// ---------- market status bar: open / closed (IST) and how old the numbers are
+function istNow() {
+  const p = {}; new Intl.DateTimeFormat("en-GB", {timeZone: "Asia/Kolkata", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false})
+    .formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
+  return {wd: p.weekday, m: +p.hour * 60 + +p.minute, hm: p.hour + ":" + p.minute};
+}
+function mkt() {
+  const n = istNow(), wkend = n.wd === "Sat" || n.wd === "Sun", open = !wkend && n.m >= 555 && n.m < 930;
+  const nextDay = n.wd === "Fri" || wkend ? "Mon" : "tomorrow";
+  let st, nx = "";
+  if (open) { const q = Math.min(930, (Math.floor(n.m / 10) + 1) * 10); st = "Market open · " + n.hm; nx = "next update ~" + String(Math.floor(q / 60)).padStart(2, "0") + ":" + String(q % 60).padStart(2, "0"); }
+  else if (!wkend && n.m < 555) st = "Pre-open · opens 9:15";
+  else st = "Market closed · opens " + nextDay + " 9:15";
+  const ts = (D.updated || {}).ts, mins = ts ? Math.max(0, Math.round((Date.now() / 1000 - ts) / 60)) : null;
+  const ago = mins == null ? "" : mins < 1 ? "updated just now" : mins < 60 ? "updated " + mins + " min ago" : mins < 1440 ? "updated " + Math.round(mins / 60) + " h ago" : "updated " + Math.round(mins / 1440) + " d ago";
+  $("#mkt").innerHTML = `<span class="st ${open ? "open" : ""}"><span class="dot"></span>${esc(st)}</span>${nx ? `<span class="sep nx">·</span><span class="nx">${esc(nx)}</span>` : ""}
+    <span class="ago">${esc(ago)}</span><button type="button" id="refresh" aria-label="Refresh now">↻ Refresh</button>`;
+  $("#refresh").onclick = async () => { const b = $("#refresh"); b.disabled = true; b.textContent = "…"; const r = await pullLive(); toast(r === "new" ? "Updated" : r === "same" ? "Already up to date" : "Could not refresh"); mkt(); };
+}
+function toast(msg) {
+  const el = $("#ptr"); el.firstElementChild.textContent = msg; el.classList.add("show");
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1600);
+}
+mkt(); setInterval(mkt, 30 * 1000);
+// ---------- pull to refresh (phones): pull down at the top of the page
+(function () {
+  let y0 = null, pulled = 0;
+  const el = $("#ptr");
+  document.addEventListener("touchstart", e => { y0 = (window.scrollY <= 0 && !$("#tradedlg").open) ? e.touches[0].clientY : null; pulled = 0; }, {passive: true});
+  document.addEventListener("touchmove", e => {
+    if (y0 == null) return;
+    pulled = e.touches[0].clientY - y0;
+    if (pulled > 20) { el.firstElementChild.textContent = pulled > 90 ? "Release to refresh" : "Pull to refresh"; el.classList.add("show"); }
+  }, {passive: true});
+  document.addEventListener("touchend", async () => {
+    if (y0 == null) return;
+    y0 = null;
+    if (pulled > 90) { el.firstElementChild.textContent = "Refreshing…"; const r = await pullLive(); mkt(); toast(r === "new" ? "Updated" : r === "same" ? "Already up to date" : "Could not refresh"); }
+    else el.classList.remove("show");
+  });
+})();
+// ---------- trade screen as a bottom sheet on phones: swipe the header down to close
+(function () {
+  let y0 = null, dy = 0;
+  const dlg = $("#tradedlg");
+  dlg.addEventListener("touchstart", e => { if (e.target.closest(".tdh") && innerWidth < 560) { y0 = e.touches[0].clientY; dy = 0; dlg.style.transition = "none"; } }, {passive: true});
+  dlg.addEventListener("touchmove", e => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); dlg.style.transform = `translateY(${dy}px)`; }, {passive: true});
+  dlg.addEventListener("touchend", () => {
+    if (y0 == null) return;
+    y0 = null; dlg.style.transition = "transform .2s"; dlg.style.transform = "";
+    if (dy > 110) dlg.close();
+  });
+})();
 pullLive(); setInterval(pullLive, 3 * 60 * 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) pullLive(); });
 </script></body></html>"""
