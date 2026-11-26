@@ -94,6 +94,18 @@ def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
         c.boxes([("Range HIGH  →  close above = BUY CALL", format(doc["range_high"], ",.2f"), LGREEN),
                  ("Range LOW  →  close below = BUY PUT", format(doc["range_low"], ",.2f"), LRED)], cols=1, h=120)
         return c.png(foot)
+    if event in ("near_high", "near_low"):
+        up = event == "near_high"
+        edge = doc["range_high"] if up else doc["range_low"]
+        last, step = doc["index_last"], doc.get("step") or 50
+        c = Card(AMBER, "GET READY · %s · %s" % (name, doc.get("index_last_at", "")),
+                 "%s NEAR RANGE %s" % ("▲" if up else "▼", "HIGH" if up else "LOW"),
+                 "A 1-minute close %s %s takes the trade" % ("above" if up else "below", format(edge, ",.2f")))
+        c.boxes([("%s now" % name, format(last, ",.2f"), TEXT),
+                 ("Range %s" % ("high" if up else "low"), format(edge, ",.2f"), LGREEN if up else LRED),
+                 ("Distance", "%s pts" % format(abs(edge - last), ",.1f"), AMBER),
+                 ("If it breaks", "BUY %d %s" % (round(edge / step) * step, "CE" if up else "PE"), LGREEN if up else LRED)])
+        return c.png(foot)
     if event == "no trade":
         c = Card(GREY, "%s · %s" % (name, day), "NO TRADE TODAY", None)
         c.line(doc.get("note") or "No breakout of the 9:15-9:45 range by 13:00", TEXT, 34, True)

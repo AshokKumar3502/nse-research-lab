@@ -326,6 +326,25 @@ def live(every_min=10, until=(15, 20)):
     if datetime.datetime.now(config.IST).time() > stop:
         log("after %s: no live updates today (the evening job settles the day)" % stop.strftime("%H:%M"))
         return
+    from optionlab import nifty_orb, telegram_alerts
+    seen = {}
+
+    def watch():
+        """Every minute between the 10-minute cycles (9:45-15:16): each index's rule -> Telegram (get ready, entry,
+        exit) within about a minute; True when a trade opened or closed, so the app is refreshed at once."""
+        changed = False
+        for index in nifty_orb.INDEXES:
+            try:
+                doc = nifty_orb.run(log=lambda *a: None, index=index)
+                telegram_alerts.notify(doc, log=log, status=False)
+                if seen.get(index) not in (None, doc.get("status")) and doc.get("status") in ("open", "closed"):
+                    log("%s: %s -> %s" % (index, seen[index], doc["status"]))
+                    changed = True
+                seen[index] = doc.get("status")
+            except Exception as e:     # noqa: BLE001
+                log("watch %s: %s" % (index, e))
+        return changed
+
     while True:
         _step("live prices", cycle)
         now = datetime.datetime.now(config.IST)
@@ -336,7 +355,18 @@ def live(every_min=10, until=(15, 20)):
         nxt = nxt.replace(minute=nxt.minute - nxt.minute % every_min, second=5, microsecond=0)
         if nxt.time() > stop:
             nxt = now.replace(hour=stop.hour, minute=stop.minute, second=5, microsecond=0)
-        time.sleep(max(1.0, (nxt - datetime.datetime.now(config.IST)).total_seconds()))
+        refresh = False
+        while True:
+            now = datetime.datetime.now(config.IST)
+            tick = (now + datetime.timedelta(minutes=1)).replace(second=3, microsecond=0)
+            if tick >= nxt:
+                break
+            time.sleep(max(1.0, (tick - datetime.datetime.now(config.IST)).total_seconds()))
+            if datetime.time(9, 45) <= tick.time() <= datetime.time(15, 16) and watch():
+                refresh = True         # a trade opened or closed: refresh the app now
+                break
+        if not refresh:
+            time.sleep(max(0.0, (nxt - datetime.datetime.now(config.IST)).total_seconds()))
 
 
 def evening():

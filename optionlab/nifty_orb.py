@@ -106,7 +106,8 @@ def run(day=None, log=print, index="NIFTY"):
         return _save(doc, p)
     rng = [b for b in idx if b[0].time() < RANGE_END]
     hi, lo = max(b[2] for b in rng), min(b[3] for b in rng)
-    doc.update(range_high=round(hi, 2), range_low=round(lo, 2))
+    doc.update(range_high=round(hi, 2), range_low=round(lo, 2), step=ix["step"],
+               index_last=round(idx[-1][4], 2), index_last_at=(idx[-1][0] + dt.timedelta(minutes=1)).strftime("%H:%M"))
     sig = None
     for i, b in enumerate(idx):
         if b[0].time() < RANGE_END:

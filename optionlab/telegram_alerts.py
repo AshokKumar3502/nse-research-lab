@@ -3,6 +3,8 @@
 Messages (1 lot, paper trade, nothing here places an order):
   range    once after 9:45: today's 9:15-9:45 range, watching for a breakout
   entry    once, when the trade is taken: strike, entry price and time, stop-loss
+  near     once per side, 9:45-13:00 while waiting: the index is within NEAR (0.1%) of its range high or low
+           ("get ready": a 1-minute close beyond it takes the trade); checked every minute
   status   every live cycle (10 minutes) while the trade is open: last price, P&L for 1 lot
   exit     once, when it closes: exit price, reason, net P&L after charges
   no trade once, when there is no breakout by 13:00
@@ -20,6 +22,7 @@ from warehouse import config
 
 STATE = os.path.join(config.ROOT, "state", "picks")
 FOOT = "Paper trade, 1 lot. Not investment advice."
+NEAR = 0.001          # "get ready" when the index is within 0.1% of the range edge (NIFTY ~26 pts, SENSEX ~85 pts)
 
 
 def send(text):
@@ -55,7 +58,8 @@ def send_photo(png, caption):
         return False
 
 
-CAPTION = {"range": "🔵 {ix} 9:45 range set: waiting for a breakout", "no trade": "⚪ {ix}: no trade today",
+CAPTION = {"near_high": "🟡 GET READY: {ix} near its range HIGH (call side)", "near_low": "🟡 GET READY: {ix} near its range LOW (put side)",
+           "range": "🔵 {ix} 9:45 range set: waiting for a breakout", "no trade": "⚪ {ix}: no trade today",
            "status": "🔵 Live update", "entry": "{dot} NEW SIGNAL: BUY {sym}", "exit": "{dot} CLOSED {sym}: {res}"}
 
 
@@ -86,6 +90,15 @@ def messages(doc, sent):
     if doc.get("range_high") and "range" not in sent and st in ("waiting", "open", "closed", "no trade"):
         out.append(("range", ix + " 9:15-9:45 range: high %s, low %s.\nWatching for a 1-minute close outside it until 13:00.\n%s"
                     % (format(doc["range_high"], ",.2f"), format(doc["range_low"], ",.2f"), FOOT)))
+    last, at = doc.get("index_last"), doc.get("index_last_at") or ""
+    if st == "waiting" and last and doc.get("range_high") and "09:45" <= at < "13:00":
+        step = doc.get("step") or 50
+        for ev, edge, side, gap in (("near_high", doc["range_high"], "CE", doc["range_high"] - last),
+                                    ("near_low", doc["range_low"], "PE", last - doc["range_low"])):
+            if ev not in sent and 0 <= gap <= last * NEAR:
+                out.append((ev, "GET READY: %s %s at %s, %s pts from the range %s %s.\nA 1-minute close %s it buys the %d %s (about).\n%s"
+                            % (ix, format(last, ",.2f"), at, format(gap, ",.1f"), "high" if side == "CE" else "low",
+                               format(edge, ",.2f"), "above" if side == "CE" else "below", round(edge / step) * step, side, FOOT)))
     if st == "no trade" and "no trade" not in sent:
         out.append(("no trade", "%s option: no trade today. %s.\n%s" % (ix, doc.get("note") or "No breakout by 13:00", FOOT)))
     if st not in ("open", "closed"):
@@ -106,8 +119,9 @@ def messages(doc, sent):
     return out
 
 
-def notify(doc, log=print):
-    """Send what is due for today's trade document and remember it. Safe to call every cycle."""
+def notify(doc, log=print, status=True):
+    """Send what is due for today's trade document and remember it. Safe to call every cycle.
+    status=False (the 1-minute watcher): everything except the 10-minute P&L status card."""
     if not (os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")) or not doc or not doc.get("day"):
         return 0
     p = os.path.join(STATE, "telegram-%s-%s.json" % (doc.get("index", "NIFTY").lower(), doc["day"]))
@@ -117,6 +131,8 @@ def notify(doc, log=print):
             sent = json.load(fh).get("sent", [])
     n = 0
     for event, text in messages(doc, set(sent)):
+        if event == "status" and not status:
+            continue
         if deliver(event, text, doc):
             n += 1
             if event != "status":
