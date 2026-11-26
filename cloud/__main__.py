@@ -309,11 +309,16 @@ def live(every_min=10, until=(15, 20)):
         if not bars.empty:
             store.upsert("minute_bars", bars, ["date", "symbol", "ts"])
         from optionlab import nifty_orb, telegram_alerts
+        docs = []
         for index in nifty_orb.INDEXES:
             try:
-                telegram_alerts.notify(nifty_orb.run(log=log, index=index), log=log)
+                docs.append(nifty_orb.run(log=log, index=index))
             except Exception as e:     # noqa: BLE001
                 log("%s option: %s" % (index.lower(), e))
+        try:
+            telegram_alerts.board(docs, log=log)       # one card for all instruments, every 10 minutes
+        except Exception as e:     # noqa: BLE001
+            log("telegram board: %s" % e)
         paper_update(db.connect(read_only=True), log=log)
         data = collect()
         os.makedirs(os.path.join(REPO, "docs", "data"), exist_ok=True)
@@ -330,13 +335,12 @@ def live(every_min=10, until=(15, 20)):
     seen = {}
 
     def watch():
-        """Every minute between the 10-minute cycles (9:45-15:16): each index's rule -> Telegram (get ready, entry,
-        exit) within about a minute; True when a trade opened or closed, so the app is refreshed at once."""
+        """Every minute between the 10-minute cycles (9:45-15:16): each instrument's rule (stop-loss, targets);
+        True when a trade opened or closed, so the app is refreshed at once. Telegram gets one board every 10 minutes."""
         changed = False
         for index in nifty_orb.INDEXES:
             try:
                 doc = nifty_orb.run(log=lambda *a: None, index=index)
-                telegram_alerts.notify(doc, log=log, status=False)
                 if seen.get(index) not in (None, doc.get("status")) and doc.get("status") in ("open", "closed"):
                     log("%s: %s -> %s" % (index, seen[index], doc["status"]))
                     changed = True

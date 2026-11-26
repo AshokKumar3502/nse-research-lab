@@ -186,3 +186,42 @@ def watchlist_card(rows, day, foot="Paper trade · 1 lot each · Not investment 
     b = io.BytesIO()
     c.im.save(b, "PNG", optimize=True)
     return b.getvalue()
+
+
+def board_card(rows, stamp, total, foot="Paper trade · 1 lot each · targets are information only · Not investment advice"):
+    """One card for every instrument. rows: dicts with name, tag, tag_colour, line, targets [(label, hit)], pnl (or None)."""
+    rh = 132
+    hh = 250 + rh * len(rows) + 90
+    im = Image.new("RGB", (W, hh), BG)
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, W, 150], fill=BLUE)
+    d.text((48, 26), "LIVE BOARD · %s" % stamp, font=font(30, True), fill=(255, 255, 255))
+    d.text((48, 68), "%d INSTRUMENTS" % len(rows), font=font(52, True), fill=(255, 255, 255))
+    col = LGREEN if total > 0 else LRED if total < 0 else TEXT
+    d.rounded_rectangle([48, 172, W - 48, 232], 14, fill=PANEL, outline=col, width=3)
+    d.text((72, 186), "Total P&L today (1 lot each)", font=font(26), fill=MUTED)
+    tt = rs(total, True)
+    d.text((W - 72 - d.textlength(tt, font=font(34, True)), 182), tt, font=font(34, True), fill=col)
+    y = 250
+    for r in rows:
+        d.rounded_rectangle([48, y, W - 48, y + rh - 12], 16, fill=PANEL, outline=LINE, width=2)
+        d.text((72, y + 14), r["name"], font=font(32, True), fill=TEXT)
+        tx = 72 + d.textlength(r["name"], font=font(32, True)) + 16
+        tw = d.textlength(r["tag"], font=font(20, True)) + 24
+        d.rounded_rectangle([tx, y + 18, tx + tw, y + 50], 14, fill=r["tag_colour"])
+        d.text((tx + 12, y + 22), r["tag"], font=font(20, True), fill=(255, 255, 255))
+        d.text((72, y + 58), r["line"], font=font(23), fill=MUTED)
+        x = 72
+        for label, hit in r.get("targets") or []:
+            d.text((x, y + 88), label, font=font(21, True), fill=LGREEN if hit else MUTED)
+            x += d.textlength(label, font=font(21, True)) + 22
+        if r.get("pnl") is not None:
+            p = rs(r["pnl"], True)
+            c = LGREEN if r["pnl"] > 0 else LRED if r["pnl"] < 0 else TEXT
+            d.text((W - 72 - d.textlength(p, font=font(34, True)), y + 14), p, font=font(34, True), fill=c)
+        y += rh
+    d.line([48, hh - 70, W - 48, hh - 70], fill=LINE, width=2)
+    d.text((48, hh - 52), foot, font=font(22), fill=MUTED)
+    b = io.BytesIO()
+    im.save(b, "PNG", optimize=True)
+    return b.getvalue()

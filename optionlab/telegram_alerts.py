@@ -155,6 +155,91 @@ def messages(doc, sent):
     return out
 
 
+NAMES = {"NIFTY": "NIFTY 50", "SENSEX": "SENSEX", "BSE": "BSE Ltd", "ADANIENT": "Adani Ent", "DIXON": "Dixon", "PNB": "PNB"}
+
+
+def board_rows(docs):
+    """One row per instrument from today's trade documents (skips instruments that have not started)."""
+    from .telegram_cards import AMBER, BLUE, GREEN, GREY, RED
+    rows, lines, total = [], [], 0.0
+    for doc in docs:
+        st = doc.get("status")
+        if st in (None, "not started", "no market"):
+            continue
+        ix = doc.get("index", "NIFTY")
+        name = NAMES.get(ix, ix)
+        r = {"name": name, "pnl": None, "targets": []}
+        if st == "waiting":
+            last, hi, lo = doc.get("index_last"), doc.get("range_high"), doc.get("range_low")
+            near = None
+            if last and hi and lo:
+                near = "NEAR HIGH" if 0 <= hi - last <= last * NEAR else "NEAR LOW" if 0 <= last - lo <= last * NEAR else None
+            r.update(tag=near or "WATCHING", tag_colour=AMBER if near else BLUE,
+                     line=("Range %s – %s · now %s" % (format(lo, ",.2f"), format(hi, ",.2f"), format(last, ",.2f"))) if hi else
+                     (doc.get("note") or "Range builds 9:15–9:45"))
+        elif st == "no trade":
+            r.update(tag="NO TRADE", tag_colour=GREY, line=doc.get("note") or "No breakout by 13:00")
+        elif st in ("open", "closed"):
+            side = doc["symbol"].split(" ", 1)[1] if " " in doc["symbol"] else doc["symbol"]
+            v = doc["gross"] if st == "open" else doc["net"]
+            total += v
+            if st == "open":
+                tag, colour = "OPEN", AMBER
+                line = "%s · in %s @ %s → now %s · SL %s" % (side, doc["entry"], doc["entry_at"][11:], doc["last"],
+                                                          doc.get("sl_option") or doc.get("sl_index"))
+            else:
+                tag, colour = ("WON" if v > 0 else "LOST"), (GREEN if v > 0 else RED)
+                line = "%s · in %s @ %s → out %s @ %s · %s" % (side, doc["entry"], doc["entry_at"][11:], doc["exit"],
+                                                             doc["exit_at"][11:], "SL" if str(doc.get("why", "")).startswith("SL") else "15:15")
+            got = {h["t"]: h["at"] for h in doc.get("target_hits") or []}
+            r.update(tag=tag, tag_colour=colour, line=line, pnl=v,
+                     targets=[("T%d %s%s" % (i + 1, format(p, ",.2f"), " HIT " + got[i + 1] if i + 1 in got else ""), i + 1 in got)
+                              for i, p in enumerate(doc.get("targets") or [])])
+        else:
+            r.update(tag=str(st).upper(), tag_colour=GREY, line=doc.get("note") or "")
+        rows.append(r)
+        lines.append("%s: %s%s" % (name, r["tag"], (" " + _rs(r["pnl"])) if r["pnl"] is not None else ""))
+    return rows, lines, total
+
+
+def board(docs, log=print, force=False, every_min=10):
+    """One Telegram card for all instruments, at most once every 10 minutes from 9:45 (state in state/picks)."""
+    if not (os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")):
+        return False
+    import datetime as _dt
+    now = _dt.datetime.now(config.IST)
+    day = next((d["day"] for d in docs if d.get("day")), now.date().isoformat())
+    p = os.path.join(STATE, "telegram-board-%s.json" % day)
+    last = None
+    if os.path.exists(p):
+        with open(p, encoding="utf-8") as fh:
+            last = json.load(fh).get("last")
+    if not force:
+        if now.time() < _dt.time(9, 45):
+            return False
+        if last and (now - _dt.datetime.fromisoformat(last)).total_seconds() < (every_min - 0.5) * 60:
+            return False
+    rows, lines, total = board_rows(docs)
+    if not rows:
+        return False
+    from .telegram_cards import board_card
+    stamp = now.strftime("%d %b %Y · %H:%M")
+    cap = "📊 Live board %s · total %s\n%s\n%s" % (now.strftime("%H:%M"), _rs(total), "\n".join(lines), FOOT)
+    try:
+        ok = send_photo(board_card(rows, stamp, total), cap[:1000])
+    except Exception:      # noqa: BLE001
+        ok = False
+    ok = ok or send(cap)
+    if ok:
+        os.makedirs(STATE, exist_ok=True)
+        with open(p, "w", encoding="utf-8") as fh:
+            json.dump({"last": now.isoformat(timespec="seconds")}, fh)
+        log("telegram: live board sent (%d instruments, total %s)" % (len(rows), _rs(total)))
+    else:
+        log("telegram: could not send the live board")
+    return ok
+
+
 def notify(doc, log=print, status=True):
     """Send what is due for today's trade document and remember it. Safe to call every cycle.
     status=False (the 1-minute watcher): everything except the 10-minute P&L status card."""
@@ -215,6 +300,29 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
         ok = send_photo(watchlist_card(rows, nxt.strftime("%a %d %b %Y")), cap) or send(cap + "\n" + "\n".join(lines))
         print("\n".join(lines))
         print("sent" if ok else "NOT sent")
+        sys.exit(0 if ok else 1)
+    if "--board" in sys.argv:          # today's live board for every instrument, computed now from real prices
+        import datetime as _dt
+        import tempfile
+        from . import nifty_orb
+        nifty_orb.PICKS = tempfile.mkdtemp()           # compute fresh, do not touch the saved trades
+        day = config.today_ist()
+        while day.weekday() >= 5:
+            day -= _dt.timedelta(days=1)
+        docs = []
+        if "--preview" in sys.argv:                    # include instruments that have not started yet
+            for c in nifty_orb.INDEXES.values():
+                c.pop("start", None)
+                c["sl_from"] = min(c["sl_from"], day)
+            send("PREVIEW: the single live-board card you will get every 10 minutes from 9:50 to 15:20, here with %s's "
+                 "real prices for all six (BSE Ltd, Adani Ent, Dixon and PNB start paper trading on 27 Nov)." % day.strftime("%d %b"))
+        for ix in nifty_orb.INDEXES:
+            try:
+                docs.append(nifty_orb.run(day, log=lambda *a: None, index=ix))
+            except Exception as e:     # noqa: BLE001
+                print(ix, e)
+        ok = board(docs, force=True)
+        print("board", "sent" if ok else "NOT sent", [(d.get("index"), d.get("status")) for d in docs])
         sys.exit(0 if ok else 1)
     if "--sample-targets" in sys.argv:   # entry with T1/T2/T3, the three target-hit cards, a status card (made-up numbers)
         tg = [274.63, 307.25, 339.88]
