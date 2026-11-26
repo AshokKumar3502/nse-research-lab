@@ -135,7 +135,7 @@ def build():
         msgs.append({"id": "intraday-%s" % it.get("day"), "ts": now, "title": "Intraday picks (paper only)",
                      "text": "Buy: %s" % names_i})
     msgs = []                     # option-only app: no stock-pick messages
-    for ixn in ("NIFTY", "SENSEX", "BSE"):
+    for ixn in ("NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON"):
         ops = sorted((t for t in data.get("trades", []) if t.get("kind") == "option"
                       and (t.get("index") or ("SENSEX" if str(t.get("symbol", "")).startswith("SENSEX") else "NIFTY")) == ixn),
                      key=lambda t: t["signal_date"])
@@ -547,6 +547,7 @@ let ODAILY = [];
 const kindPill = t => t.kind === "momentum" ? `<span class="pill p-info">Momentum</span>` : t.kind === "results" ? `<span class="pill p-info">Results</span>`
   : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>`
   : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
+const IXT = {BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon"};
 const ixOf = t => t.index || (/^SENSEX/.test(t.symbol || "") ? "SENSEX" : "NIFTY");
 const reduceMotion = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.addEventListener("click", e => {
@@ -634,8 +635,8 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
         <div class="kv"><div>Entry · ${esc(when(op.entry_at))}<b>${inr(op.entry)}</b></div><div>${op.status === "closed" ? "Exit" : "Now"} · ${esc(tm(op.last_at))}<b>${inr(op.last)}</b></div><div>SL<b class="dn" style="font-size:12.5px">${esc(op.sl_note)}</b></div></div>
         <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}</div>
         <div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${op.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:12.5px">${pct(v, op.entry * op.qty)}</span></span></div></div></div>`; }
-    sec(id, ix === "BSE" ? "BSE Ltd option" : ix + " option", "9:15–9:45 range breakout · ATM call or put · SL = the option's own 9:15–9:45 low · exit 15:15 · 1 lot"
-      + (ix === "SENSEX" ? " (20 qty) · BSE weekly options" : ix === "BSE" ? " · BSE Ltd stock options, monthly expiry" : "") + " · paper only", op ? 1 : 0, ob);
+    sec(id, (IXT[ix] || ix) + " option", "9:15–9:45 range breakout · ATM call or put · SL = the option's own 9:15–9:45 low · exit 15:15 · 1 lot"
+      + (ix === "SENSEX" ? " (20 qty) · BSE weekly options" : ix !== "NIFTY" ? " · stock options, monthly expiry" : "") + " · paper only", op ? 1 : 0, ob);
   };
   optSec("NIFTY", "option", "The 2022–2026 backtest looked strong, but buying a random call or put at 9:45 did just as well in the same price model, and real NSE option prices showed the model flatters option buyers by about ₹160–330 a trade. On real prices a random buyer loses a little. This paper trade, on real prices, is the test.",
     "No option trade yet. The rule watches NIFTY from 9:45 to 13:00 each trading day.");
@@ -643,6 +644,10 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
     "No SENSEX trade yet. The rule watches SENSEX from 9:45 to 13:00 each trading day.");
   optSec("BSE", "bse", "The same rule on BSE Ltd stock options (monthly expiry), paper traded on real prices from 27 Nov 2026. It was the only F&O stock whose 2024–2026 backtest beat a random call or put (t 3.09), but that covers only BSE's strong 2024–26 trend, and many stocks and indices were tested. This paper trade, on real prices, is the test.",
     "No BSE trade yet. The rule watches BSE Ltd from 9:45 to 13:00 each trading day.");
+  optSec("ADANIENT", "adanient", "The same rule on Adani Enterprises stock options (monthly expiry), paper traded on real prices from 27 Nov 2026. Its 2022–2026 backtest was the strongest of 15 F&O stocks (+₹12.5 lakh a lot, beat a random side with t 2.45), but a few shock days such as the 2023 Hindenburg fall made a large part of it. This paper trade, on real prices, is the test.",
+    "No Adani Enterprises trade yet. The rule watches it from 9:45 to 13:00 each trading day.");
+  optSec("DIXON", "dixon", "The same rule on Dixon Technologies stock options (monthly expiry), paper traded on real prices from 27 Nov 2026. Its 2022–2026 backtest made money in every year (+₹4.6 lakh a lot, beat a random side with t 2.06), short of a proven edge. This paper trade, on real prices, is the test.",
+    "No Dixon trade yet. The rule watches it from 9:45 to 13:00 each trading day.");
   const multi = (kind, label) => {
     const ts = (D.trades || []).filter(t => t.kind === kind && t.status !== "closed").sort((a, b) => b.signal_date.localeCompare(a.signal_date) || (b.gross || 0) - (a.gross || 0));
     return [ts.length, ts.length ? `<div class="list">` + ts.map(t => {
@@ -660,9 +665,9 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
   sec("momentum", "12-1 momentum", "10 strongest 12-month gainers (skipping the last month) · rebalanced every 20 sessions · buy 9:30 · no stop-loss · ₹50,000 each · paper test", nm,
     why("Promising, not proven.", "2017–2026: +22% a year vs NIFTY +12%, but it fell up to 45% from a peak (NIFTY 30%) and lost 25% in 2018 and 16% in 2022. A few big winners made the profit. This paper trade on real prices is the test.")
     + (mb || `<div class="empty">No open momentum trades yet. New picks come every 20 sessions.</div>`));
-  const keep = secs.filter(s => s.id === "option" || s.id === "sensex" || s.id === "bse");
+  const keep = secs.filter(s => ["option", "sensex", "bse", "adanient", "dixon"].includes(s.id));
   const recent = (D.trades || []).filter(t => t.kind === "option").sort((a, b) => b.signal_date.localeCompare(a.signal_date)).slice(0, 15);
-  keep.push({id: "recent", title: "Recent option trades", sub: "Last 15 paper trades on real option prices (NIFTY, SENSEX, BSE Ltd) · 1 lot each, after charges", count: recent.length,
+  keep.push({id: "recent", title: "Recent option trades", sub: "Last 15 paper trades on real option prices (indices and stocks) · 1 lot each, after charges", count: recent.length,
     body: recent.length ? `<div class="list">` + recent.map(t => {
       const v = t.status === "closed" ? t.net : t.gross;
       return `<div class="li"><div><b>${esc(t.symbol)}</b> <span class="muted">${esc(fdl(t.signal_date))}</span>
@@ -698,12 +703,12 @@ ODAILY = (() => {
     ["Latest day", last ? sgn(last.net) : "–", last ? cl(last.net) : "", last ? fdl(last.date) : "no trades yet"],
     ["Trades", T.filter(t => t.status !== "pending").length + "", "", closed.length ? "avg " + sgn(closed.reduce((a, t) => a + t.net, 0) / closed.length) + " a trade" : "none closed yet"],
     ["Win rate", closed.length ? Math.round(wins.length / closed.length * 100) + "%" : "–", "", closed.length + " closed trades"]];
-  let h = `<h2>Option paper trading<span class="sub">NIFTY, SENSEX and BSE Ltd · 1 lot each a day on real option prices, after charges</span></h2><div class="kpis">` +
+  let h = `<h2>Option paper trading<span class="sub">NIFTY, SENSEX, BSE Ltd, Adani Ent and Dixon · 1 lot each a day on real option prices, after charges</span></h2><div class="kpis">` +
     k.map(([l, v, c, s]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div><div class="s">${esc(s)}</div></div>`).join("") + `</div>`;
   h += `<h2>By index<span class="sub">Closed trades plus any open one</span></h2><div class="list"><table><caption class="sr">P&L by index</caption><thead><tr><th scope="col">Index</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Won</th><th scope="col" class="r">Net</th></tr></thead><tbody>${
-    ["NIFTY", "SENSEX", "BSE"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
+    ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
       n = ts.reduce((a, t) => a + (t.status === "closed" ? t.net : (t.gross || 0)), 0);
-      return `<tr><td>${ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
+      return `<tr><td>${IXT[ix] || ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
   if (!MULTI.length) {
     const mon = {};
     T.filter(t => t.status === "closed").forEach(t => { const k = String(t.signal_date).slice(0, 7); (mon[k] = mon[k] || []).push(t.net); });
@@ -826,7 +831,7 @@ ODAILY = (() => {
   const closed = T.filter(t => t.status === "closed");
   const grp = (name, f) => { const ts = closed.filter(f), w = ts.filter(t => t.net > 0).length, tot = ts.reduce((a, t) => a + t.net, 0);
     return [name, ts.length, ts.length ? Math.round(w / ts.length * 100) + "%" : "–", ts.length ? sgn(tot / ts.length) : "–", tot, ts.length]; };
-  const g = [grp("NIFTY", t => ixOf(t) === "NIFTY"), grp("SENSEX", t => ixOf(t) === "SENSEX"), grp("BSE Ltd", t => ixOf(t) === "BSE"), grp("Calls (CE)", t => / CE$/.test(t.symbol)),
+  const g = [grp("NIFTY", t => ixOf(t) === "NIFTY"), grp("SENSEX", t => ixOf(t) === "SENSEX"), grp("BSE Ltd", t => ixOf(t) === "BSE"), grp("Adani Ent", t => ixOf(t) === "ADANIENT"), grp("Dixon", t => ixOf(t) === "DIXON"), grp("Calls (CE)", t => / CE$/.test(t.symbol)),
     grp("Puts (PE)", t => / PE$/.test(t.symbol)), grp("All option trades", t => true)];
   h += `<h2>NIFTY vs SENSEX · calls vs puts</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
     g.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td class="r">${r[2]}</td><td class="r">${r[3]}</td><td class="r ${cl(r[4])}"><b>${r[5] ? sgn(r[4]) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;

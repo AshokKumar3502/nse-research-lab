@@ -389,7 +389,7 @@ def evening():
         log("data checks failed: no swing picks tonight (the monitor halts publishing)")
     _step("monitor", lambda: monitor_run(log=log))
     _step("nifty option (final)", lambda: __import__("optionlab.nifty_orb", fromlist=["run"]).run(log=log))
-    for _ix in ("SENSEX", "BSE"):
+    for _ix in [i for i in __import__("optionlab.nifty_orb", fromlist=["INDEXES"]).INDEXES if i != "NIFTY"]:
         _step("%s option (final)" % _ix.lower(), lambda i=_ix: __import__("optionlab.nifty_orb", fromlist=["run"]).run(log=log, index=i))
     _step("paper trades", lambda: paper_update(db.connect(read_only=True), log=log))
     _step("site", site_build)

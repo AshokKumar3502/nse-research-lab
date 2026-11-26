@@ -38,6 +38,13 @@ INDEXES = {
     # BSE Ltd stock options (monthly expiry): the only F&O stock whose 2024-2026 backtest beat a random side
     "BSE": {"key": "NSE_EQ|INE118H01025", "step": 50, "segment": "NSE_FO", "name": "BSE LIMITED", "sl_from": dt.date(2026, 11, 27),
             "start": dt.date(2026, 11, 27), "file": "bse", "list": minute.INSTRUMENTS_URL, "id": "OB"},
+    # the two strongest of the next 15 F&O stocks (2022-2026 backtest), monthly stock options
+    "ADANIENT": {"key": "NSE_EQ|INE423A01024", "step": 50, "segment": "NSE_FO", "name": "ADANI ENTERPRISES LIMITED",
+                 "sl_from": dt.date(2026, 11, 27), "start": dt.date(2026, 11, 27), "file": "adanient",
+                 "list": minute.INSTRUMENTS_URL, "id": "OA"},
+    "DIXON": {"key": "NSE_EQ|INE935N01020", "step": 100, "segment": "NSE_FO", "name": "DIXON TECHNO (INDIA) LTD",
+              "sl_from": dt.date(2026, 11, 27), "start": dt.date(2026, 11, 27), "file": "dixon",
+              "list": minute.INSTRUMENTS_URL, "id": "OD"},
 }
 
 
