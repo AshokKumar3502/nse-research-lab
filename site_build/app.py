@@ -61,6 +61,13 @@ def updated_by():
 
 def collect():
     book = _j(os.path.join(DOCS, "paper.json")) or {"trades": [], "daily": [], "summary": {}}
+    for t in book.get("trades", []):          # option trades: results only in the app, no wording about the rule
+        if t.get("kind") == "option":
+            w = str(t.get("exit_reason") or "")
+            if w:
+                t["exit_reason"] = "Stop-loss" if w.startswith(("SL", "Stop")) else "Time exit" if "15:15" in w or w.startswith("Time") else w
+            n = str(t.get("sl_note") or "")
+            t["sl_note"] = n.replace("Option below Rs ", "Rs ")
     sw, it = _latest("swing-"), _latest("intraday-")
     ind = {}
     p = os.path.join(config.SETS, "industries", "all.parquet")
