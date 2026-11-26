@@ -39,7 +39,11 @@ IX = {"NIFTY": {"lot": LOT, "step": STEP, "out": OUT, "file": "nifty", "first": 
       "SENSEX": {"lot": 20, "step": 100, "out": os.path.join(config.ROOT, "docs", "data", "backtest-sensex.json"),
                  "file": "sensex", "first": dt.date(2023, 6, 1)},
       "BSE": {"lot": 200, "step": 50, "out": os.path.join(config.ROOT, "docs", "data", "backtest-bse.json"),
-              "file": "bse", "first": dt.date(2024, 12, 2), "symbol": "BSE"}}
+              "file": "bse", "first": dt.date(2024, 12, 2), "symbol": "BSE", "name": "BSE Ltd"},
+      "ADANIENT": {"lot": 309, "step": 50, "out": os.path.join(config.ROOT, "docs", "data", "backtest-adanient.json"),
+                   "file": "adanient", "first": dt.date(2022, 1, 3), "symbol": "ADANIENT", "name": "Adani Enterprises"},
+      "DIXON": {"lot": 50, "step": 100, "out": os.path.join(config.ROOT, "docs", "data", "backtest-dixon.json"),
+                "file": "dixon", "first": dt.date(2022, 1, 3), "symbol": "DIXON", "name": "Dixon Technologies"}}
 SNAP = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10]
 
 
@@ -308,7 +312,7 @@ def build(months=6, log=print, index="NIFTY"):
     con = db.connect(read_only=True)
     end = con.execute("SELECT max(date) FROM minute_bars WHERE symbol = 'NIFTY 50'").fetchone()[0]
     start = max((pd.Timestamp(end) - pd.DateOffset(months=months)).date(), IX[index]["first"])
-    rows = (replay_stock(con, start, end, index) if index == "BSE" else replay(con, start, end, index)) + real_trades(end, index)
+    rows = (replay_stock(con, start, end, index) if "symbol" in IX[index] else replay(con, start, end, index)) + real_trades(end, index)
     rows.sort(key=lambda r: r["date"])
     cum = 0
     for r in rows:
@@ -338,11 +342,12 @@ def build(months=6, log=print, index="NIFTY"):
                       "prices": ("Times and levels: real %s 1-minute prices. Option prices: a model set each day from "
                                  "NSE's real NIFTY option prices%s; 'real' days are the app's own paper trades on real option "
                                  "prices." % (index, " (no BSE option history, so SENSEX uses NIFTY's volatility and the "
-                                              "published weekly expiry day)" if index == "SENSEX" else "")) if index != "BSE" else
-                                ("Times and levels: real BSE Ltd 1-minute share prices (adjusted back to the traded price "
-                                 "around its 2025 bonus). Option prices: a model set each day from BSE Ltd's own real option "
-                                 "prices (NSE bhavcopy), nearest monthly expiry and listed strike; 1 lot = 200 shares today "
-                                 "(fewer shares before the bonus, same exposure). 'Real' days are the app's own paper trades."),
+                                              "published weekly expiry day)" if index == "SENSEX" else "")) if "symbol" not in IX[index] else
+                                ("Times and levels: real %s 1-minute share prices (adjusted back to the traded price "
+                                 "around any bonus or split). Option prices: a model set each day from the stock's own real "
+                                 "option prices (NSE bhavcopy), nearest monthly expiry and listed strike; 1 lot = %d shares "
+                                 "today (fewer shares before a bonus or split, same exposure). 'Real' days are the app's own "
+                                 "paper trades." % (IX[index]["name"], IX[index]["lot"])),
                       "bias": "The model flatters option buyers by about Rs %d-%d a trade (checked on real prices)." % BIAS,
                       "lot": IX[index]["lot"]},
            "summary": {"trading_days": sum(1 for r in rows if r["status"] != "holiday"), "trades": len(tr),
@@ -372,6 +377,6 @@ def build(months=6, log=print, index="NIFTY"):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--months", type=int, default=6)
-    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse"])
+    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon"])
     a = ap.parse_args()
     build(a.months, index=a.index.upper())
