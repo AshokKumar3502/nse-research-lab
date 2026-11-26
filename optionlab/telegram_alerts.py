@@ -216,6 +216,24 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
         print("\n".join(lines))
         print("sent" if ok else "NOT sent")
         sys.exit(0 if ok else 1)
+    if "--sample-targets" in sys.argv:   # entry with T1/T2/T3, the three target-hit cards, a status card (made-up numbers)
+        tg = [285.5, 329.0, 372.5]
+        hits = [{"t": 1, "at": "10:48", "price": 285.5}, {"t": 2, "at": "11:52", "price": 329.0}, {"t": 3, "at": "13:40", "price": 372.5}]
+        b = {"day": "SAMPLE", "index": "NIFTY", "range_high": 25850.5, "range_low": 25760.2, "symbol": "NIFTY 25800 CE",
+             "side": "CE", "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "SAMPLE 10:19",
+             "sl_option": 198.5, "sl_index": 25760.2, "status": "open", "targets": tg}
+        docs = [("entry", dict(b, target_hits=[], last=242.0, last_at="SAMPLE 10:19", gross=0.0))]
+        docs += [("t%d" % k, dict(b, target_hits=hits[:k], last=tg[k - 1], last_at="SAMPLE " + hits[k - 1]["at"],
+                                  gross=(tg[k - 1] - 242) * 65)) for k in (1, 2, 3)]
+        docs.append(("status", dict(b, target_hits=hits[:2], last=318.0, last_at="SAMPLE 12:30", gross=(318 - 242) * 65)))
+        send("SAMPLE TARGET ALERTS (made-up numbers): entry with T1/T2/T3, a card when each target is reached, and the "
+             "10-minute status with targets marked HIT. Targets are information only: the paper trade still exits at the "
+             "stop-loss or 15:15.")
+        ok = 0
+        for ev, d in docs:
+            ok += deliver(ev, dict(messages(d, set())).get(ev, ""), d)
+        print("sent %d of %d sample target cards" % (ok, len(docs)))
+        sys.exit(0 if ok == len(docs) else 1)
     if "--sample" in sys.argv:        # the five alert cards with made-up numbers, marked SAMPLE
         b = {"day": "SAMPLE", "range_high": 25850.5, "range_low": 25760.2, "symbol": "NIFTY 25800 CE", "side": "CE",
              "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "SAMPLE 10:19",
