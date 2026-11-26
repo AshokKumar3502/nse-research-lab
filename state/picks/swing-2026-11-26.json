@@ -1,0 +1,187 @@
+{
+ "session": "2026-11-26",
+ "made_at": "2026-11-26 17:32 IST",
+ "status": "VALIDATED",
+ "review": {
+  "verdict": "KEEP",
+  "problems": [],
+  "mean_pct": 0.907,
+  "t_offset0": 2.3
+ },
+ "regime": {
+  "nifty_above_ma200": true,
+  "breadth_ma50_pct": 58.5,
+  "exposure": 1.0
+ },
+ "model_backtest": {
+  "mean_pct": 1.0307,
+  "t": 2.3,
+  "win_days_pct": 57.4,
+  "verdict": "EDGE",
+  "years": {
+   "2019": 0.051,
+   "2020": 2.203,
+   "2021": 2.208,
+   "2022": -0.254,
+   "2023": 1.75,
+   "2024": 1.409,
+   "2025": -0.385,
+   "2026": 1.342
+  }
+ },
+ "tested_rule": "Buy at the next open, sell at the close of the 10th session. The 2-ATR stop is shown for reference only: in the test it lowered results (+0.66% vs +1.03% a period).",
+ "per_capital": 100000.0,
+ "picks": [
+  {
+   "symbol": "KEC",
+   "industry": "Construction",
+   "score_pct": 1.84,
+   "ref_close": 297.45,
+   "stop": 278.04,
+   "stop_pct": -6.53,
+   "use_stop": false,
+   "shares_per_lakh": 33,
+   "value_per_lakh": 9816,
+   "hold_sessions": 10,
+   "ret_20_pct": -12.0,
+   "rs_industry_20_pct": -15.0
+  },
+  {
+   "symbol": "INOXWIND",
+   "industry": "Construction",
+   "score_pct": 1.57,
+   "ref_close": 53.0,
+   "stop": 47.65,
+   "stop_pct": -10.1,
+   "use_stop": false,
+   "shares_per_lakh": 188,
+   "value_per_lakh": 9964,
+   "hold_sessions": 10,
+   "ret_20_pct": -10.2,
+   "rs_industry_20_pct": -13.1
+  },
+  {
+   "symbol": "THERMAX",
+   "industry": "Construction",
+   "score_pct": 1.55,
+   "ref_close": 2675.8,
+   "stop": 2449.2,
+   "stop_pct": -8.47,
+   "use_stop": false,
+   "shares_per_lakh": 3,
+   "value_per_lakh": 8027,
+   "hold_sessions": 10,
+   "ret_20_pct": -15.9,
+   "rs_industry_20_pct": -18.8
+  },
+  {
+   "symbol": "PIIND",
+   "industry": "Chemicals",
+   "score_pct": 1.33,
+   "ref_close": 1591.2,
+   "stop": 1509.01,
+   "stop_pct": -5.17,
+   "use_stop": false,
+   "shares_per_lakh": 6,
+   "value_per_lakh": 9547,
+   "hold_sessions": 10,
+   "ret_20_pct": -22.6,
+   "rs_industry_20_pct": -25.9
+  },
+  {
+   "symbol": "CUPID",
+   "industry": "Financial Services",
+   "score_pct": 1.26,
+   "ref_close": 371.1,
+   "stop": 341.96,
+   "stop_pct": -7.85,
+   "use_stop": false,
+   "shares_per_lakh": 26,
+   "value_per_lakh": 9649,
+   "hold_sessions": 10,
+   "ret_20_pct": 18.0,
+   "rs_industry_20_pct": 4.5
+  },
+  {
+   "symbol": "MARSONS",
+   "industry": "Oil Gas & Consumable Fuels",
+   "score_pct": 1.22,
+   "ref_close": 153.35,
+   "stop": 132.13,
+   "stop_pct": -13.84,
+   "use_stop": false,
+   "shares_per_lakh": 65,
+   "value_per_lakh": 9968,
+   "hold_sessions": 10,
+   "ret_20_pct": 24.8,
+   "rs_industry_20_pct": 13.7
+  },
+  {
+   "symbol": "HEGAM",
+   "industry": "Metals & Mining",
+   "score_pct": 1.21,
+   "ref_close": 280.99,
+   "stop": 249.98,
+   "stop_pct": -11.03,
+   "use_stop": false,
+   "shares_per_lakh": 35,
+   "value_per_lakh": 9835,
+   "hold_sessions": 10,
+   "ret_20_pct": 22.8,
+   "rs_industry_20_pct": 21.5
+  },
+  {
+   "symbol": "RAYMOND",
+   "industry": "Realty",
+   "score_pct": 0.98,
+   "ref_close": 1183.2,
+   "stop": 1077.09,
+   "stop_pct": -8.97,
+   "use_stop": false,
+   "shares_per_lakh": 8,
+   "value_per_lakh": 9466,
+   "hold_sessions": 10,
+   "ret_20_pct": 11.6,
+   "rs_industry_20_pct": -9.3
+  },
+  {
+   "symbol": "JSLL",
+   "industry": "Power",
+   "score_pct": 0.98,
+   "ref_close": 307.2,
+   "stop": 260.36,
+   "stop_pct": -15.25,
+   "use_stop": false,
+   "shares_per_lakh": 32,
+   "value_per_lakh": 9830,
+   "hold_sessions": 10,
+   "ret_20_pct": -11.0,
+   "rs_industry_20_pct": -16.9
+  },
+  {
+   "symbol": "SUNSHINE",
+   "industry": "UNKNOWN",
+   "score_pct": 0.82,
+   "ref_close": 525.8,
+   "stop": 466.64,
+   "stop_pct": -11.25,
+   "use_stop": false,
+   "shares_per_lakh": 19,
+   "value_per_lakh": 9990,
+   "hold_sessions": 10,
+   "ret_20_pct": 35.0,
+   "rs_industry_20_pct": null
+  }
+ ],
+ "rules_today": {
+  "sector_leaders": [
+   "PRESTIGE",
+   "GODREJPROP",
+   "HDFCBANK",
+   "LODHA",
+   "DLF"
+  ],
+  "results_jump": []
+ },
+ "universe": 494
+}
