@@ -142,3 +142,32 @@ def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
                  ("Exit · %s" % doc["exit_at"][11:], px(doc["exit"]), LGREEN if win else LRED)])
         return c.png(foot)
     raise ValueError(event)
+
+
+def watchlist_card(rows, day, foot="Paper trade · 1 lot each · Not investment advice"):
+    """One card listing every instrument: name, last close, lot, next expiry, ATM capital estimate, status.
+    rows: [(name, close, lot, expiry, status)]."""
+    h = 230 + 112 * len(rows) + 90
+    c = Card(BLUE, "WATCHLIST · %s" % day, "NEXT SESSION · %d TRADES" % len(rows),
+             "Alerts from 9:45: range set → GET READY → entry → status → exit")
+    c.im = c.im.resize((W, max(H, h)))
+    c.d = ImageDraw.Draw(c.im)
+    c.d.rectangle([0, 0, W, 170], fill=BLUE)
+    c.d.text((48, 30), "WATCHLIST · %s" % day, font=font(30, True), fill=(255, 255, 255))
+    c.d.text((48, 72), "NEXT SESSION · %d TO WATCH" % len(rows), font=font(56, True), fill=(255, 255, 255))
+    c.d.rectangle([0, 171, W, max(H, h)], fill=BG)
+    c.d.text((48, 200), "Alerts from 9:45: range set → GET READY → entry → status → exit", font=font(28), fill=MUTED)
+    y = 256
+    for name, close, lot, expiry, status in rows:
+        c.d.rounded_rectangle([48, y, W - 48, y + 96], 16, fill=PANEL, outline=LINE, width=2)
+        c.d.text((72, y + 14), name, font=font(36, True), fill=TEXT)
+        c.d.text((72, y + 58), "Lot %s · expiry %s" % (lot, expiry), font=font(24), fill=MUTED)
+        c.d.text((560, y + 14), format(close, ",.2f"), font=font(36, True), fill=TEXT)
+        c.d.text((560, y + 58), status, font=font(24, True), fill=LGREEN if status.startswith("FIRST") else AMBER)
+        y += 112
+    hh = max(H, h)
+    c.d.line([48, hh - 70, W - 48, hh - 70], fill=LINE, width=2)
+    c.d.text((48, hh - 52), foot, font=font(24), fill=MUTED)
+    b = io.BytesIO()
+    c.im.save(b, "PNG", optimize=True)
+    return b.getvalue()

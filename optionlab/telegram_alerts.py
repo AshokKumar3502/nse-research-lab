@@ -154,6 +154,32 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
                   "on trading days: the 9:45 range, the entry, a status every 10 minutes and the exit P&L.\n" + FOOT)
         print("sent" if ok else "NOT sent (check TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID, and press Start in the bot first)")
         sys.exit(0 if ok else 1)
+    if "--watchlist" in sys.argv:     # one card: every instrument the live job trades next session
+        import datetime as _dt
+        from warehouse import config as _cfg
+        from . import nifty_orb
+        from .telegram_cards import watchlist_card
+        today = _cfg.today_ist()
+        nxt = today + _dt.timedelta(days=1)
+        while nxt.weekday() >= 5:
+            nxt += _dt.timedelta(days=1)
+        names = {"NIFTY": "NIFTY 50", "BSE": "BSE Ltd", "ADANIENT": "Adani Ent", "DIXON": "Dixon"}
+        rows, lines = [], []
+        for ix, c in nifty_orb.INDEXES.items():
+            bars = nifty_orb.candles(c["key"], today)
+            cs = [x for x in nifty_orb.contracts(today, ix) if x["expiry"] > str(today)]
+            if not bars or not cs:
+                continue
+            e = min(x["expiry"] for x in cs)
+            lot = [x["lot"] for x in cs if x["expiry"] == e][0]
+            status = "FIRST DAY" if c.get("start") == nxt else "LIVE"
+            rows.append((names.get(ix, ix), bars[-1][4], lot, e, status))
+            lines.append("%s %s · lot %s · expiry %s · %s" % (names.get(ix, ix), format(bars[-1][4], ",.2f"), lot, e, status))
+        cap = "🔵 Watchlist for %s: %d to watch, alerts from 9:45\n%s" % (nxt.strftime("%a %d %b"), len(rows), FOOT)
+        ok = send_photo(watchlist_card(rows, nxt.strftime("%a %d %b %Y")), cap) or send(cap + "\n" + "\n".join(lines))
+        print("\n".join(lines))
+        print("sent" if ok else "NOT sent")
+        sys.exit(0 if ok else 1)
     if "--sample" in sys.argv:        # the five alert cards with made-up numbers, marked SAMPLE
         b = {"day": "SAMPLE", "range_high": 25850.5, "range_low": 25760.2, "symbol": "NIFTY 25800 CE", "side": "CE",
              "strike": 25800, "expiry": "2026-12-01", "lot": 65, "entry": 242.0, "entry_at": "SAMPLE 10:19",
