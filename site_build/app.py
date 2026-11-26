@@ -157,9 +157,15 @@ def build():
     notify = {"built": data["built"], "messages": msgs}
     with open(os.path.join(DOCS, "data", "notify.json"), "w", encoding="utf-8") as fh:
         json.dump(notify, fh)
-    manifest = {"name": "NIFTY Option Lab", "short_name": "NIFTY Options", "start_url": "./", "scope": "./", "display": "standalone",
-                "background_color": "#0b1220", "theme_color": "#0f766e",
-                "icons": [{"src": "logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]}
+    _icons()
+    with open(os.path.join(DOCS, "sw.js"), "w", encoding="utf-8") as fh:
+        fh.write(SW)
+    manifest = {"name": "NIFTY Option Lab", "short_name": "Option Lab", "start_url": "./", "scope": "./", "display": "standalone",
+                "orientation": "portrait", "background_color": "#070b16", "theme_color": "#0a0f1d",
+                "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                          {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+                          {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+                          {"src": "logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]}
     with open(os.path.join(DOCS, "manifest.webmanifest"), "w", encoding="utf-8") as fh:
         json.dump(manifest, fh)
     html = PAGE.replace("__DATA__", json.dumps(data, default=str).replace("</", "<\\/"))
@@ -168,11 +174,55 @@ def build():
     return os.path.join(DOCS, "index.html")
 
 
+SW = r"""// offline: network first, last good copy when offline (never serves stale pages while online)
+const C = "option-lab-v1";
+self.addEventListener("install", e => self.skipWaiting());
+self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
+self.addEventListener("fetch", e => {
+  const u = new URL(e.request.url);
+  if (e.request.method !== "GET" || !/^https?:/.test(u.protocol)) return;
+  e.respondWith(fetch(e.request).then(r => {
+    if (r.ok && (u.origin === location.origin || u.hostname === "raw.githubusercontent.com")) {
+      const c = r.clone(); caches.open(C).then(x => x.put(e.request.url.split("?")[0], c));
+    }
+    return r;
+  }).catch(() => caches.match(e.request.url.split("?")[0]).then(r => r || caches.match("./"))));
+});
+"""
+
+
+def _icons():
+    """App icons (PNG) for the home screen: gradient square with a rising line."""
+    try:
+        from PIL import Image, ImageDraw
+    except ImportError:
+        return
+    for n in (192, 512):
+        out = os.path.join(DOCS, "icon-%d.png" % n)
+        if os.path.exists(out):
+            continue
+        im = Image.new("RGB", (n, n))
+        px = im.load()
+        a, b = (99, 102, 241), (34, 211, 238)
+        for yy in range(n):
+            for xx in range(n):
+                t = (xx + yy) / (2 * n)
+                px[xx, yy] = tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+        d = ImageDraw.Draw(im)
+        w = max(4, n // 18)
+        pts = [(n * .18, n * .70), (n * .40, n * .48), (n * .55, n * .60), (n * .82, n * .28)]
+        d.line(pts, fill=(255, 255, 255), width=w, joint="curve")
+        r = w * 1.1
+        d.ellipse([n * .82 - r, n * .28 - r, n * .82 + r, n * .28 + r], fill=(255, 255, 255))
+        im.save(out, "PNG", optimize=True)
+
+
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>NIFTY Option Lab</title><meta name="description" content="Paper-trading dashboard: live option trades, results and backtests.">
 <meta name="theme-color" content="#0a0f1d"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"><link rel="icon" href="logo.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"><link rel="icon" href="logo.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Option Lab">
 <script>try{var t=localStorage.getItem("theme");if(t&&t!=="system")document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 :root{--bg:#f4f6fc;--surface:#ffffff;--surface2:#eef1f9;--surface3:#e4e9f5;--text:#0c1224;--muted:#5d6782;--line:#e2e7f2;
@@ -293,6 +343,19 @@ h3.month{display:flex;justify-content:space-between;margin:24px 2px 2px;font-siz
 .kv.kv4{grid-template-columns:repeat(4,1fr)}
 .btmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
 .btd{margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.6;background:var(--surface2);border-radius:12px;padding:9px 11px}
+/* crosshair, arrows, flash, ring, sheet nav */
+.chwrap{position:relative;touch-action:pan-y}.chtip{position:absolute;top:8px;pointer-events:none;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow2);border-radius:10px;padding:5px 9px;font:700 12px var(--mono);white-space:nowrap;transform:translateX(-50%);display:none}
+.arr{font-size:.7em;margin-right:4px;vertical-align:.12em}
+@keyframes flashup{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--up) 60%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+@keyframes flashdn{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--dn) 60%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+.flash-up{animation:flashup 1s ease-out}.flash-dn{animation:flashdn 1s ease-out}
+.glance{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;margin:4px 0 2px}
+.ring{width:118px;height:118px}.ring text{font-family:var(--mono)}
+.glg{display:grid;grid-template-columns:repeat(2,auto);gap:6px 18px;font-size:13px;justify-content:start}.glg span{display:inline-flex;align-items:center;gap:7px}.glg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.sumbar .sp{flex-basis:100%;height:46px;margin-top:2px}.sumbar .sp svg{width:100%;height:46px;display:block}
+.tdnav{display:flex;gap:6px}.tdnav button{border:0;background:rgba(255,255,255,.18);color:#fff;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer}.tdnav button[disabled]{opacity:.35}
+.tdpos{font-size:11.5px;opacity:.85;margin-top:2px}
+#install{display:none}
 /* market status bar */
 .mkt{max-width:1180px;margin:0 auto;padding:0 16px 8px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
 .mkt .st{display:inline-flex;align-items:center;gap:7px;font-weight:700;color:var(--text)}.mkt .st .dot{width:9px;height:9px}
@@ -423,6 +486,7 @@ const views = [["today", "Dashboard"], ["backtest", "Backtest"], ["compare", "Co
 $("nav.tabs").innerHTML = views.map(([k, l]) => `<button data-v="${k}">${l}</button>`).join("");
 $(".bnav").innerHTML = views.map(([k, l]) => `<button data-v="${k}" aria-label="${l}">${I[k]}<span>${{highs: "Highs", today: "Home"}[k] || l}</span></button>`).join("");
 function show(v) {
+  setTimeout(() => decorate(), 60);
   if (!views.some(x => x[0] === v)) v = "today";
   document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + v));
   document.querySelectorAll("[data-v]").forEach(b => { if (b.dataset.v === v) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
@@ -666,17 +730,47 @@ function tradeChart(t) {
   const st = small ? 60 : 30, ticks = []; for (let m = Math.ceil(x0 / st) * st; m <= x1; m += st) ticks.push(m);
   const poly = pts.map(p => `${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(" ");
   const mk = hm => +hm.slice(0, 2) * 60 + +hm.slice(3, 5);
-  return `<div class="chart" style="margin-top:12px"><svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Option price since entry">
+  CH = {pts, x0, x1, W, L, R, T, H, B, lo, hi, sp, entry: t.entry, qty: t.qty};
+  return `<div class="chart chwrap" style="margin-top:12px"><div class="chtip" id="chtip"></div><svg class="c" id="chsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Option price since entry · touch or hover to read the price">
     ${ticks.map(m => `<line class="g" x1="${x(m)}" x2="${x(m)}" y1="${T}" y2="${H - B}" stroke-dasharray="2 5"/><text class="ax" x="${x(m)}" y="${H - 8}" text-anchor="middle">${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}</text>`).join("")}
     ${line(t.sl_price, "var(--dn)", "SL", true)}${line(t.entry, "var(--muted)", "Entry", false)}
     ${tg.map((val, i) => (hits.some(h => h.t === i + 1) || val === nxt) ? line(val, "var(--up)", "T" + (i + 1), !hits.some(h => h.t === i + 1)) : "").join("")}
     <polygon points="${x(pts[0][0])},${y(t.entry)} ${poly} ${x(pts[pts.length - 1][0])},${y(t.entry)}" fill="${col}" opacity=".10"/>
     <polyline points="${poly}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
     ${hits.map(h => `<circle cx="${x(mk(h.at))}" cy="${y(h.price)}" r="5" fill="var(--up)" stroke="var(--surface)" stroke-width="2"><title>T${h.t} at ${h.at}</title></circle>`).join("")}
-    <circle cx="${x(pts[pts.length - 1][0])}" cy="${y(pts[pts.length - 1][1])}" r="5.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/></svg></div>`;
+    <circle cx="${x(pts[pts.length - 1][0])}" cy="${y(pts[pts.length - 1][1])}" r="5.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/>
+    <line id="chx" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--text)" stroke-width="1" opacity="0"/><circle id="chc" r="5" fill="var(--text)" opacity="0"/></svg></div>`;
 }
-function openTrade(id) {
+let CH = null;
+function chartRead(clientX) {
+  const svg = $("#chsvg"); if (!svg || !CH) return;
+  const b = svg.getBoundingClientRect(), vx = (clientX - b.left) / b.width * CH.W;
+  const m = CH.x0 + (vx - CH.L) / (CH.W - CH.L - CH.R) * (CH.x1 - CH.x0);
+  let best = CH.pts[0]; CH.pts.forEach(p => { if (Math.abs(p[0] - m) < Math.abs(best[0] - m)) best = p; });
+  const px = CH.L + (best[0] - CH.x0) / (CH.x1 - CH.x0) * (CH.W - CH.L - CH.R), py = CH.T + (CH.hi - best[1]) / CH.sp * (CH.H - CH.T - CH.B);
+  const hm = String(Math.floor(best[0] / 60)).padStart(2, "0") + ":" + String(best[0] % 60).padStart(2, "0"), pl = (best[1] - CH.entry) * CH.qty;
+  $("#chx").setAttribute("x1", px); $("#chx").setAttribute("x2", px); $("#chx").setAttribute("opacity", ".45");
+  $("#chc").setAttribute("cx", px); $("#chc").setAttribute("cy", py); $("#chc").setAttribute("opacity", "1");
+  const tip = $("#chtip"); tip.style.display = "block"; tip.style.left = Math.min(Math.max(px / CH.W * b.width, 60), b.width - 60) + "px";
+  tip.innerHTML = `${hm} · ${inr(best[1])} · <span class="${cl(pl)}">${sgn(pl)}</span>`;
+}
+function chartHide() { if (!$("#chsvg")) return; $("#chx").setAttribute("opacity", "0"); $("#chc").setAttribute("opacity", "0"); $("#chtip").style.display = "none"; }
+document.addEventListener("pointermove", e => { if (e.target.closest && e.target.closest("#chsvg")) chartRead(e.clientX); });
+document.addEventListener("pointerdown", e => { if (e.target.closest && e.target.closest("#chsvg")) chartRead(e.clientX); });
+document.addEventListener("pointerleave", e => chartHide(), true);
+document.addEventListener("touchmove", e => { if (e.target.closest && e.target.closest("#chsvg")) chartRead(e.touches[0].clientX); }, {passive: true});
+document.addEventListener("touchend", e => { if (e.target.closest && e.target.closest("#chsvg")) setTimeout(chartHide, 1500); });
+const tradeList = () => (D.trades || []).filter(x => x.kind === "option" && x.status !== "pending")
+  .sort((a, b) => b.signal_date.localeCompare(a.signal_date) || String(b.entry_at || "").localeCompare(String(a.entry_at || "")));
+let CUR = null;
+function stepTrade(d) {
+  const L = tradeList(), i = L.findIndex(x => x.id === CUR);
+  const n = L[i + d]; if (n) { openTrade(n.id, true); $("#tdbody").animate && $("#tdbody").animate([{transform: `translateX(${d > 0 ? 40 : -40}px)`, opacity: .3}, {transform: "none", opacity: 1}], {duration: 220, easing: "ease-out"}); }
+}
+function openTrade(id, keepOpen) {
   const t = (D.trades || []).find(x => x.id === id); if (!t) return;
+  CUR = id;
+  const LST = tradeList(), pos = LST.findIndex(x => x.id === id);
   const v = t.status === "closed" ? t.net : (t.gross || 0), cap = t.entry * t.qty;
   const hits = t.target_hits || [], tg = t.targets || [];
   const ev = [[tm(t.entry_at), "br", "Entry", inr(t.entry)]];
@@ -684,22 +778,25 @@ function openTrade(id) {
   if (t.status === "closed") ev.push([t.exit_time || tm(t.last_at), v >= 0 ? "up" : "dn", t.exit_reason || "Exit", inr(t.exit)]);
   else ev.push([tm(t.last_at), "", "Now (open)", inr(t.last)]);
   const ic = IXC[ixOf(t)] || "#6366f1";
-  $("#tdbody").innerHTML = `<div class="tdh" style="background:linear-gradient(135deg,${ic},color-mix(in srgb,${ic} 55%,#0a0f1d))"><span class="grab"></span><div><h3 id="tdh">${esc(t.symbol)}</h3><div style="font-size:12.5px;opacity:.9">${esc(fdl(t.signal_date))}${t.expiry ? " · expiry " + esc(fd(t.expiry)) : ""} · ${t.qty} qty (1 lot)</div></div>
-      <button class="x" type="button" aria-label="Close" data-close>×</button></div>
+  $("#tdbody").innerHTML = `<div class="tdh" style="background:linear-gradient(135deg,${ic},color-mix(in srgb,${ic} 55%,#0a0f1d))"><span class="grab"></span><div><h3 id="tdh">${esc(t.symbol)}</h3><div style="font-size:12.5px;opacity:.9">${esc(fdl(t.signal_date))}${t.expiry ? " · expiry " + esc(fd(t.expiry)) : ""} · ${t.qty} qty (1 lot)</div>${pos >= 0 ? `<div class="tdpos">Trade ${pos + 1} of ${LST.length} · swipe sideways for others</div>` : ""}</div>
+      <div class="tdnav"><button type="button" aria-label="Newer trade" data-step="-1" ${pos <= 0 ? "disabled" : ""}>‹</button><button type="button" aria-label="Older trade" data-step="1" ${pos < 0 || pos >= LST.length - 1 ? "disabled" : ""}>›</button>
+      <button class="x" type="button" aria-label="Close" data-close>×</button></div></div>
     <div class="tdb"><div class="row"><span class="pill ${t.status === "open" ? "p-warn" : v > 0 ? "p-up" : "p-dn"}">${t.status === "open" ? "Open" : v > 0 ? "Won" : "Lost"}</span>
       <span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:13px">${pct(v, cap)}</span></span></div>
     <div class="tdkv" style="margin-top:12px"><div>Entry · ${esc(tm(t.entry_at))}<b>${inr(t.entry)}</b></div><div>${t.status === "closed" ? "Exit" : "Now"} · ${esc(t.status === "closed" ? (t.exit_time || "") : tm(t.last_at))}<b class="${cl(v)}">${inr(t.status === "closed" ? t.exit : t.last)}</b></div>
-      <div>Stop-loss<b class="dn">${t.sl_price != null ? inr(t.sl_price) : esc(t.sl_note || "–")}</b></div><div>Capital<b>${inr(Math.round(cap))}</b></div></div>
+      <div>Stop-loss<b class="dn">${t.sl_price != null ? inr(t.sl_price) : esc(String(t.sl_note || "–").replace(/^Rs /, "₹"))}</b></div><div>Capital<b>${inr(Math.round(cap))}</b></div></div>
     ${tg.length ? `<div class="tdkv" style="margin-top:8px;grid-template-columns:repeat(3,1fr)">${tg.map((val, i) => { const h = hits.find(z => z.t === i + 1);
       return `<div>T${i + 1}${h ? " ✓ " + esc(h.at) : ""}<b class="${h ? "up" : ""}">${inr(val)}</b></div>`; }).join("")}</div>` : ""}
     ${tradeChart(t)}
     <h3 style="margin:16px 0 0;font-size:14px">Timeline</h3><ul class="tl">${ev.map(([a, c, l, r]) => `<li><span class="tm">${esc(a || "–")}</span><i class="${c}"></i><span>${esc(l)}</span><span class="r">${r}</span></li>`).join("")}</ul>
     <p class="muted" style="font-size:12px;margin:12px 0 0">Paper trade on real option prices · after ₹${Math.round(t.charges || 0).toLocaleString("en-IN")} charges · targets are information only.</p></div>`;
-  const dlg = $("#tradedlg"); if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+  const dlg = $("#tradedlg"); if (!dlg.open) { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", ""); }
+  decorate($("#tdbody"));
   location.hash.includes("trade=") || history.replaceState(null, "", location.hash + "");
 }
 document.addEventListener("click", e => {
   const tr = e.target.closest("[data-trade]"); if (tr) { openTrade(tr.dataset.trade); return; }
+  const stp = e.target.closest("[data-step]"); if (stp) { stepTrade(+stp.dataset.step); return; }
   if (e.target.closest("[data-close]") || e.target.id === "tradedlg") $("#tradedlg").close();
 });
 document.addEventListener("keydown", e => { const tr = e.target.closest && e.target.closest("[data-trade]"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openTrade(tr.dataset.trade); } });
@@ -729,6 +826,40 @@ async function realVsModel() {
       || `<tr><td colspan="7" class="muted">No real trades yet.</td></tr>`}</tbody></table></div>`;
 }
 
+// ---------- day's running P&L (all trades of the day, minute by minute from their price paths)
+function daySpark(ts) {
+  const ws = ts.filter(t => (t.path || []).length > 1); if (!ws.length) return "";
+  const mm = hm => +hm.slice(0, 2) * 60 + +hm.slice(3, 5);
+  const ser = ws.map(t => ({m: t.path.map(p => [mm(p[0]), (p[1] - t.entry) * t.qty]), fin: t.status === "closed" ? t.net : null}));
+  const a = Math.min(...ser.map(z => z.m[0][0])), b = Math.max(...ser.map(z => z.m[z.m.length - 1][0]));
+  const pts = [];
+  for (let m = a; m <= b; m += 2) {
+    let tot = 0;
+    ser.forEach(z => { if (m < z.m[0][0]) return; let v = z.m[0][1]; for (const q of z.m) { if (q[0] <= m) v = q[1]; else break; } if (m > z.m[z.m.length - 1][0] && z.fin != null) v = z.fin; tot += v; });
+    pts.push([m, tot]);
+  }
+  if (pts.length < 2) return "";
+  const lo = Math.min(0, ...pts.map(p => p[1])), hi = Math.max(0, ...pts.map(p => p[1])), sp = (hi - lo) || 1;
+  const x = m => (m - a) / ((b - a) || 1) * 300, y = v => 42 - (v - lo) / sp * 38;
+  return `<div class="sp" aria-hidden="true"><svg viewBox="0 0 300 46" preserveAspectRatio="none"><line x1="0" x2="300" y1="${y(0)}" y2="${y(0)}" stroke="rgba(255,255,255,.45)" stroke-dasharray="3 3"/>
+    <polyline points="${pts.map(p => x(p[0]).toFixed(1) + "," + y(p[1]).toFixed(1)).join(" ")}" fill="none" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>`;
+}
+// ---------- today at a glance: won / lost / open / waiting across the instruments
+function glance(ops, lastDay) {
+  const c = {won: 0, lost: 0, open: 0, wait: 0};
+  BOARD.forEach(([ix]) => {
+    const t = ops.filter(x => ixOf(x) === ix && x.signal_date === lastDay)[0];
+    if (!t) c.wait++; else if (t.status === "open") c.open++; else if (t.net > 0) c.won++; else c.lost++;
+  });
+  const segs = [["won", "var(--up)", "Won"], ["lost", "var(--dn)", "Lost"], ["open", "var(--warn)", "Open"], ["wait", "var(--surface3)", "No trade / waiting"]];
+  const tot = BOARD.length, R = 46, C = 2 * Math.PI * R;
+  let off = 0;
+  const arcs = segs.map(([k, col]) => { const len = c[k] / tot * C; const a = `<circle cx="59" cy="59" r="${R}" fill="none" stroke="${col}" stroke-width="14" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 59 59)"/>`; off += len; return a; }).join("");
+  return `<div class="card glance"><svg class="ring" viewBox="0 0 118 118" role="img" aria-label="${c.won} won, ${c.lost} lost, ${c.open} open, ${c.wait} no trade or waiting">${arcs}
+    <text x="59" y="56" text-anchor="middle" font-size="22" font-weight="700" fill="var(--text)">${c.won + c.lost + c.open}/${tot}</text><text x="59" y="74" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--sans)">traded</text></svg>
+    <div><b style="font-size:15px">Today at a glance${lastDay ? " · " + esc(fd(lastDay)) : ""}</b><div class="glg" style="margin-top:8px">${segs.map(([k, col, l]) => `<span><i style="background:${col}"></i>${l} <b class="num">${c[k]}</b></span>`).join("")}</div></div></div>`;
+}
+
 // ---------- LIVE BOARD (Today): one tile per instrument from the paper-trade data already in the app
 const IXC = {NIFTY: "#818cf8", SENSEX: "#22d3ee", BSE: "#f472b6", ADANIENT: "#fbbf24", DIXON: "#34d399", PNB: "#f97316"};
 const ixDot = ix => `<span class="ixd" style="--ix:${IXC[ix] || "var(--brand)"}" aria-hidden="true"></span>`;
@@ -751,7 +882,7 @@ function liveBoard() {
     <div><div class="k">Latest day${lastDay ? " · " + esc(fd(lastDay)) : ""}</div><div class="v">${lastDay ? sgn(dayTot) : "–"}</div></div>
     <div><div class="k">All paper trades</div><div class="v">${sgn(allTot)}</div></div>
     <div><div class="k">Open now</div><div class="v">${open}</div></div>
-    <div><div class="k">Trades</div><div class="v">${ops.length}</div></div></div>
+    <div><div class="k">Trades</div><div class="v">${ops.length}</div></div>${daySpark(ops.filter(t => t.signal_date === lastDay))}</div>${glance(ops, lastDay)}
     <h2 style="margin-top:14px">Live board<span class="sub">Latest paper trade for each instrument · tap a tile to open the trade</span></h2><div class="board">`;
   BOARD.forEach(([ix, name, id]) => {
     const ts = ops.filter(t => ixOf(t) === ix).sort((a, b) => a.signal_date.localeCompare(b.signal_date));
@@ -897,6 +1028,32 @@ document.addEventListener("click", e => {
   }
 });
 
+// ---------- numbers: up/down arrows, count-up when they change, a short glow on the tile
+const PREV = {};
+function parseRs(txt) { const m = String(txt).replace(/[,\s]/g, "").match(/([+−-]?)₹([\d.]+)/); return m ? (m[1] === "−" || m[1] === "-" ? -1 : 1) * parseFloat(m[2]) : null; }
+function fmtRs(v, signed) { return (signed ? (v > 0 ? "+" : v < 0 ? "−" : "") : "") + "₹" + Math.abs(Math.round(v)).toLocaleString("en-IN"); }
+function decorate(root) {
+  (root || document).querySelectorAll(".pnl, .tile .pl, .sumbar .v, .kpi .v").forEach((el, i) => {
+    if (el.dataset.dec) return;
+    el.dataset.dec = "1";
+    const txt = el.textContent.trim();
+    if (!/^[+−-]?₹[\d,]+$/.test(txt)) return;            // whole-rupee values only; prices and ranges stay as they are
+    const val = parseRs(txt), signed = /^[+−-]/.test(txt);
+    const dir = signed && val > 0 ? "▲" : signed && val < 0 ? "▼" : "";
+    const host = el.closest("[data-trade]"), sec = el.closest("section");
+    const key = (host ? host.dataset.trade : "") + "|" + (sec ? sec.id : "") + "|" + el.className + "|" + i;
+    const from = PREV[key];
+    PREV[key] = val;
+    const draw = v => { el.innerHTML = (dir ? `<span class="arr" aria-hidden="true">${dir}</span>` : "") + esc(fmtRs(v, signed)); };
+    const start = from == null ? (el.closest(".sumbar, .tile") ? 0 : val) : from;
+    if (reduceMotion() || start === val) { draw(val); return; }
+    const t0 = performance.now(), d = 700;
+    const step = now => { const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3); draw(start + (val - start) * e); if (k < 1) requestAnimationFrame(step); else draw(val); };
+    requestAnimationFrame(step);
+    const card = el.closest(".tile, .kpi");
+    if (card && from != null) { card.classList.remove("flash-up", "flash-dn"); void card.offsetWidth; card.classList.add(val > from ? "flash-up" : "flash-dn"); }
+  });
+}
 function renderAll() {
 U = D.updated || {at: D.built, by: "", next: null};
 $("#upd").textContent = "Updated " + U.at;
@@ -1141,7 +1298,7 @@ ODAILY = (() => {
 })();
 }
 let T = [], S = {};
-renderAll();
+renderAll(); decorate();
 show(location.hash.slice(1) || "today");
 
 // ---------- live prices: GitHub refreshes data/live.json every 10 minutes in market hours
@@ -1153,7 +1310,7 @@ async function pullLive() {
     const L = await r.json();
     if ((L.updated || {}).ts > ((D.updated || {}).ts || 0)) {
       const keep = location.hash.slice(1) || "today", y = window.scrollY;
-      D = L; renderAll(); show(keep); window.scrollTo(0, y); mkt();
+      D = L; renderAll(); show(keep); window.scrollTo(0, y); mkt(); decorate();
       return "new";
     }
     return "same";
@@ -1175,13 +1332,17 @@ function mkt() {
   const ts = (D.updated || {}).ts, mins = ts ? Math.max(0, Math.round((Date.now() / 1000 - ts) / 60)) : null;
   const ago = mins == null ? "" : mins < 1 ? "updated just now" : mins < 60 ? "updated " + mins + " min ago" : mins < 1440 ? "updated " + Math.round(mins / 60) + " h ago" : "updated " + Math.round(mins / 1440) + " d ago";
   $("#mkt").innerHTML = `<span class="st ${open ? "open" : ""}"><span class="dot"></span>${esc(st)}</span>${nx ? `<span class="sep nx">·</span><span class="nx">${esc(nx)}</span>` : ""}
-    <span class="ago">${esc(ago)}</span><button type="button" id="refresh" aria-label="Refresh now">↻ Refresh</button>`;
+    <span class="ago">${esc(ago)}</span><button type="button" id="install" aria-label="Install the app">⬇ Install</button><button type="button" id="refresh" aria-label="Refresh now">↻ Refresh</button>`;
+  if (INSTALL) { $("#install").style.display = "inline-block"; $("#install").onclick = async () => { INSTALL.prompt(); await INSTALL.userChoice; INSTALL = null; mkt(); }; }
   $("#refresh").onclick = async () => { const b = $("#refresh"); b.disabled = true; b.textContent = "…"; const r = await pullLive(); toast(r === "new" ? "Updated" : r === "same" ? "Already up to date" : "Could not refresh"); mkt(); };
 }
 function toast(msg) {
   const el = $("#ptr"); el.firstElementChild.textContent = msg; el.classList.add("show");
   clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1600);
 }
+let INSTALL = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); INSTALL = e; mkt(); });
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 mkt(); setInterval(mkt, 30 * 1000);
 // ---------- pull to refresh (phones): pull down at the top of the page
 (function () {
@@ -1204,6 +1365,14 @@ mkt(); setInterval(mkt, 30 * 1000);
 (function () {
   let y0 = null, dy = 0;
   const dlg = $("#tradedlg");
+  let sx = null, sy = null;
+  dlg.addEventListener("touchstart", e => { if (!e.target.closest("#chsvg")) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; } }, {passive: true});
+  dlg.addEventListener("touchend", e => {
+    if (sx == null) return;
+    const dx = e.changedTouches[0].clientX - sx, dyy = e.changedTouches[0].clientY - sy; sx = null;
+    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dyy) * 1.5) stepTrade(dx < 0 ? 1 : -1);
+  });
+  document.addEventListener("keydown", e => { if (dlg.open && (e.key === "ArrowRight" || e.key === "ArrowLeft")) stepTrade(e.key === "ArrowRight" ? 1 : -1); });
   dlg.addEventListener("touchstart", e => { if (e.target.closest(".tdh") && innerWidth < 560) { y0 = e.touches[0].clientY; dy = 0; dlg.style.transition = "none"; } }, {passive: true});
   dlg.addEventListener("touchmove", e => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); dlg.style.transform = `translateY(${dy}px)`; }, {passive: true});
   dlg.addEventListener("touchend", () => {
