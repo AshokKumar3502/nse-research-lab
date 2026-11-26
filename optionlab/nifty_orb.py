@@ -45,6 +45,10 @@ INDEXES = {
     "DIXON": {"key": "NSE_EQ|INE935N01020", "step": 100, "segment": "NSE_FO", "name": "DIXON TECHNO (INDIA) LTD",
               "sl_from": dt.date(2026, 11, 27), "start": dt.date(2026, 11, 27), "file": "dixon",
               "list": minute.INSTRUMENTS_URL, "id": "OD"},
+    # the one stock whose rule beat a random side in both 2022-24 and 2025-26 (and random lost money in both)
+    "PNB": {"key": "NSE_EQ|INE160A01022", "step": 1, "segment": "NSE_FO", "name": "PUNJAB NATIONAL BANK",
+            "sl_from": dt.date(2026, 11, 27), "start": dt.date(2026, 11, 27), "file": "pnb",
+            "list": minute.INSTRUMENTS_URL, "id": "OP"},
 }
 
 

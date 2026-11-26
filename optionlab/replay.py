@@ -43,7 +43,9 @@ IX = {"NIFTY": {"lot": LOT, "step": STEP, "out": OUT, "file": "nifty", "first": 
       "ADANIENT": {"lot": 309, "step": 50, "out": os.path.join(config.ROOT, "docs", "data", "backtest-adanient.json"),
                    "file": "adanient", "first": dt.date(2022, 1, 3), "symbol": "ADANIENT", "name": "Adani Enterprises"},
       "DIXON": {"lot": 50, "step": 100, "out": os.path.join(config.ROOT, "docs", "data", "backtest-dixon.json"),
-                "file": "dixon", "first": dt.date(2022, 1, 3), "symbol": "DIXON", "name": "Dixon Technologies"}}
+                "file": "dixon", "first": dt.date(2022, 1, 3), "symbol": "DIXON", "name": "Dixon Technologies"},
+      "PNB": {"lot": 8000, "step": 1, "out": os.path.join(config.ROOT, "docs", "data", "backtest-pnb.json"),
+              "file": "pnb", "first": dt.date(2022, 1, 3), "symbol": "PNB", "name": "Punjab National Bank"}}
 SNAP = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10]
 
 
@@ -377,6 +379,6 @@ def build(months=6, log=print, index="NIFTY"):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--months", type=int, default=6)
-    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon"])
+    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb"])
     a = ap.parse_args()
     build(a.months, index=a.index.upper())
