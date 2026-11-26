@@ -19,7 +19,7 @@ on:
       phase:
         description: "Which job"
         type: choice
-        options: [evening, morning]
+        options: [evening, morning, site]
         default: evening
       force:
         description: "Run even if already done today (and at weekends)"

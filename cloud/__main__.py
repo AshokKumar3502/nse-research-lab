@@ -427,6 +427,12 @@ def main(argv):
             return 0
         live()
         return 0
+    if cmd == "site":
+        # rebuild and publish the app only (after an app change): no sync, picks, paper-book update or done marker
+        from site_build.build import build as site_build
+        prepare()
+        _step("site", site_build)
+        return 0
     if cmd == "export":
         export()
         return 0
