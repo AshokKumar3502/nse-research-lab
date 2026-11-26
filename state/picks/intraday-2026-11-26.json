@@ -1,0 +1,163 @@
+{
+ "day": "2026-11-26",
+ "decision_time": "09:30",
+ "made_at": "09:30:58 IST",
+ "status": "PAPER ONLY: the walk-forward test has not shown an edge",
+ "model_report": {
+  "from": "2022-01-03",
+  "to": "2026-11-19",
+  "best": {
+   "strategy": "model_short_close",
+   "verdict": "NO EDGE"
+  }
+ },
+ "universe": 218,
+ "missing_keys": [],
+ "long": [
+  {
+   "symbol": "ENRIN",
+   "side": "long",
+   "score": 0.407,
+   "ref_price": 3118.8,
+   "stop": 3100.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 32,
+   "exposure_per_lakh": 99802,
+   "risk_to_stop_rs_per_lakh": 602,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "GODREJCP",
+   "side": "long",
+   "score": 0.242,
+   "ref_price": 939.1,
+   "stop": 934.5,
+   "flat_by": "15:10",
+   "shares_per_lakh": 106,
+   "exposure_per_lakh": 99545,
+   "risk_to_stop_rs_per_lakh": 488,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "PIIND",
+   "side": "long",
+   "score": 0.231,
+   "ref_price": 1595.0,
+   "stop": 1571.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 62,
+   "exposure_per_lakh": 98890,
+   "risk_to_stop_rs_per_lakh": 1488,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "DABUR",
+   "side": "long",
+   "score": 0.229,
+   "ref_price": 419.6,
+   "stop": 417.4,
+   "flat_by": "15:10",
+   "shares_per_lakh": 238,
+   "exposure_per_lakh": 99865,
+   "risk_to_stop_rs_per_lakh": 524,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  },
+  {
+   "symbol": "DMART",
+   "side": "long",
+   "score": 0.193,
+   "ref_price": 3563.1,
+   "stop": 3555.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 28,
+   "exposure_per_lakh": 99767,
+   "risk_to_stop_rs_per_lakh": 227,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.1823
+  }
+ ],
+ "short": [
+  {
+   "symbol": "KFINTECH",
+   "side": "short",
+   "score": -0.316,
+   "ref_price": 966.95,
+   "stop": 967.3,
+   "flat_by": "15:10",
+   "shares_per_lakh": 103,
+   "exposure_per_lakh": 99596,
+   "risk_to_stop_rs_per_lakh": 36,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "AXISBANK",
+   "side": "short",
+   "score": -0.198,
+   "ref_price": 1430.2,
+   "stop": 1445.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 69,
+   "exposure_per_lakh": 98684,
+   "risk_to_stop_rs_per_lakh": 1021,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "SIEMENS",
+   "side": "short",
+   "score": -0.178,
+   "ref_price": 3638.9,
+   "stop": 3677.7,
+   "flat_by": "15:10",
+   "shares_per_lakh": 27,
+   "exposure_per_lakh": 98250,
+   "risk_to_stop_rs_per_lakh": 1048,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "BSE",
+   "side": "short",
+   "score": -0.169,
+   "ref_price": 3896.9,
+   "stop": 3898.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 25,
+   "exposure_per_lakh": 97422,
+   "risk_to_stop_rs_per_lakh": 27,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  },
+  {
+   "symbol": "POLICYBZR",
+   "side": "short",
+   "score": -0.155,
+   "ref_price": 1149.0,
+   "stop": 1151.0,
+   "flat_by": "15:10",
+   "shares_per_lakh": 87,
+   "exposure_per_lakh": 99963,
+   "risk_to_stop_rs_per_lakh": 174,
+   "verdict": "NO EDGE",
+   "backtest_mean_net_pct": -0.0584
+  }
+ ],
+ "blocked": {},
+ "per_capital": 100000.0,
+ "leverage": 5.0,
+ "leverage_effect": {
+  "long": {
+   "backtest_pct_per_day_on_exposure": -0.1823,
+   "pct_per_day_on_capital": -0.911
+  },
+  "short": {
+   "backtest_pct_per_day_on_exposure": -0.0584,
+   "pct_per_day_on_capital": -0.292
+  }
+ }
+}
