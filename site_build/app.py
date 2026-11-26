@@ -505,7 +505,9 @@ function renderBacktest() {
     ["Avg win / loss", `<span class="nw">${sgn(S.avg_win)}</span> / <span class="nw">${sgn(S.avg_loss)}</span>`, "", "per trade"],
     ["Capital a trade", inr(S.capital_avg), "", "average · highest " + inr(S.capital_max)],
     ["Worst fall", sgn(S.max_drawdown), "dn", "from a peak · worst day " + sgn(S.worst)],
-    ["If sold at the high", S.high_net != null ? sgn(S.high_net) : "–", cl(S.high_net), "hindsight best · vs actual " + sgn(S.net)]];
+    ["If sold at the high", S.high_net != null ? sgn(S.high_net) : "–", cl(S.high_net), "hindsight best · vs actual " + sgn(S.net)],
+    ["Targets reached", (() => { const r = tgRates(BT.days); return r ? r.map((v, i) => "T" + (i + 1) + " " + v + "%").join(" · ") : "–"; })(), "",
+     "before the stop · T = entry + 1/2/3 × risk"]];
   let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(IXN[BT.index] || BT.index || "NIFTY")} 9:45 range breakout · 1 lot (${M.lot || 65}${["BSE", "ADANIENT", "DIXON", "PNB"].includes(BT.index) ? " shares" : ""}) a day · after charges</span></h2>${ixSeg()}
     <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
       <p style="margin:6px 0 0">${esc(M.rule || "")}</p><p style="margin:6px 0 0">${esc(M.prices || "")} ${esc(M.bias || "")}
@@ -581,7 +583,7 @@ function drawBacktest() {
         <span class="pill ${sl ? "p-dn" : "p-mute"}">${sl ? "Stop-loss" : "15:15 exit"}</span>${d.source === "real" ? `<span class="pill p-info">Real prices</span>` : ""}${d.expiry_day ? `<span class="pill p-warn">Expiry day</span>` : ""}</div>
       <div class="kv kv4"><div>Entry · ${esc(d.entry_time)}<b>${inr(d.entry)}</b></div><div>Exit · ${esc(d.exit_time)}<b>${inr(d.exit)}</b></div>
         <div>Capital<b>${inr(d.capital)}</b></div><div>Total so far<b class="${cl(d.cum)}">${sgn(d.cum)}</b></div></div>
-      ${d.high != null ? `<div class="kv kv4"><div>High · ${esc(d.high_time)}<b>${inr(d.high)}</b></div><div>P&L at the high<b class="${cl(d.high_pnl)}">${sgn(d.high_pnl)}</b></div>
+      ${tgRow(d)}${d.high != null ? `<div class="kv kv4"><div>High · ${esc(d.high_time)}<b>${inr(d.high)}</b></div><div>P&L at the high<b class="${cl(d.high_pnl)}">${sgn(d.high_pnl)}</b></div>
         <div>P&L at exit<b class="${cl(d.pnl)}">${sgn(d.pnl)}</b></div><div>Left on table<b class="muted">${sgn(d.high_pnl - d.pnl)}</b></div></div>` : ""}
       <button type="button" class="linkbtn" data-btd aria-expanded="false" aria-controls="${id}">Details</button>
       <div class="btd" id="${id}" hidden>9:15–9:45 range ${d.range_low ?? "–"} – ${d.range_high ?? "–"}${d.nifty_entry ? `<br>${esc(BT.index || "NIFTY")} ${d.nifty_entry} → ${d.nifty_exit} (${d.nifty_pts >= 0 ? d.nifty_pts + " pts in the trade's favour" : Math.abs(d.nifty_pts) + " pts against the trade"})` : ""}
@@ -595,6 +597,17 @@ function drawBacktest() {
   if (more) more.onclick = () => { BTF.limit += 30; drawBacktest(); const n = $("#btmore"); (n || $("#btsum")).focus(); };
 }
 
+
+// ---------- TARGETS (information only): T1/T2/T3 = entry + 1/2/3 x (entry - the option's 9:15-9:45 low)
+const tgOf = d => d.status === "closed" && d.high != null && d.sl_option != null && d.sl_option < d.entry ? [1, 2, 3].map(k => d.entry + k * (d.entry - d.sl_option)) : null;
+function tgRates(days) {
+  const ok = days.filter(tgOf);
+  return ok.length ? [0, 1, 2].map(i => Math.round(ok.filter(d => d.high >= tgOf(d)[i]).length / ok.length * 100)) : null;
+}
+function tgRow(d) {
+  const tg = tgOf(d); if (!tg) return "";
+  return `<div class="kv">${tg.map((v, i) => `<div>T${i + 1}${d.high >= v ? " ✓" : ""}<b class="${d.high >= v ? "up" : ""}">${inr(Math.round(v * 100) / 100)}</b></div>`).join("")}</div>`;
+}
 
 // ---------- LIVE BOARD (Today): one tile per instrument from the paper-trade data already in the app
 const BOARD = [["NIFTY", "NIFTY 50", "option"], ["SENSEX", "SENSEX", "sensex"], ["BSE", "BSE Ltd", "bse"], ["ADANIENT", "Adani Ent", "adanient"], ["DIXON", "Dixon", "dixon"], ["PNB", "PNB", "pnb"]];
@@ -630,7 +643,7 @@ function liveBoard() {
       <div class="sy">${t ? esc(t.symbol) + " · " + esc(fd(t.signal_date)) : "No trades yet"}</div>
       <div class="pl ${cl(v)}">${t ? sgn(v) : "–"}</div>
       ${spark(cum, cum.length && cum[cum.length - 1] < 0 ? "var(--dn)" : "var(--up)")}
-      <div class="ind" style="margin-top:2px">${ts.length} trade${ts.length === 1 ? "" : "s"} · total ${ts.length ? sgn(cum[cum.length - 1]) : "–"}</div></div>`;
+      <div class="ind" style="margin-top:2px">${t && t.targets ? [1, 2, 3].map(k => (t.target_hits || []).some(x => x.t === k) ? `<b class="up">T${k}✓</b>` : `T${k}`).join(" ") + " · " : ""}${ts.length} trade${ts.length === 1 ? "" : "s"} · total ${ts.length ? sgn(cum[cum.length - 1]) : "–"}</div></div>`;
   });
   return h + `</div>`;
 }
@@ -817,7 +830,9 @@ $("#lastupd").innerHTML = `<span class="dot up"></span>Last updated <b>${esc(U.a
       ob += `<div class="grid"><div class="card pick ${v >= 0 ? "win" : "loss"}"><div class="row"><div><span class="sym">${esc(op.symbol)}</span><div class="ind">${esc(op.industry)}</div></div>
         <span class="pill ${op.status === "open" ? "p-warn" : v >= 0 ? "p-up" : "p-dn"}">${op.status === "open" ? "Open" : "Closed"}</span></div>
         <div class="kv"><div>Entry · ${esc(when(op.entry_at))}<b>${inr(op.entry)}</b></div><div>${op.status === "closed" ? "Exit" : "Now"} · ${esc(tm(op.last_at))}<b>${inr(op.last)}</b></div><div>SL<b class="dn" style="font-size:12.5px">${esc(op.sl_note)}</b></div></div>
-        <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}</div>
+        ${op.targets ? `<div class="kv">${op.targets.map((v, i) => { const h = (op.target_hits || []).find(x => x.t === i + 1);
+          return `<div>T${i + 1}${h ? " ✓ " + esc(h.at) : ""}<b class="${h ? "up" : ""}">${inr(v)}</b></div>`; }).join("")}</div>` : ""}
+        <div class="ind" style="margin-top:6px">${op.qty} qty (1 lot)${op.exit_reason ? " · " + esc(op.exit_reason) : ""}${op.opt_high ? " · high " + inr(op.opt_high) + " at " + esc(op.opt_high_at) : ""} · targets are information only</div>
         <div class="row" style="margin-top:10px"><span class="muted" style="font-size:12.5px">${op.status === "open" ? "P&L now" : "Net P&L"}</span><span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:12.5px">${pct(v, op.entry * op.qty)}</span></span></div></div></div>`; }
     sec(id, (IXT[ix] || ix) + " option", "9:15–9:45 range breakout · ATM call or put · SL = the option's own 9:15–9:45 low · exit 15:15 · 1 lot"
       + (ix === "SENSEX" ? " (20 qty) · BSE weekly options" : ix !== "NIFTY" ? " · stock options, monthly expiry" : "") + " · paper only", op ? 1 : 0, ob);

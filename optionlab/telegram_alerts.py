@@ -58,7 +58,7 @@ def send_photo(png, caption):
         return False
 
 
-CAPTION = {"near_high": "🟡 GET READY: {ix} near its range HIGH (call side)", "near_low": "🟡 GET READY: {ix} near its range LOW (put side)",
+CAPTION = {"t1": "🎯 T1 HIT: {sym}", "t2": "🎯🎯 T2 HIT: {sym}", "t3": "🎯🎯🎯 T3 HIT: {sym}", "near_high": "🟡 GET READY: {ix} near its range HIGH (call side)", "near_low": "🟡 GET READY: {ix} near its range LOW (put side)",
            "range": "🔵 {ix} 9:45 range set: waiting for a breakout", "no trade": "⚪ {ix}: no trade today",
            "status": "🔵 Live update", "entry": "{dot} NEW SIGNAL: BUY {sym}", "exit": "{dot} CLOSED {sym}: {res}"}
 
@@ -76,6 +76,33 @@ def deliver(event, text, doc):
     except Exception:      # noqa: BLE001  (no Pillow, bad data): fall back to text
         pass
     return send(text)
+
+
+_RATES = {}
+
+
+def hit_rates(index):
+    """Share of past backtest trades that reached T1/T2/T3 before the stop (from docs/data/backtest*.json)."""
+    if index in _RATES:
+        return _RATES[index]
+    name = {"NIFTY": "backtest.json"}.get(index, "backtest-%s.json" % index.lower())
+    out = None
+    try:
+        with open(os.path.join(config.ROOT, "docs", "data", name), encoding="utf-8") as fh:
+            days = [d for d in json.load(fh)["days"] if d.get("status") == "closed" and d.get("high") is not None
+                    and d.get("sl_option") is not None and d["sl_option"] < d["entry"]]
+        if days:
+            out = [round(sum(1 for d in days if d["high"] >= d["entry"] + k * (d["entry"] - d["sl_option"])) / len(days) * 100)
+                   for k in (1, 2, 3)]
+    except (OSError, ValueError, KeyError):
+        pass
+    _RATES[index] = out
+    return out
+
+
+def _tline(doc):
+    tg, got = doc.get("targets") or [], {h["t"] for h in doc.get("target_hits") or []}
+    return " · ".join("T%d Rs %s%s" % (i + 1, format(v, ",.2f"), " ✓" if i + 1 in got else "") for i, v in enumerate(tg))
 
 
 def _rs(x):
@@ -107,11 +134,20 @@ def messages(doc, sent):
     sl = ("option below Rs %s" % doc["sl_option"]) if doc.get("sl_option") else \
         "%s %s %s" % (ix, "below" if doc["side"] == "CE" else "above", format(doc["sl_index"], ",.2f"))
     if "entry" not in sent:
-        out.append(("entry", "BUY %s (expiry %s)\nEntry Rs %s at %s, 1 lot (%d qty)\nCapital about Rs %s\nStop-loss: %s\nExit: 15:15 if the stop-loss is not hit\n%s"
-                    % (sym, doc["expiry"], doc["entry"], doc["entry_at"][11:], lot, format(round(doc["entry"] * lot), ","), sl, FOOT)))
+        hr = hit_rates(ix)
+        out.append(("entry", "BUY %s (expiry %s)\nEntry Rs %s at %s, 1 lot (%d qty)\nCapital about Rs %s\nStop-loss: %s\nTargets: %s%s\n"
+                    "Exit: 15:15 if the stop-loss is not hit (targets are information only)\n%s"
+                    % (sym, doc["expiry"], doc["entry"], doc["entry_at"][11:], lot, format(round(doc["entry"] * lot), ","), sl,
+                       _tline(doc), ("\nReached in past trades: T1 %d%% · T2 %d%% · T3 %d%%" % tuple(hr)) if hr else "", FOOT)))
+    for h in doc.get("target_hits") or []:
+        if "t%d" % h["t"] not in sent:
+            out.append(("t%d" % h["t"], "TARGET %d HIT: %s at %s\nTarget Rs %s (entry Rs %s): %s for 1 lot before charges\n%s\n"
+                        "The paper trade keeps holding to 15:15 or the stop-loss (targets are information only).\n%s"
+                        % (h["t"], sym, h["at"], format(h["price"], ",.2f"), doc["entry"], _rs((h["price"] - doc["entry"]) * lot),
+                           _tline(doc), FOOT)))
     if st == "open":
-        out.append(("status", "%s %s\nEntry Rs %s, now Rs %s\nP&L %s (1 lot, before charges)\nStop-loss: %s\n%s"
-                    % (doc["last_at"][11:], sym, doc["entry"], doc["last"], _rs(doc["gross"]), sl, FOOT)))
+        out.append(("status", "%s %s\nEntry Rs %s, now Rs %s\nP&L %s (1 lot, before charges)\nStop-loss: %s\nTargets: %s\n%s"
+                    % (doc["last_at"][11:], sym, doc["entry"], doc["last"], _rs(doc["gross"]), sl, _tline(doc), FOOT)))
     elif "exit" not in sent:
         out.append(("exit", "%s %s\nEntry Rs %s at %s, exit Rs %s at %s\nReason: %s\nNet P&L %s (1 lot, after Rs %s charges)\n%s"
                     % ("PROFIT" if doc["net"] > 0 else "LOSS", sym, doc["entry"], doc["entry_at"][11:], doc["exit"],

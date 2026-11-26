@@ -123,6 +123,8 @@ def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
                  ("Exit", "15:15", AMBER)])
         if doc.get("sl_option"):
             c.line("Max loss at stop-loss ≈ %s" % rs((doc["sl_option"] - doc["entry"]) * lot, True), LRED, 30, True)
+        if doc.get("targets"):
+            c.line("Targets  T1 %s · T2 %s · T3 %s" % tuple(px(v) for v in doc["targets"]), LGREEN, 30, True)
         return c.png(foot)
     if event == "status":
         g = doc["gross"]
@@ -131,6 +133,19 @@ def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
         c.big("P&L now (1 lot, before charges)", "%s   (%+.1f%%)" % (rs(g, True), (doc["last"] / doc["entry"] - 1) * 100), col)
         c.boxes([("Entry", px(doc["entry"]), TEXT), ("Now", px(doc["last"]), col),
                  ("Stop-loss", _sl(doc), LRED), ("Exit", "15:15", AMBER)], cols=4, h=120)
+        if doc.get("targets"):
+            got = {h["t"] for h in doc.get("target_hits") or []}
+            c.line("  ".join("T%d %s%s" % (i + 1, px(v), " HIT" if i + 1 in got else "") for i, v in enumerate(doc["targets"])), LGREEN, 28, True)
+        return c.png(foot)
+    if event in ("t1", "t2", "t3"):
+        k = int(event[1])
+        h = [x for x in doc.get("target_hits") or [] if x["t"] == k][0]
+        got = {x["t"] for x in doc.get("target_hits") or []}
+        c = Card(GREEN, "TARGET HIT · %s · %s" % (day, h["at"]), "T%d REACHED  %s" % (k, doc["symbol"]),
+                 "Information only: the paper trade holds to 15:15 or the stop-loss")
+        c.big("P&L at T%d (1 lot, before charges)" % k, rs((h["price"] - doc["entry"]) * lot, True), LGREEN)
+        c.boxes([("Entry", px(doc["entry"]), TEXT)] + [("T%d%s" % (i + 1, " HIT" if i + 1 in got else ""), px(v), LGREEN if i + 1 in got else MUTED)
+                                                      for i, v in enumerate(doc["targets"])], cols=4, h=120)
         return c.png(foot)
     if event == "exit":
         n = doc["net"]

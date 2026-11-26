@@ -188,6 +188,20 @@ def run(day=None, log=print, index="NIFTY"):
     if doc["status"] == "open":
         last = opt[max(opt)]
         doc.update(last=last[4], last_at="%s %s" % (day, (last[0] + dt.timedelta(minutes=1)).strftime("%H:%M")))
+    # T1/T2/T3 = entry + 1/2/3 x risk (information only: the paper trade still exits at the stop-loss or 15:15)
+    risk = (entry - opt_low) if opt_low is not None else entry * 0.3
+    tg = [round(entry + k * risk, 2) for k in (1, 2, 3)]
+    end = doc.get("exit_at") or "%s 23:59" % day
+    hits, best, best_at = [], entry, doc["entry_at"][11:]
+    for t in sorted(opt):
+        if t < ob[0] or "%s %s" % (day, t.strftime("%H:%M")) > end:
+            continue
+        b = opt[t]
+        if b[2] > best:
+            best, best_at = b[2], t.strftime("%H:%M")
+        while len(hits) < 3 and b[2] >= tg[len(hits)]:
+            hits.append({"t": len(hits) + 1, "at": t.strftime("%H:%M"), "price": tg[len(hits)]})
+    doc.update(targets=tg, target_hits=hits, opt_high=best, opt_high_at=best_at)
     doc["gross"] = round((doc["last"] - entry) * c["lot"], 2)
     doc["charges"] = charges(entry, doc["last"], c["lot"]) if doc["status"] == "closed" else 0.0
     doc["net"] = round(doc["gross"] - doc["charges"], 2)
@@ -214,7 +228,8 @@ def trades():
                     "exit": d.get("exit"), "exit_reason": d.get("why"),
                     "exit_time": (d.get("exit_at") or "")[11:] or None,
                     "last": d["last"], "last_at": d["last_at"], "gross": d["gross"], "charges": d["charges"],
-                    "net": d["net"], "flag": None,
+                    "net": d["net"], "flag": None, "targets": d.get("targets"), "target_hits": d.get("target_hits") or [],
+                    "opt_high": d.get("opt_high"), "opt_high_at": d.get("opt_high_at"),
                     "marks": [{"date": d["day"], "session": 1, "close": d["last"], "mark": d["last"],
                                "at": d["last_at"][11:], "day_pnl": d["gross"], "total_pnl": d["gross"]}]})
     return out
