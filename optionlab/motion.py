@@ -219,6 +219,10 @@ def scene_trade(doc, idx, total):
         d.rounded_rectangle([x0 + 50, 470, x0 + 50 + pw, 524], 27, fill=UP if call else DN)
         d.text((x0 + 72, 478), pill, font=F(30), fill=(10, 14, 24))
         d.text((x0 + 80 + pw, 480), "Entry %s at %s" % (format(entry, ",.2f"), doc["entry_at"][11:16]), font=F(34, False), fill=MUTED)
+        nr = [n for n in doc.get("near") or [] if n["side"] == doc.get("side")]
+        if nr:
+            d.text((x0 + 50, 548), "Be ready %s · %s side · strike %s" % (nr[0]["at"], "call" if call else "put", format(nr[0]["strike"], "g")),
+                   font=F(30, False), fill=AMB)
         dx = x0 - 70                                  # chart moves with the card
         yv = lambda v: CY1 - (v - lo) / (hi - lo) * (CY1 - CY0)
         # level lines
@@ -355,6 +359,54 @@ def scene_outro(day):
     return draw
 
 
+def timeline_events(docs):
+    """Every alert of the day in time order: (time, ix, tag, detail, colour)."""
+    ev = []
+    for x in docs:
+        ix = x.get("index", "NIFTY")
+        for n in x.get("near") or []:
+            ev.append((n["at"], ix, "BE READY", "%s side · %s %s" % ("CALL" if n["side"] == "CE" else "PUT",
+                                                                   format(n["strike"], "g"), n["side"]), AMB))
+        if x.get("status") in ("open", "closed"):
+            call = x["side"] == "CE"
+            ev.append((x["entry_at"][11:16], ix, "ENTRY", "BUY %s %s @ %s" % (format(x["strike"], "g"), x["side"],
+                                                                            format(x["entry"], ",.2f")), UP if call else DN))
+            for h in x.get("target_hits") or []:
+                ev.append((h["at"], ix, "TARGET %d" % h["t"], "%s %s hit %s" % (format(x["strike"], "g"), x["side"],
+                                                                             format(h["price"], ",.2f")), UP))
+            if x.get("status") == "closed":
+                pl = x.get("net") or 0
+                ev.append(((x.get("exit_at") or "")[11:16], ix, "EXIT", "%s %s out %s · %s" % (
+                    format(x["strike"], "g"), x["side"], format(x.get("exit") or 0, ",.2f"), rs(pl)), UP if pl > 0 else DN))
+    return sorted(ev, key=lambda e: (e[0], e[1]))
+
+
+def scene_timeline(rows, page, pages):
+    def draw(im, frame, t):
+        header(im, "Alerts timeline" + ("  %d/%d" % (page + 1, pages) if pages > 1 else ""), frame, t)
+        d = ImageDraw.Draw(im)
+        d.line([(196, 330), (196, 330 + len(rows) * 172 - 40)], fill=LINE, width=4)
+        for i, (hm, ix, tag, det, col) in enumerate(rows):
+            k = eo(seg(t, 0.05 + i * 0.09, 0.3 + i * 0.09))
+            if k <= 0:
+                continue
+            y = 330 + i * 172
+            x = 70 + int(180 * (1 - k))
+            d.text((70, y + 30), hm, font=F(36), fill=MUTED)
+            r = int(16 * eb(seg(t, 0.05 + i * 0.09, 0.25 + i * 0.09)))
+            d.ellipse([196 - r, y + 52 - r, 196 + r, y + 52 + r], fill=col)
+            d.rounded_rectangle([x + 170, y, W - 70, y + 148], 24, fill=PANEL, outline=LINE, width=2)
+            d.rounded_rectangle([x + 170, y, x + 182, y + 148], 6, fill=IXC.get(ix, GRAD[0]))
+            d.text((x + 206, y + 20), NAMES.get(ix, ix), font=F(36), fill=TEXT)
+            tw = text_w(d, tag, F(26)) + 30
+            tx = W - 100 - tw
+            d.rounded_rectangle([tx, y + 22, tx + tw, y + 64], 21, fill=col)
+            d.text((tx + 15, y + 28), tag, font=F(26), fill=(10, 14, 24))
+            d.text((x + 206, y + 84), det, font=F(32, False), fill=TEXT)
+        footer(im)
+    return draw
+
+
 # ---------------------------------------------------------------- render
 def make(day, docs, out_path, watch_rows=None):
     exe = _ffmpeg()
@@ -374,6 +426,10 @@ def make(day, docs, out_path, watch_rows=None):
     scenes = [(scene_intro(day, len(trades)), 2.6)]
     if wl:
         scenes.append((scene_watch(wl), 3.4))
+    ev = timeline_events(docs)
+    page = 7
+    pages = [ev[i:i + page] for i in range(0, len(ev), page)]
+    scenes += [(scene_timeline(rows, i, len(pages)), 1.0 + 0.45 * len(rows)) for i, rows in enumerate(pages)]
     per = 3.6 if len(trades) <= 4 else 3.1
     scenes += [(scene_trade(x, i, len(trades)), per) for i, x in enumerate(trades)]
     scenes += [(scene_scores(items), 4.0), (scene_total(total, won, lost, len(docs) - len(trades), day.toordinal()), 3.6),

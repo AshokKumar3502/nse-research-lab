@@ -29,6 +29,7 @@ OPTION_SL_FROM = dt.date(2026, 11, 26)
 INDEX_KEY = "NSE_INDEX|Nifty 50"
 # T1/T2/T3 = entry + these multiples of the risk (entry - stop); 25% closer than 1/2/3 from 26 Nov 2026
 TARGET_R = (0.75, 1.5, 2.25)
+NEAR = 0.001          # "be ready" when the index is within 0.1% of its range edge (same as the Telegram alert)
 CANDLES = "https://api.upstox.com/v3/historical-candle/intraday/%s/minutes/1"
 PICKS = os.path.join(config.DATA, "picks")
 # the same rule on SENSEX (BSE weekly options), paper traded from 26 Nov 2026
@@ -133,14 +134,20 @@ def run(day=None, log=print, index="NIFTY"):
     doc.update(range_high=round(hi, 2), range_low=round(lo, 2), step=ix["step"],
                index_last=round(idx[-1][4], 2), index_last_at=(idx[-1][0] + dt.timedelta(minutes=1)).strftime("%H:%M"))
     sig = None
+    near = []                                    # "be ready": first minute within NEAR of each edge, before any entry
     for i, b in enumerate(idx):
         if b[0].time() < RANGE_END:
             continue
         if b[0].time() >= LAST_ENTRY or i + 1 >= len(idx):
             break
+        for side, gap, edge in (("CE", hi - b[4], hi), ("PE", b[4] - lo, lo)):
+            if 0 <= gap <= b[4] * NEAR and side not in {x["side"] for x in near}:
+                near.append({"side": side, "at": (b[0] + dt.timedelta(minutes=1)).strftime("%H:%M"), "price": round(b[4], 2),
+                             "edge": round(edge, 2), "strike": round(edge / ix["step"]) * ix["step"]})
         if b[4] > hi or b[4] < lo:
             sig = (i + 1, "CE" if b[4] > hi else "PE", b[0])
             break
+    doc["near"] = near
     if sig is None:
         done = now.time() >= dt.time(13, 1)
         doc.update(status="no trade" if done else "waiting",
