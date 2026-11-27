@@ -37,6 +37,55 @@ def send(text):
         return False
 
 
+def send_video(path, caption):
+    """Send an mp4 (the daily reel) with a caption. False if it could not be sent."""
+    tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN", ""), os.environ.get("TELEGRAM_CHAT_ID", "")
+    if not (tok and chat) or not os.path.exists(path):
+        return False
+    bnd = "----reel%s" % uuid.uuid4().hex
+    with open(path, "rb") as fh:
+        blob = fh.read()
+    parts = [("--%s\r\nContent-Disposition: form-data; name=\"%s\"\r\n\r\n%s\r\n" % (bnd, k, v)).encode("utf-8")
+             for k, v in (("chat_id", chat), ("caption", caption), ("supports_streaming", "true"), ("width", "1080"), ("height", "1920"))]
+    parts.append(("--%s\r\nContent-Disposition: form-data; name=\"video\"; filename=\"%s\"\r\nContent-Type: video/mp4\r\n\r\n"
+                  % (bnd, os.path.basename(path))).encode() + blob + b"\r\n")
+    parts.append(("--%s--\r\n" % bnd).encode())
+    req = urllib.request.Request("https://api.telegram.org/bot%s/sendVideo" % tok, b"".join(parts),
+                                 {"Content-Type": "multipart/form-data; boundary=%s" % bnd})
+    try:
+        urllib.request.urlopen(req, timeout=120).read()
+        return True
+    except OSError:
+        return False
+
+
+def send_reel(day, docs, log=print, force=False, note=""):
+    """Make the day's reel and send it to the channel once (state/picks/telegram-reel-DATE.json)."""
+    import tempfile
+    from . import reel
+    p = os.path.join(STATE, "telegram-reel-%s.json" % day)
+    if os.path.exists(p) and not force:
+        return False
+    out = os.path.join(tempfile.mkdtemp(), "option-lab-%s.mp4" % day)
+    try:
+        made = reel.make(day, docs, out, watch_rows=reel.watchlist_rows(day))
+    except Exception as e:     # noqa: BLE001
+        log("reel: %s" % e)
+        return False
+    if not made:
+        log("reel: nothing to make (or no ffmpeg)")
+        return False
+    _rows, _lines, total = board_rows([reel.public(d) for d in docs])
+    cap = "🎬 Daily reel · %s · total %s\n%sReady for Instagram (9:16). %s" % (day.strftime("%d %b %Y"), _rs(total), note, FOOT)
+    ok = send_video(made, cap)
+    if ok and not force:
+        os.makedirs(STATE, exist_ok=True)
+        with open(p, "w", encoding="utf-8") as fh:
+            json.dump({"sent": True}, fh)
+    log("reel: %s (%d KB)" % ("sent" if ok else "NOT sent", os.path.getsize(made) // 1024))
+    return ok
+
+
 def send_photo(png, caption):
     """Send a PNG card with a short caption (multipart upload). False if it could not be sent."""
     tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN", ""), os.environ.get("TELEGRAM_CHAT_ID", "")
@@ -178,7 +227,7 @@ def board_rows(docs):
                      line=("Range %s – %s · now %s" % (format(lo, ",.2f"), format(hi, ",.2f"), format(last, ",.2f"))) if hi else
                      (doc.get("note") or "Range builds 9:15–9:45"))
         elif st == "no trade":
-            r.update(tag="NO TRADE", tag_colour=GREY, line=doc.get("note") or "No breakout by 13:00")
+            r.update(tag="NO TRADE", tag_colour=GREY, line="No trade today" if doc.get("public") else (doc.get("note") or "No breakout by 13:00"))
         elif st in ("open", "closed"):
             side = doc["symbol"].split(" ", 1)[1] if " " in doc["symbol"] else doc["symbol"]
             v = doc["gross"] if st == "open" else doc["net"]
@@ -190,7 +239,7 @@ def board_rows(docs):
             else:
                 tag, colour = ("WON" if v > 0 else "LOST"), (GREEN if v > 0 else RED)
                 line = "%s · in %s @ %s → out %s @ %s · %s" % (side, doc["entry"], doc["entry_at"][11:], doc["exit"],
-                                                             doc["exit_at"][11:], "SL" if str(doc.get("why", "")).startswith("SL") else "15:15")
+                                                             doc["exit_at"][11:], "SL" if str(doc.get("why", "")).startswith("SL") else ("time exit" if doc.get("public") else "15:15"))
             got = {h["t"]: h["at"] for h in doc.get("target_hits") or []}
             r.update(tag=tag, tag_colour=colour, line=line, pnl=v,
                      targets=[("T%d %s%s" % (i + 1, format(p, ",.2f"), " HIT " + got[i + 1] if i + 1 in got else ""), i + 1 in got)
@@ -335,6 +384,26 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
                 print(ix, e)
         ok = board(docs, force=True)
         print("board", "sent" if ok else "NOT sent", [(d.get("index"), d.get("status")) for d in docs])
+        sys.exit(0 if ok else 1)
+    if "--reel" in sys.argv:           # the daily reel for the last trading day, computed now from real prices
+        import datetime as _dt
+        import tempfile
+        from . import nifty_orb
+        nifty_orb.PICKS = tempfile.mkdtemp()
+        day = config.today_ist()
+        if _dt.datetime.now(config.IST).time() < _dt.time(15, 20):
+            day -= _dt.timedelta(days=1)
+        while day.weekday() >= 5:
+            day -= _dt.timedelta(days=1)
+        note = ""
+        if "--preview" in sys.argv:
+            for c in nifty_orb.INDEXES.values():
+                c.pop("start", None)
+                c["sl_from"] = min(c["sl_from"], day)
+            note = "PREVIEW with real prices. "
+        docs = [nifty_orb.run(day, log=lambda *a: None, index=ix) for ix in nifty_orb.INDEXES]
+        ok = send_reel(day, docs, force=True, note=note)
+        print("reel", "sent" if ok else "NOT sent")
         sys.exit(0 if ok else 1)
     if "--sample-targets" in sys.argv:   # entry with T1/T2/T3, the three target-hit cards, a status card (made-up numbers)
         tg = [274.63, 307.25, 339.88]

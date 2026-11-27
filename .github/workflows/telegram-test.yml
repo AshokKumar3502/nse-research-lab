@@ -24,11 +24,15 @@ on:
         description: "Send sample instant alerts (GET READY + entry)"
         type: boolean
         default: false
+      reel:
+        description: "Send the last trading day's reel (preview: all six)"
+        type: boolean
+        default: false
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -43,4 +47,6 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m optionlab.telegram_alerts ${{ inputs.instant && '--sample-instant' || inputs.board && '--board --preview' || inputs.targets && '--sample-targets' || (inputs.watchlist && '--watchlist' || (inputs.sample && '--sample' || '--test')) }}
+      - name: ffmpeg (for the daily reel)
+        run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+      - run: python -m optionlab.telegram_alerts ${{ inputs.reel && '--reel --preview' || inputs.instant && '--sample-instant' || inputs.board && '--board --preview' || inputs.targets && '--sample-targets' || (inputs.watchlist && '--watchlist' || (inputs.sample && '--sample' || '--test')) }}

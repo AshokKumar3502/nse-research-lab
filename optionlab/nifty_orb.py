@@ -59,6 +59,11 @@ def _path(day, index="NIFTY"):
 
 
 def candles(key, day):
+    if day < config.today_ist():               # a past day: the intraday feed only has today, use the history feed
+        try:                                     # (expired option contracts are not in the history feed)
+            return sorted((r[1], float(r[2]), float(r[3]), float(r[4]), float(r[5])) for r in minute.fetch_upstox(key, day, day))
+        except OSError:
+            return []
     minute._throttle()
     doc = net.get_json(CANDLES % urllib.parse.quote(key, safe=""))
     out = []

@@ -356,6 +356,12 @@ def live(every_min=10, until=(15, 20)):
         now = datetime.datetime.now(config.IST)
         if now.time() >= stop:
             log("live updates done for today (the evening job settles the day)")
+            try:                                   # the day's reel (9:16 video) to the Telegram channel, once
+                rdocs = [nifty_orb.run(log=lambda *a: None, index=ix) for ix in nifty_orb.INDEXES]
+                telegram_alerts.send_reel(config.today_ist(), rdocs, log=log)
+                _git_push(["state/picks"], "Daily reel %s" % config.today_ist())
+            except Exception as e:     # noqa: BLE001
+                log("reel: %s" % e)
             break
         nxt = now + datetime.timedelta(minutes=every_min)
         nxt = nxt.replace(minute=nxt.minute - nxt.minute % every_min, second=5, microsecond=0)
