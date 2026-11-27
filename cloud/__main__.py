@@ -404,6 +404,12 @@ def evening():
     for _ix in [i for i in __import__("optionlab.nifty_orb", fromlist=["INDEXES"]).INDEXES if i != "NIFTY"]:
         _step("%s option (final)" % _ix.lower(), lambda i=_ix: __import__("optionlab.nifty_orb", fromlist=["run"]).run(log=log, index=i))
     _step("real vs model", lambda: __import__("optionlab.replay", fromlist=["real_vs_model"]).real_vs_model(log=log))
+
+    def _reel_backup():                          # the day's video, if the 15:20 live job did not send it
+        from optionlab import nifty_orb, telegram_alerts
+        day = session_day("evening")
+        telegram_alerts.send_reel(day, [nifty_orb.run(day, log=lambda *a: None, index=ix) for ix in nifty_orb.INDEXES], log=log)
+    _step("daily reel (backup)", _reel_backup)
     _step("paper trades", lambda: paper_update(db.connect(read_only=True), log=log))
     _step("site", site_build)
     persist()
