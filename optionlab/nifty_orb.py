@@ -59,9 +59,6 @@ INDEXES = {
     "BAJFINANCE": {"key": "NSE_EQ|INE296A01032", "step": 10, "segment": "NSE_FO", "name": "BAJAJ FINANCE LIMITED",
                    "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "bajfinance",
                    "list": minute.INSTRUMENTS_URL, "id": "OF"},
-    "TCS": {"key": "NSE_EQ|INE467B01029", "step": 20, "segment": "NSE_FO", "name": "TATA CONSULTANCY SERV LT",
-            "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "tcs",
-            "list": minute.INSTRUMENTS_URL, "id": "OT"},
 }
 
 

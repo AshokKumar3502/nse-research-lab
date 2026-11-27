@@ -49,9 +49,7 @@ IX = {"NIFTY": {"lot": LOT, "step": STEP, "out": OUT, "file": "nifty", "first": 
       "LAURUSLABS": {"lot": 425, "step": 20, "out": os.path.join(config.ROOT, "docs", "data", "backtest-lauruslabs.json"),
                      "file": "lauruslabs", "first": dt.date(2022, 1, 3), "symbol": "LAURUSLABS", "name": "Laurus Labs"},
       "BAJFINANCE": {"lot": 750, "step": 10, "out": os.path.join(config.ROOT, "docs", "data", "backtest-bajfinance.json"),
-                     "file": "bajfinance", "first": dt.date(2022, 1, 3), "symbol": "BAJFINANCE", "name": "Bajaj Finance"},
-      "TCS": {"lot": 225, "step": 20, "out": os.path.join(config.ROOT, "docs", "data", "backtest-tcs.json"),
-              "file": "tcs", "first": dt.date(2022, 1, 3), "symbol": "TCS", "name": "TCS"}}
+                     "file": "bajfinance", "first": dt.date(2022, 1, 3), "symbol": "BAJFINANCE", "name": "Bajaj Finance"}}
 SNAP = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10]
 
 
@@ -463,7 +461,7 @@ def build(months=6, log=print, index="NIFTY", rows=None):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--months", type=int, default=6)
-    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb", "lauruslabs", "bajfinance", "tcs", "all"])
+    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb", "lauruslabs", "bajfinance", "all"])
     ap.add_argument("--extend", action="store_true", help="add only the new days to the existing files")
     a = ap.parse_args()
     for ix in (list(IX) if a.index == "all" else [a.index.upper()]):
