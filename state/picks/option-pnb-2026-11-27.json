@@ -1,0 +1,8 @@
+{
+ "day": "2026-11-27",
+ "index": "PNB",
+ "status": "waiting",
+ "updated": "00:18",
+ "rule": "PNB 9:15-9:45 range breakout, ATM option, SL = the option's own 9:15-9:45 low, exit 15:15",
+ "note": "The range builds from 9:15 to 9:45"
+}

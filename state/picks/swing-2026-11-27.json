@@ -1,0 +1,186 @@
+{
+ "session": "2026-11-27",
+ "made_at": "2026-11-28 00:18 IST",
+ "status": "VALIDATED",
+ "review": {
+  "verdict": "KEEP",
+  "problems": [],
+  "mean_pct": 0.907,
+  "t_offset0": 2.3
+ },
+ "regime": {
+  "nifty_above_ma200": true,
+  "breadth_ma50_pct": 59.1,
+  "exposure": 1.0
+ },
+ "model_backtest": {
+  "mean_pct": 1.0307,
+  "t": 2.3,
+  "win_days_pct": 57.4,
+  "verdict": "EDGE",
+  "years": {
+   "2019": 0.051,
+   "2020": 2.203,
+   "2021": 2.208,
+   "2022": -0.254,
+   "2023": 1.75,
+   "2024": 1.409,
+   "2025": -0.385,
+   "2026": 1.342
+  }
+ },
+ "tested_rule": "Buy at the next open, sell at the close of the 10th session. The 2-ATR stop is shown for reference only: in the test it lowered results (+0.66% vs +1.03% a period).",
+ "per_capital": 100000.0,
+ "picks": [
+  {
+   "symbol": "KEC",
+   "industry": "Construction",
+   "score_pct": 2.46,
+   "ref_close": 292.45,
+   "stop": 273.31,
+   "stop_pct": -6.55,
+   "use_stop": false,
+   "shares_per_lakh": 34,
+   "value_per_lakh": 9943,
+   "hold_sessions": 10,
+   "ret_20_pct": -14.9,
+   "rs_industry_20_pct": -17.5
+  },
+  {
+   "symbol": "INOXWIND",
+   "industry": "Construction",
+   "score_pct": 2.12,
+   "ref_close": 53.35,
+   "stop": 48.18,
+   "stop_pct": -9.69,
+   "use_stop": false,
+   "shares_per_lakh": 187,
+   "value_per_lakh": 9976,
+   "hold_sessions": 10,
+   "ret_20_pct": -9.9,
+   "rs_industry_20_pct": -12.4
+  },
+  {
+   "symbol": "PIIND",
+   "industry": "Chemicals",
+   "score_pct": 1.76,
+   "ref_close": 1606.0,
+   "stop": 1526.41,
+   "stop_pct": -4.96,
+   "use_stop": false,
+   "shares_per_lakh": 6,
+   "value_per_lakh": 9636,
+   "hold_sessions": 10,
+   "ret_20_pct": -23.9,
+   "rs_industry_20_pct": -27.2
+  },
+  {
+   "symbol": "THERMAX",
+   "industry": "Construction",
+   "score_pct": 1.62,
+   "ref_close": 2722.3,
+   "stop": 2578.16,
+   "stop_pct": -5.29,
+   "use_stop": false,
+   "shares_per_lakh": 3,
+   "value_per_lakh": 8167,
+   "hold_sessions": 10,
+   "ret_20_pct": -14.7,
+   "rs_industry_20_pct": -17.3
+  },
+  {
+   "symbol": "RAYMOND",
+   "industry": "Realty",
+   "score_pct": 1.27,
+   "ref_close": 1278.6,
+   "stop": 1165.74,
+   "stop_pct": -8.83,
+   "use_stop": false,
+   "shares_per_lakh": 7,
+   "value_per_lakh": 8950,
+   "hold_sessions": 10,
+   "ret_20_pct": 16.0,
+   "rs_industry_20_pct": 0.0
+  },
+  {
+   "symbol": "MARSONS",
+   "industry": "Oil Gas & Consumable Fuels",
+   "score_pct": 1.09,
+   "ref_close": 153.81,
+   "stop": 133.36,
+   "stop_pct": -13.3,
+   "use_stop": false,
+   "shares_per_lakh": 65,
+   "value_per_lakh": 9998,
+   "hold_sessions": 10,
+   "ret_20_pct": 24.0,
+   "rs_industry_20_pct": 12.5
+  },
+  {
+   "symbol": "HEGAM",
+   "industry": "Metals & Mining",
+   "score_pct": 0.95,
+   "ref_close": 285.79,
+   "stop": 255.9,
+   "stop_pct": -10.46,
+   "use_stop": false,
+   "shares_per_lakh": 34,
+   "value_per_lakh": 9717,
+   "hold_sessions": 10,
+   "ret_20_pct": 17.4,
+   "rs_industry_20_pct": 14.4
+  },
+  {
+   "symbol": "STYLEBAAZA",
+   "industry": "Capital Goods",
+   "score_pct": 0.94,
+   "ref_close": 511.7,
+   "stop": 456.07,
+   "stop_pct": -10.87,
+   "use_stop": false,
+   "shares_per_lakh": 19,
+   "value_per_lakh": 9722,
+   "hold_sessions": 10,
+   "ret_20_pct": 40.1,
+   "rs_industry_20_pct": 40.0
+  },
+  {
+   "symbol": "KPITTECH",
+   "industry": "Information Technology",
+   "score_pct": 0.92,
+   "ref_close": 520.0,
+   "stop": 488.08,
+   "stop_pct": -6.14,
+   "use_stop": false,
+   "shares_per_lakh": 19,
+   "value_per_lakh": 9880,
+   "hold_sessions": 10,
+   "ret_20_pct": -4.4,
+   "rs_industry_20_pct": -5.6
+  },
+  {
+   "symbol": "CUPID",
+   "industry": "Financial Services",
+   "score_pct": 0.88,
+   "ref_close": 389.5,
+   "stop": 358.26,
+   "stop_pct": -8.02,
+   "use_stop": false,
+   "shares_per_lakh": 25,
+   "value_per_lakh": 9738,
+   "hold_sessions": 10,
+   "ret_20_pct": 21.7,
+   "rs_industry_20_pct": 11.4
+  }
+ ],
+ "rules_today": {
+  "sector_leaders": [
+   "HDFCBANK",
+   "PRESTIGE",
+   "LODHA",
+   "RAYMOND"
+  ],
+  "results_jump": []
+ },
+ "universe": 494
+}
