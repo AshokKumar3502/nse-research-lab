@@ -376,6 +376,24 @@ h3.month{display:flex;justify-content:space-between;margin:24px 2px 2px;font-siz
 .tdnav{display:flex;gap:6px}.tdnav button{border:0;background:rgba(255,255,255,.18);color:#fff;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer}.tdnav button[disabled]{opacity:.35}
 .tdpos{font-size:11.5px;opacity:.85;margin-top:2px}
 #install{display:none}
+/* collapsible sections + year chips */
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:18px;margin:14px 0;box-shadow:var(--shadow);overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:14px 46px 14px 16px;display:flex;flex-direction:column;gap:2px;position:relative}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary .t{font-weight:800;font-size:16.5px;letter-spacing:-.01em}
+details.acc>summary .sub{font-size:12.5px;color:var(--muted)}
+details.acc>summary::after{content:"";position:absolute;right:20px;top:22px;width:9px;height:9px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+details.acc[open]>summary::after{transform:rotate(-135deg);top:26px}
+details.acc>summary:hover{background:var(--surface2)}
+.accb{padding:0 12px 14px}.accb .list{box-shadow:none}
+.chipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin:6px 0 12px}
+.chipgrid button{font:inherit;font-size:13px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:9px 11px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
+.chipgrid button:hover{border-color:var(--brand)}
+.chipgrid button[aria-pressed=true]{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 3px 10px var(--glow)}
+.chipgrid .n{font-family:var(--mono);font-size:12px}.chipgrid button[aria-pressed=true] .n{color:#fff}
+@media (max-width:420px){.accb .list>table{min-width:0}.accb th,.accb td{padding:8px 6px;font-size:12px}.chipgrid{grid-template-columns:repeat(3,1fr)}.chipgrid button{padding:8px 9px;font-size:12.5px}.chipgrid .n{font-size:11px}
+ table.fit th,table.fit td{padding:8px 6px;font-size:12px}table.fit{min-width:0!important}table.fit th:nth-child(5),table.fit td:nth-child(5){display:none}}
 /* instrument picker */
 .ixpick{display:inline-flex;align-items:center;gap:10px;font:inherit;font-weight:800;font-size:15px;color:var(--text);background:var(--surface);border:1px solid var(--line);
   border-left:4px solid var(--ix);border-radius:14px;padding:10px 14px;cursor:pointer;box-shadow:var(--shadow)}
@@ -548,7 +566,8 @@ window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 
 
 // ---------- EXIT VS HIGH: actual exit P&L vs selling at the trade's high (hindsight), from the backtest file
-const HF = {year: "all", limit: 30};
+const PG = innerWidth < 640 ? 10 : 30;          // days shown at a time (fewer on phones)
+const HF = {year: "all", limit: PG};
 async function loadHighs() {
   const box = $("#v-highs");
   if (!BTS[BTI]) {
@@ -571,12 +590,10 @@ async function loadHighs() {
       <div class="card kpi"><div class="l">If sold at the high</div><div class="v ${cl(hi)}">${sgn(hi)}</div><div class="s">hindsight best</div></div>
       <div class="card kpi"><div class="l">Left on the table</div><div class="v">${sgn(hi - act)}</div><div class="s">avg ${sgn((hi - act) / Math.max(1, tr.length))} a trade</div></div>
       <div class="card kpi"><div class="l">Trades that were in profit</div><div class="v">${Math.round(tr.filter(d => d.high_pnl > 0).length / Math.max(1, tr.length) * 100)}%</div><div class="s">at some point after entry</div></div></div>
-    <h2>By year</h2><div class="list"><table><caption class="sr">Actual vs at the high by year</caption><thead><tr><th scope="col">Year</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Actual</th><th scope="col" class="r">At the high</th><th scope="col" class="r">Left</th></tr></thead><tbody>${
-      Object.keys(yrs).sort().map(y => `<tr><td>${y}</td><td class="r">${yrs[y].n}</td><td class="r ${cl(yrs[y].a)}"><b>${sgn(yrs[y].a)}</b></td><td class="r ${cl(yrs[y].h)}">${sgn(yrs[y].h)}</td><td class="r muted">${sgn(yrs[y].h - yrs[y].a)}</td></tr>`).join("")}</tbody></table></div>
-    <h2>When the high came<span class="sub">Number of trades whose best price was in each hour</span></h2>
-    <div class="list">${Object.keys(hrs).sort().map(hh => `<div class="li"><div><b>${hh}:00–${hh}:59</b><div class="prog" style="margin-top:6px"><i style="width:${(hrs[hh] / hmax * 100).toFixed(0)}%"></i></div></div><span class="r">${hrs[hh]}</span></div>`).join("")}</div>
-    <h2>When the high came · every 15 minutes<span class="sub">Trades whose best price was in each 15-minute slot · bar = all trades · W = winning trades, L = losing trades</span></h2>
-    <div class="list">${(() => {
+    ${acc("hi-year", "By year", "Actual P&L vs selling at the high, year by year", `<div class="list"><table class="fit"><caption class="sr">Actual vs at the high by year</caption><thead><tr><th scope="col">Year</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Actual</th><th scope="col" class="r">At the high</th><th scope="col" class="r">Left</th></tr></thead><tbody>${
+      Object.keys(yrs).sort().map(y => `<tr><td>${y}</td><td class="r">${yrs[y].n}</td><td class="r ${cl(yrs[y].a)}"><b>${sgn(yrs[y].a)}</b></td><td class="r ${cl(yrs[y].h)}">${sgn(yrs[y].h)}</td><td class="r muted">${sgn(yrs[y].h - yrs[y].a)}</td></tr>`).join("")}</tbody></table></div>`, false)}
+    ${acc("hi-hour", "When the high came · by hour", "Number of trades whose best price was in each hour", `<div class="list">${Object.keys(hrs).sort().map(hh => `<div class="li"><div><b>${hh}:00–${hh}:59</b><div class="prog" style="margin-top:6px"><i style="width:${(hrs[hh] / hmax * 100).toFixed(0)}%"></i></div></div><span class="r">${hrs[hh]}</span></div>`).join("")}</div>`, true)}
+    ${acc("hi-15", "When the high came · every 15 minutes", "Bar = all trades · W = winning trades, L = losing trades", `<div class="list">${(() => {
       const q = {};
       tr.forEach(d => { const t = String(d.high_time || ""); if (!t) return; const mm = Math.floor(+t.slice(3, 5) / 15) * 15;
         const k = t.slice(0, 2) + ":" + String(mm).padStart(2, "0"); q[k] = q[k] || {a: 0, w: 0, l: 0}; q[k].a++; if (d.pnl > 0) q[k].w++; else q[k].l++; });
@@ -586,12 +603,12 @@ async function loadHighs() {
         return `<div class="li"><div><b>${k}–${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}</b>
           <span class="muted" style="font-size:12px"> · W ${q[k].w} · L ${q[k].l} · ${(q[k].a / tr.length * 100).toFixed(1)}% · cumulative ${(cum / tr.length * 100).toFixed(0)}%</span>
           <div class="prog" style="margin-top:6px"><i style="width:${(q[k].a / qmax * 100).toFixed(0)}%"></i></div></div><span class="r">${q[k].a}</span></div>`; }).join("");
-    })()}</div>
-    <h2>Every trade</h2><div class="tools"><div class="seg" role="group" aria-label="Year">${[["all", "All"], ...Object.keys(yrs).sort().map(y => [y, y])].map(([k, l]) => `<button type="button" data-hy="${k}" aria-pressed="${HF.year === k}">${l}</button>`).join("")}</div></div>
+    })()}</div>`, false)}
+    <h2>Every trade</h2><div class="chipgrid" role="group" aria-label="Year">${[["all", "All"], ...Object.keys(yrs).sort().map(y => [y, y])].map(([k, l]) => `<button type="button" data-hy="${k}" aria-pressed="${HF.year === k}">${l}</button>`).join("")}</div>
     <p class="sumline" id="hisum" aria-live="polite" tabindex="-1"></p><div id="hilist"></div>`;
   box.innerHTML = h;
   wireIx(box, loadHighs);
-  box.querySelectorAll("[data-hy]").forEach(b => b.onclick = () => { HF.year = b.dataset.hy; HF.limit = 30;
+  box.querySelectorAll("[data-hy]").forEach(b => b.onclick = () => { HF.year = b.dataset.hy; HF.limit = PG;
     box.querySelectorAll("[data-hy]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawHighs(tr); });
   drawHighs(tr);
 }
@@ -609,14 +626,14 @@ function drawHighs(tr) {
   else if (rows.length > HF.limit) h += `<button type="button" class="more-btn" id="himore">Show more (${rows.length - HF.limit} older trades)</button>`;
   $("#hilist").innerHTML = h;
   const more = $("#himore");
-  if (more) more.onclick = () => { HF.limit += 30; drawHighs(tr); const n = $("#himore"); (n || $("#hisum")).focus(); };
+  if (more) more.onclick = () => { HF.limit += PG; drawHighs(tr); const n = $("#himore"); (n || $("#hisum")).focus(); };
 }
 
 // ---------- BACKTEST: the option rule replayed day by day, NIFTY (docs/data/backtest.json, 2022-) or SENSEX
 // (docs/data/backtest-sensex.json, Jun 2023-), each loaded on first open
 let BT = null, BTI = "NIFTY";
 const BTS = {};
-const BTF = {month: "all", kind: "all", limit: 30};
+const BTF = {month: "all", kind: "all", limit: PG};
 const IXN = {NIFTY: "NIFTY", SENSEX: "SENSEX", BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB", LAURUSLABS: "Laurus Labs", BAJFINANCE: "Bajaj Finance", RBLBANK: "RBL Bank", DLF: "DLF", ABB: "ABB", POLYCAB: "Polycab"};
 const ALLIX = ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "RBLBANK", "DLF", "ABB", "POLYCAB"];
 const ixSeg = () => `<div class="tools"><button type="button" class="ixpick" data-ixpick aria-haspopup="dialog" style="--ix:${IXC[BTI] || "var(--brand)"}">
@@ -634,7 +651,7 @@ document.addEventListener("click", e => {
   const c = e.target.closest && e.target.closest("[data-bpick]");
   if (!c) return;
   const v = location.hash.slice(1) || "today";
-  BTI = c.dataset.bpick; BT = BTS[BTI] || null; BTF.month = "all"; BTF.limit = 30; HF.year = "all"; HF.limit = 30;
+  BTI = c.dataset.bpick; BT = BTS[BTI] || null; BTF.month = "all"; BTF.limit = PG; HF.year = "all"; HF.limit = PG;
   $("#tradedlg").close();
   if (v === "highs") loadHighs(); else loadBacktest();
 });
@@ -650,7 +667,7 @@ const getBT = () => fetchBT(BTI);
 function wireIx(box, reload) {
   box.querySelectorAll("[data-bti]").forEach(b => b.onclick = () => {
     if (BTI === b.dataset.bti) return;
-    BTI = b.dataset.bti; BT = BTS[BTI] || null; BTF.month = "all"; BTF.limit = 30; HF.year = "all"; HF.limit = 30; reload();
+    BTI = b.dataset.bti; BT = BTS[BTI] || null; BTF.month = "all"; BTF.limit = PG; HF.year = "all"; HF.limit = PG; reload();
   });
 }
 async function loadBacktest() {
@@ -699,21 +716,22 @@ function renderBacktest() {
   }
   const yrs = {};
   BT.months.forEach(m => { const y = m.month.slice(0, 4); yrs[y] = (yrs[y] || 0) + m.net; });
-  h += `<h2>By year<span class="sub">Tap a year to see its days</span></h2>
-    <div class="tools"><div class="seg" role="group" aria-label="Year">` +
+  h += `<h2>By year<span class="sub">Tap a year to filter the calendar and the days below</span></h2>
+    <div class="chipgrid" role="group" aria-label="Year">` +
     [["all", "All", S.net], ...Object.keys(yrs).sort().map(y => [y, y, yrs[y]])].map(([kk, l, n]) =>
-      `<button type="button" data-btm="${kk}" aria-pressed="${BTF.month === kk}">${l} <span class="n ${cl(n)}">${sgn(n)}</span></button>`).join("") + `</div></div>
+      `<button type="button" data-btm="${kk}" aria-pressed="${BTF.month === kk}">${l} <span class="n ${cl(n)}">${sgn(n)}</span></button>`).join("") + `</div>
     <div class="tools"><div class="seg" role="group" aria-label="Show">` +
     [["all", "All days"], ["win", "Wins"], ["loss", "Losses"], ["none", "No trade"]].map(([kk, l]) =>
       `<button type="button" data-btk="${kk}" aria-pressed="${BTF.kind === kk}">${l}</button>`).join("") + `</div></div>
-    <div id="btcal"></div>${weekdayTable()}
+    ${acc("bt-cal", "P&L calendar", "Each square is a trading day · green profit, red loss, grey no trade", `<div id="btcal"></div>`, false)}
+    ${acc("bt-wd", "By weekday", "Trades, win rate and P&L for Monday to Friday", weekdayTable(), false)}
     <h2>Every day<span class="sub">Newest first · tap Details for the expiry</span></h2>
     <p class="sumline" id="btsum" aria-live="polite" tabindex="-1"></p><div id="btlist"></div>`;
   box.innerHTML = h;
   wireIx(box, loadBacktest);
-  box.querySelectorAll("[data-btm]").forEach(b => b.onclick = () => { BTF.month = b.dataset.btm; BTF.limit = 30;
+  box.querySelectorAll("[data-btm]").forEach(b => b.onclick = () => { BTF.month = b.dataset.btm; BTF.limit = PG;
     box.querySelectorAll("[data-btm]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawBacktest(); });
-  box.querySelectorAll("[data-btk]").forEach(b => b.onclick = () => { BTF.kind = b.dataset.btk; BTF.limit = 30;
+  box.querySelectorAll("[data-btk]").forEach(b => b.onclick = () => { BTF.kind = b.dataset.btk; BTF.limit = PG;
     box.querySelectorAll("[data-btk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawBacktest(); });
   box.onclick = e => {
     const b = e.target.closest("[data-btd]");
@@ -759,12 +777,17 @@ function drawBacktest() {
   });
   if (last) h += `</div>`;
   if (!rows.length) h = `<div class="empty">No days match.</div>`;
-  else if (rows.length > BTF.limit) h += `<button type="button" class="more-btn" id="btmore">Show more (${rows.length - BTF.limit} older days)</button>`;
+  else if (rows.length > BTF.limit) h += `<button type="button" class="more-btn" id="btmore">Show ${Math.min(PG, rows.length - BTF.limit)} more (${rows.length - BTF.limit} older days)</button>`;
   $("#btlist").innerHTML = h;
   const more = $("#btmore");
-  if (more) more.onclick = () => { BTF.limit += 30; drawBacktest(); const n = $("#btmore"); (n || $("#btsum")).focus(); };
+  if (more) more.onclick = () => { BTF.limit += PG; drawBacktest(); const n = $("#btmore"); (n || $("#btsum")).focus(); };
 }
 
+
+// ---------- collapsible sections (remember open / closed on this device)
+function accOpen(id, def) { try { const v = localStorage.getItem("acc_" + id); return v == null ? def : v === "1"; } catch (e) { return def; } }
+const acc = (id, title, sub, body, def) => `<details class="acc" data-acc="${id}"${accOpen(id, def) ? " open" : ""}><summary><span class="t">${title}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</summary><div class="accb">${body}</div></details>`;
+document.addEventListener("toggle", e => { const d = e.target; if (d.matches && d.matches("details.acc")) { try { localStorage.setItem("acc_" + d.dataset.acc, d.open ? "1" : "0"); } catch (er) {} } }, true);
 
 // ---------- TARGETS (information only)
 const TGR = [0.75, 1.5, 2.25];
@@ -1094,7 +1117,7 @@ function drawCalendar() {
   const mx = Math.max(1, ...BT.days.filter(d => d.status === "closed" && d.date.startsWith(yr)).map(d => Math.abs(d.pnl)));
   const col = d => { if (!d) return ""; if (d.status !== "closed") return "background:var(--surface3)";
     const a = Math.min(1, Math.sqrt(Math.abs(d.pnl) / mx)) * 0.85 + 0.15; return `background:color-mix(in srgb,var(${d.pnl > 0 ? "--up" : "--dn"}) ${Math.round(a * 100)}%,transparent)`; };
-  let h = `<h2>P&L calendar · ${esc(yr)}<span class="sub">Each square is a trading day · green = profit, red = loss, grey = no trade · ${BTF.month === "all" ? "latest year (tap a year above to change)" : "the year selected above"}</span></h2><div class="cal">`;
+  let h = `<p class="sumline"><b>${esc(yr)}</b> · ${BTF.month === "all" ? "latest year (tap a year above to change)" : "the year selected above"}</p><div class="cal">`;
   for (let m = 0; m < 12; m++) {
     const first = new Date(+yr, m, 1), days = new Date(+yr, m + 1, 0).getDate(), mo = `${yr}-${String(m + 1).padStart(2, "0")}`;
     if (!BT.days.some(d => d.date.startsWith(mo))) continue;
@@ -1115,7 +1138,7 @@ function drawCalendar() {
 function weekdayTable() {
   const wd = ["Mon", "Tue", "Wed", "Thu", "Fri"], a = wd.map(() => ({n: 0, w: 0, p: 0}));
   BT.days.filter(d => d.status === "closed").forEach(d => { const i = (new Date(d.date + "T00:00:00").getDay() + 6) % 7; if (i < 5) { a[i].n++; a[i].p += d.pnl; if (d.pnl > 0) a[i].w++; } });
-  return `<h2>By weekday<span class="sub">All trades in this backtest, grouped by the day of the week</span></h2><div class="list"><table><caption class="sr">P&L by weekday</caption>
+  return `<div class="list"><table><caption class="sr">P&L by weekday</caption>
     <thead><tr><th scope="col">Day</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Won</th><th scope="col" class="r">Avg</th><th scope="col" class="r">Net</th></tr></thead><tbody>${
     a.map((x, i) => `<tr><td>${wd[i]}</td><td class="r">${x.n}</td><td class="r">${x.n ? Math.round(x.w / x.n * 100) + "%" : "–"}</td><td class="r ${cl(x.p)}">${x.n ? sgn(x.p / x.n) : "–"}</td><td class="r ${cl(x.p)}"><b>${x.n ? sgn(x.p) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;
 }
