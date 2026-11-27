@@ -20,7 +20,8 @@ BG0, BG1 = (6, 10, 22), (14, 21, 39)
 TEXT, MUTED, LINE, PANEL = (236, 240, 248), (139, 151, 180), (40, 52, 82), (16, 23, 41)
 UP, DN, AMB = (52, 211, 153), (251, 113, 133), (251, 191, 36)
 IXC = {"NIFTY": (129, 140, 248), "SENSEX": (34, 211, 238), "BSE": (244, 114, 182), "ADANIENT": (251, 191, 36),
-       "DIXON": (52, 211, 153), "PNB": (249, 115, 22)}
+       "DIXON": (52, 211, 153), "PNB": (249, 115, 22), "LAURUSLABS": (96, 165, 250), "BAJFINANCE": (232, 121, 249),
+       "TCS": (163, 230, 53)}
 GRAD = [(99, 102, 241), (168, 85, 247), (34, 211, 238)]
 
 
@@ -157,7 +158,7 @@ def scene_intro(day, n_trades):
         if k2 > 0:
             gradient_text(im, (cx, 920 + 30 * (1 - k2)), day.strftime("%d %b %Y"), F(118), "ma")
         alpha_text(im, (cx, 1080), "DAILY RECAP", F(58), TEXT, k3, "ma")
-        alpha_text(im, (cx, 1170), "6 instruments · %d trade%s" % (n_trades, "" if n_trades == 1 else "s"), F(40, False), MUTED, k3, "ma")
+        alpha_text(im, (cx, 1170), "%d instruments · %d trade%s" % (len(NAMES), n_trades, "" if n_trades == 1 else "s"), F(40, False), MUTED, k3, "ma")
         footer(im, k3)
     return draw
 
@@ -170,16 +171,20 @@ def scene_watch(rows):
             k = eo(seg(t, 0.08 + i * 0.08, 0.38 + i * 0.08))
             if k <= 0:
                 continue
-            y = 330 + i * 190
+            gap = min(190, int(1330 / max(1, len(rows))))
+            y = 330 + i * gap
             x = 70 + int(260 * (1 - k))
             col = IXC.get(ix, GRAD[0])
-            d.rounded_rectangle([x, y, x + W - 140, y + 160], 28, fill=PANEL, outline=LINE, width=2)
-            d.rounded_rectangle([x, y, x + 12, y + 160], 6, fill=col)
-            d.ellipse([x + 44, y + 52, x + 74, y + 82], fill=col)
-            d.text((x + 96, y + 40), name, font=F(50), fill=TEXT)
-            d.text((x + 96, y + 104), "Lot %s · expiry %s" % (lot, exp[5:] if exp else "–"), font=F(28, False), fill=MUTED)
-            d.text((x + W - 190, y + 46), format(price * k, ",.2f"), font=F(46), fill=TEXT, anchor="ra")
-            d.text((x + W - 190, y + 106), "OPEN", font=F(24), fill=AMB, anchor="ra")
+            hh = gap - 30
+            d.rounded_rectangle([x, y, x + W - 140, y + hh], 28, fill=PANEL, outline=LINE, width=2)
+            d.rounded_rectangle([x, y, x + 12, y + hh], 6, fill=col)
+            big, small = (50, 28) if hh >= 150 else (40, 24)
+            y1, y2 = y + int(hh * 0.16), y + int(hh * 0.62)
+            d.ellipse([x + 44, y1 + 10, x + 72, y1 + 38], fill=col)
+            d.text((x + 92, y1), name, font=F(big), fill=TEXT)
+            d.text((x + 92, y2), "Lot %s · expiry %s" % (lot, exp[5:] if exp else "–"), font=F(small, False), fill=MUTED)
+            d.text((x + W - 190, y1 + 2), format(price * k, ",.2f"), font=F(big - 4), fill=TEXT, anchor="ra")
+            d.text((x + W - 190, y2 + 2), "OPEN", font=F(small - 4), fill=AMB, anchor="ra")
         footer(im)
     return draw
 
@@ -296,24 +301,27 @@ def scene_scores(items):
         d = ImageDraw.Draw(im)
         bx0, bx1 = 70, W - 70
         for i, (ix, name, p) in enumerate(items):
-            y = 340 + i * 205
+            gap = min(205, int(1340 / max(1, len(items))))
+            y = 340 + i * gap
             k = eo(seg(t, 0.08 + i * 0.07, 0.55 + i * 0.07))
             a = eo(seg(t, 0.02 + i * 0.07, 0.25 + i * 0.07))
             if a <= 0:
                 continue
-            d.rounded_rectangle([bx0, y, bx1, y + 175], 26, fill=PANEL, outline=LINE, width=2)
-            d.ellipse([bx0 + 34, y + 36, bx0 + 64, y + 66], fill=IXC.get(ix, GRAD[0]))
-            d.text((bx0 + 84, y + 26), name, font=F(44), fill=TEXT)
+            d.rounded_rectangle([bx0, y, bx1, y + gap - 30], 26, fill=PANEL, outline=LINE, width=2)
+            hh = gap - 30
+            by = y + hh - 36
+            d.ellipse([bx0 + 34, y + 30, bx0 + 62, y + 58], fill=IXC.get(ix, GRAD[0]))
+            d.text((bx0 + 80, y + 20), name, font=F(42 if hh >= 150 else 36), fill=TEXT)
             if p is None:
-                d.text((bx1 - 34, y + 30), "No trade", font=F(38, False), fill=MUTED, anchor="ra")
-                d.rounded_rectangle([bx0 + 34, y + 110, bx1 - 34, y + 138], 14, fill=LINE)
+                d.text((bx1 - 34, y + 24), "No trade", font=F(34, False), fill=MUTED, anchor="ra")
+                d.rounded_rectangle([bx0 + 34, by, bx1 - 34, by + 22], 11, fill=LINE)
                 continue
             c = UP if p >= 0 else DN
-            d.text((bx1 - 34, y + 22), rs(p * k), font=F(50), fill=c, anchor="ra")
+            d.text((bx1 - 34, y + 16), rs(p * k), font=F(48 if hh >= 150 else 40), fill=c, anchor="ra")
             full = (bx1 - 34) - (bx0 + 34)
             L = max(28, full * abs(p) / mx * k)
-            d.rounded_rectangle([bx0 + 34, y + 110, bx1 - 34, y + 138], 14, fill=LINE)
-            d.rounded_rectangle([bx0 + 34, y + 110, bx0 + 34 + L, y + 138], 14, fill=c)
+            d.rounded_rectangle([bx0 + 34, by, bx1 - 34, by + 22], 11, fill=LINE)
+            d.rounded_rectangle([bx0 + 34, by, bx0 + 34 + L, by + 22], 11, fill=c)
         footer(im)
     return draw
 

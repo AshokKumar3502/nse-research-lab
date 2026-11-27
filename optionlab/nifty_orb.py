@@ -52,6 +52,16 @@ INDEXES = {
     "PNB": {"key": "NSE_EQ|INE160A01022", "step": 1, "segment": "NSE_FO", "name": "PUNJAB NATIONAL BANK",
             "sl_from": dt.date(2026, 11, 27), "start": dt.date(2026, 11, 27), "file": "pnb",
             "list": minute.INSTRUMENTS_URL, "id": "OP"},
+    # liquid, volatile F&O stocks where the rule beat a random side in both 2022-24 and 2025-26
+    "LAURUSLABS": {"key": "NSE_EQ|INE947Q01028", "step": 20, "segment": "NSE_FO", "name": "LAURUS LABS LIMITED",
+                   "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "lauruslabs",
+                   "list": minute.INSTRUMENTS_URL, "id": "OL"},
+    "BAJFINANCE": {"key": "NSE_EQ|INE296A01032", "step": 10, "segment": "NSE_FO", "name": "BAJAJ FINANCE LIMITED",
+                   "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "bajfinance",
+                   "list": minute.INSTRUMENTS_URL, "id": "OF"},
+    "TCS": {"key": "NSE_EQ|INE467B01029", "step": 20, "segment": "NSE_FO", "name": "TATA CONSULTANCY SERV LT",
+            "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "tcs",
+            "list": minute.INSTRUMENTS_URL, "id": "OT"},
 }
 
 

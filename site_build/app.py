@@ -156,7 +156,7 @@ def build():
         msgs.append({"id": "intraday-%s" % it.get("day"), "ts": now, "title": "Intraday picks (paper only)",
                      "text": "Buy: %s" % names_i})
     msgs = []                     # option-only app: no stock-pick messages
-    for ixn in ("NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB"):
+    for ixn in ("NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "TCS"):
         ops = sorted((t for t in data.get("trades", []) if t.get("kind") == "option"
                       and (t.get("index") or ("SENSEX" if str(t.get("symbol", "")).startswith("SENSEX") else "NIFTY")) == ixn),
                      key=lambda t: t["signal_date"])
@@ -590,13 +590,14 @@ function drawHighs(tr) {
 let BT = null, BTI = "NIFTY";
 const BTS = {};
 const BTF = {month: "all", kind: "all", limit: 30};
-const IXN = {NIFTY: "NIFTY", SENSEX: "SENSEX", BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB"};
-const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB"].map(i =>
+const IXN = {NIFTY: "NIFTY", SENSEX: "SENSEX", BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB", LAURUSLABS: "Laurus Labs", BAJFINANCE: "Bajaj Finance", TCS: "TCS"};
+const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "TCS"].map(i =>
   `<button type="button" data-bti="${i}" aria-pressed="${BTI === i}">${ixDot(i)}${IXN[i]}</button>`).join("")}</div></div>`;
 async function fetchBT(i) {
   if (BTS[i]) return BTS[i];
   const r = await fetch(({SENSEX: "data/backtest-sensex.json", BSE: "data/backtest-bse.json", ADANIENT: "data/backtest-adanient.json",
-    DIXON: "data/backtest-dixon.json", PNB: "data/backtest-pnb.json"}[i] || "data/backtest.json") + "?t=" + Date.now(), {cache: "no-store"});
+    DIXON: "data/backtest-dixon.json", PNB: "data/backtest-pnb.json", LAURUSLABS: "data/backtest-lauruslabs.json",
+    BAJFINANCE: "data/backtest-bajfinance.json", TCS: "data/backtest-tcs.json"}[i] || "data/backtest.json") + "?t=" + Date.now(), {cache: "no-store"});
   if (!r.ok) throw new Error("HTTP " + r.status);
   return (BTS[i] = await r.json());
 }
@@ -632,7 +633,7 @@ function renderBacktest() {
     ["If sold at the high", S.high_net != null ? sgn(S.high_net) : "–", cl(S.high_net), "hindsight best · vs actual " + sgn(S.net)],
     ["Targets reached", (() => { const r = tgRates(BT.days); return r ? r.map((v, i) => "T" + (i + 1) + " " + v + "%").join(" · ") : "–"; })(), "",
      "before the stop-loss"]];
-  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(IXN[BT.index] || BT.index || "NIFTY")} · 1 lot (${M.lot || 65}${["BSE", "ADANIENT", "DIXON", "PNB"].includes(BT.index) ? " shares" : ""}) a day · after charges</span></h2>${ixSeg()}
+  let h = `<h2>Backtest · ${String(BT.from).slice(0, 4)}–${String(BT.to).slice(0, 4)}<span class="sub">${fdl(BT.from)} – ${fdl(BT.to)} · ${esc(IXN[BT.index] || BT.index || "NIFTY")} · 1 lot (${M.lot || 65}${BT.index !== "NIFTY" && BT.index !== "SENSEX" ? " shares" : ""}) a day · after charges</span></h2>${ixSeg()}
     <details class="why banner warn"><summary><b>Model prices, not proven.</b> <span class="muted">How to read this</span></summary>
       <p style="margin:6px 0 0">${esc(M.note || "")} Capital = the premium paid for 1 lot. Past results are not predictions.</p></details>
     <div class="kpis bt-kpis">` + k.map(([l, v, c, s2]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}${v.length > 11 ? " sm" : ""}">${v}</div><div class="s">${esc(s2)}</div></div>`).join("") + `</div>`;
@@ -881,10 +882,10 @@ function glance(ops, lastDay) {
 }
 
 // ---------- LIVE BOARD (Today): one tile per instrument from the paper-trade data already in the app
-const IXC = {NIFTY: "#818cf8", SENSEX: "#22d3ee", BSE: "#f472b6", ADANIENT: "#fbbf24", DIXON: "#34d399", PNB: "#f97316"};
+const IXC = {NIFTY: "#818cf8", SENSEX: "#22d3ee", BSE: "#f472b6", ADANIENT: "#fbbf24", DIXON: "#34d399", PNB: "#f97316", LAURUSLABS: "#60a5fa", BAJFINANCE: "#e879f9", TCS: "#a3e635"};
 const ixDot = ix => `<span class="ixd" style="--ix:${IXC[ix] || "var(--brand)"}" aria-hidden="true"></span>`;
-const BOARD = [["NIFTY", "NIFTY 50", "option"], ["SENSEX", "SENSEX", "sensex"], ["BSE", "BSE Ltd", "bse"], ["ADANIENT", "Adani Ent", "adanient"], ["DIXON", "Dixon", "dixon"], ["PNB", "PNB", "pnb"]];
-const STARTS = {BSE: "2026-11-27", ADANIENT: "2026-11-27", DIXON: "2026-11-27", PNB: "2026-11-27"};
+const BOARD = [["NIFTY", "NIFTY 50", "option"], ["SENSEX", "SENSEX", "sensex"], ["BSE", "BSE Ltd", "bse"], ["ADANIENT", "Adani Ent", "adanient"], ["DIXON", "Dixon", "dixon"], ["PNB", "PNB", "pnb"], ["LAURUSLABS", "Laurus Labs", "lauruslabs"], ["BAJFINANCE", "Bajaj Finance", "bajfinance"], ["TCS", "TCS", "tcs"]];
+const STARTS = {BSE: "2026-11-27", ADANIENT: "2026-11-27", DIXON: "2026-11-27", PNB: "2026-11-27", LAURUSLABS: "2026-11-30", BAJFINANCE: "2026-11-30", TCS: "2026-11-30"};
 function spark(vals, color) {
   if (vals.length < 2) return `<svg viewBox="0 0 100 34" aria-hidden="true"><line x1="0" x2="100" y1="17" y2="17" stroke="var(--line)" stroke-dasharray="3 3"/></svg>`;
   const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals), sp = (hi - lo) || 1;
@@ -1047,11 +1048,11 @@ function weekdayTable() {
     a.map((x, i) => `<tr><td>${wd[i]}</td><td class="r">${x.n}</td><td class="r">${x.n ? Math.round(x.w / x.n * 100) + "%" : "–"}</td><td class="r ${cl(x.p)}">${x.n ? sgn(x.p / x.n) : "–"}</td><td class="r ${cl(x.p)}"><b>${x.n ? sgn(x.p) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;
 }
 
-// ---------- COMPARE: all six backtests side by side (same files as the Backtest tab)
-const CMP = [["NIFTY", "#818cf8"], ["SENSEX", "#22d3ee"], ["BSE", "#f472b6"], ["ADANIENT", "#fbbf24"], ["DIXON", "#34d399"], ["PNB", "#f97316"]];
+// ---------- COMPARE: all backtests side by side (same files as the Backtest tab)
+const CMP = [["NIFTY", "#818cf8"], ["SENSEX", "#22d3ee"], ["BSE", "#f472b6"], ["ADANIENT", "#fbbf24"], ["DIXON", "#34d399"], ["PNB", "#f97316"], ["LAURUSLABS", "#60a5fa"], ["BAJFINANCE", "#e879f9"], ["TCS", "#a3e635"]];
 async function loadCompare() {
   const box = $("#v-compare");
-  box.innerHTML = `<h2>Compare<span class="sub">All six backtests side by side</span></h2><div class="empty" role="status">Loading the six backtests…</div>`;
+  box.innerHTML = `<h2>Compare<span class="sub">All backtests side by side</span></h2><div class="empty" role="status">Loading the backtests…</div>`;
   let docs;
   try { docs = await Promise.all(CMP.map(([i]) => fetchBT(i))); }
   catch (e) { box.innerHTML = `<h2>Compare</h2><div class="empty" role="alert">Could not load the backtests (${esc(String(e.message || e))}).</div>`; return; }
@@ -1081,8 +1082,8 @@ async function loadCompare() {
   const all = series.flatMap(s2 => s2.pts.map(p => p[1])), lo = Math.min(0, ...all), hi = Math.max(0, ...all), sp = (hi - lo) || 1;
   const W = 760, H = 260, P = 40, x = t => P + (t - t0) / ((t1 - t0) || 1) * (W - 2 * P), y = v => H - 24 - (v - lo) / sp * (H - 44);
   const yrsAx = []; for (let yy = new Date(t0).getFullYear() + 1; yy <= new Date(t1).getFullYear(); yy++) yrsAx.push(yy);
-  h += `<h2>Running total, all six<span class="sub">Each line is one instrument's cumulative P&L from its first backtest day</span></h2><div class="chart">
-    <svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative P&L of the six backtests">
+  h += `<h2>Running total, every instrument<span class="sub">Each line is one instrument's cumulative P&L from its first backtest day</span></h2><div class="chart">
+    <svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative P&L of every backtest">
     <line class="g" x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}"/>
     ${yrsAx.map(yy => { const xx = x(+new Date(yy + "-01-01T00:00:00")); return `<line class="g" x1="${xx}" x2="${xx}" y1="10" y2="${H - 24}" stroke-dasharray="2 4"/><text class="ax" x="${xx + 3}" y="${H - 6}">${yy}</text>`; }).join("")}
     <text class="ax" x="2" y="${y(hi) + 4}">${esc(sgn(hi))}</text><text class="ax" x="2" y="${y(0) + 4}">₹0</text>
@@ -1106,7 +1107,7 @@ let ODAILY = [];
 const kindPill = t => t.kind === "momentum" ? `<span class="pill p-info">Momentum</span>` : t.kind === "results" ? `<span class="pill p-info">Results</span>`
   : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>`
   : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
-const IXT = {BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB"};
+const IXT = {BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB", LAURUSLABS: "Laurus Labs", BAJFINANCE: "Bajaj Finance", TCS: "TCS"};
 const ixOf = t => t.index || (/^SENSEX/.test(t.symbol || "") ? "SENSEX" : "NIFTY");
 const reduceMotion = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.addEventListener("click", e => {
@@ -1269,7 +1270,7 @@ ODAILY = (() => {
   let h = `<h2>Option paper trading<span class="sub">NIFTY, SENSEX, BSE Ltd, Adani Ent, Dixon and PNB · 1 lot each a day on real option prices, after charges</span></h2><div class="kpis">` +
     k.map(([l, v, c, s]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div><div class="s">${esc(s)}</div></div>`).join("") + `</div>`;
   h += `<h2>By index<span class="sub">Closed trades plus any open one</span></h2><div class="list"><table><caption class="sr">P&L by index</caption><thead><tr><th scope="col">Index</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Won</th><th scope="col" class="r">Net</th></tr></thead><tbody>${
-    ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
+    ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "TCS"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
       n = ts.reduce((a, t) => a + (t.status === "closed" ? t.net : (t.gross || 0)), 0);
       return `<tr data-ix="${ix}" style="cursor:pointer"><td>${ixDot(ix)}${IXT[ix] || ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
   if (!MULTI.length) {
@@ -1394,7 +1395,7 @@ ODAILY = (() => {
   const closed = T.filter(t => t.status === "closed");
   const grp = (name, f) => { const ts = closed.filter(f), w = ts.filter(t => t.net > 0).length, tot = ts.reduce((a, t) => a + t.net, 0);
     return [name, ts.length, ts.length ? Math.round(w / ts.length * 100) + "%" : "–", ts.length ? sgn(tot / ts.length) : "–", tot, ts.length]; };
-  const g = [grp("NIFTY", t => ixOf(t) === "NIFTY"), grp("SENSEX", t => ixOf(t) === "SENSEX"), grp("BSE Ltd", t => ixOf(t) === "BSE"), grp("Adani Ent", t => ixOf(t) === "ADANIENT"), grp("Dixon", t => ixOf(t) === "DIXON"), grp("PNB", t => ixOf(t) === "PNB"), grp("Calls (CE)", t => / CE$/.test(t.symbol)),
+  const g = [grp("NIFTY", t => ixOf(t) === "NIFTY"), grp("SENSEX", t => ixOf(t) === "SENSEX"), grp("BSE Ltd", t => ixOf(t) === "BSE"), grp("Adani Ent", t => ixOf(t) === "ADANIENT"), grp("Dixon", t => ixOf(t) === "DIXON"), grp("PNB", t => ixOf(t) === "PNB"), grp("Laurus Labs", t => ixOf(t) === "LAURUSLABS"), grp("Bajaj Finance", t => ixOf(t) === "BAJFINANCE"), grp("TCS", t => ixOf(t) === "TCS"), grp("Calls (CE)", t => / CE$/.test(t.symbol)),
     grp("Puts (PE)", t => / PE$/.test(t.symbol)), grp("All option trades", t => true)];
   h += `<h2>NIFTY vs SENSEX · calls vs puts</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
     g.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td class="r">${r[2]}</td><td class="r">${r[3]}</td><td class="r ${cl(r[4])}"><b>${r[5] ? sgn(r[4]) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;

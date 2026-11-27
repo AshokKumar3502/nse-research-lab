@@ -17,7 +17,8 @@ from .telegram_cards import (AMBER, BG, BLUE, GREEN, LGREEN, LRED, LINE, MUTED, 
                              watchlist_card)
 
 RW, RH = 1080, 1920
-NAMES = {"NIFTY": "NIFTY 50", "SENSEX": "SENSEX", "BSE": "BSE Ltd", "ADANIENT": "Adani Ent", "DIXON": "Dixon", "PNB": "PNB"}
+NAMES = {"NIFTY": "NIFTY 50", "SENSEX": "SENSEX", "BSE": "BSE Ltd", "ADANIENT": "Adani Ent", "DIXON": "Dixon", "PNB": "PNB",
+         "LAURUSLABS": "Laurus Labs", "BAJFINANCE": "Bajaj Finance", "TCS": "TCS"}
 
 
 def _ffmpeg():
@@ -71,7 +72,7 @@ def _title(day, n_trades):
     d.text((60, 640), day.strftime("%A").upper(), font=font(44, True), fill=MUTED)
     d.text((60, 700), day.strftime("%d %b %Y"), font=font(110, True), fill=TEXT)
     d.text((60, 860), "Daily recap", font=font(70, True), fill=LGREEN)
-    d.text((60, 990), "6 instruments · %d trade%s" % (n_trades, "" if n_trades == 1 else "s"), font=font(44), fill=TEXT)
+    d.text((60, 990), "%d instruments · %d trade%s" % (len(NAMES), n_trades, "" if n_trades == 1 else "s"), font=font(44), fill=TEXT)
     d.text((60, 1060), "watchlist → entries → targets → result", font=font(36), fill=MUTED)
     d.text((60, RH - 100), "Paper trade · not investment advice", font=font(28), fill=MUTED)
     return im

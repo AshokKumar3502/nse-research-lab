@@ -219,7 +219,8 @@ def messages(doc, sent):
     return out
 
 
-NAMES = {"NIFTY": "NIFTY 50", "SENSEX": "SENSEX", "BSE": "BSE Ltd", "ADANIENT": "Adani Ent", "DIXON": "Dixon", "PNB": "PNB"}
+NAMES = {"NIFTY": "NIFTY 50", "SENSEX": "SENSEX", "BSE": "BSE Ltd", "ADANIENT": "Adani Ent", "DIXON": "Dixon", "PNB": "PNB",
+         "LAURUSLABS": "Laurus Labs", "BAJFINANCE": "Bajaj Finance", "TCS": "TCS"}
 
 
 def board_rows(docs):

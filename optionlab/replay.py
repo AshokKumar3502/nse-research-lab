@@ -45,7 +45,13 @@ IX = {"NIFTY": {"lot": LOT, "step": STEP, "out": OUT, "file": "nifty", "first": 
       "DIXON": {"lot": 50, "step": 100, "out": os.path.join(config.ROOT, "docs", "data", "backtest-dixon.json"),
                 "file": "dixon", "first": dt.date(2022, 1, 3), "symbol": "DIXON", "name": "Dixon Technologies"},
       "PNB": {"lot": 8000, "step": 1, "out": os.path.join(config.ROOT, "docs", "data", "backtest-pnb.json"),
-              "file": "pnb", "first": dt.date(2022, 1, 3), "symbol": "PNB", "name": "Punjab National Bank"}}
+              "file": "pnb", "first": dt.date(2022, 1, 3), "symbol": "PNB", "name": "Punjab National Bank"},
+      "LAURUSLABS": {"lot": 425, "step": 20, "out": os.path.join(config.ROOT, "docs", "data", "backtest-lauruslabs.json"),
+                     "file": "lauruslabs", "first": dt.date(2022, 1, 3), "symbol": "LAURUSLABS", "name": "Laurus Labs"},
+      "BAJFINANCE": {"lot": 750, "step": 10, "out": os.path.join(config.ROOT, "docs", "data", "backtest-bajfinance.json"),
+                     "file": "bajfinance", "first": dt.date(2022, 1, 3), "symbol": "BAJFINANCE", "name": "Bajaj Finance"},
+      "TCS": {"lot": 225, "step": 20, "out": os.path.join(config.ROOT, "docs", "data", "backtest-tcs.json"),
+              "file": "tcs", "first": dt.date(2022, 1, 3), "symbol": "TCS", "name": "TCS"}}
 SNAP = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10]
 
 
@@ -75,6 +81,8 @@ def replay_stock(con, start, end, index):
         g, po = byday.get(d), og.get(prev)
         if d < start or g is None or po is None or len(g) < 300:
             continue
+        if abs(rclose[prev] / rclose[d] - 1) > 0.25:
+            continue                         # split / bonus day: the previous day's strikes do not match the new price
         r = float(g.close.iloc[-1]) / rclose[d]
         f = min(SNAP, key=lambda x: abs(x - r))
         if abs(r / f - 1) > 0.03:
@@ -455,7 +463,7 @@ def build(months=6, log=print, index="NIFTY", rows=None):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--months", type=int, default=6)
-    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb", "all"])
+    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb", "lauruslabs", "bajfinance", "tcs", "all"])
     ap.add_argument("--extend", action="store_true", help="add only the new days to the existing files")
     a = ap.parse_args()
     for ix in (list(IX) if a.index == "all" else [a.index.upper()]):
