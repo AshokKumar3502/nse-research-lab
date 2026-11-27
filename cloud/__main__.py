@@ -413,7 +413,12 @@ def main(argv):
     force = "--force" in argv
     if cmd in ("morning", "evening"):
         now = datetime.datetime.now(config.IST)
-        if cmd == "morning" and now.time() >= datetime.time(15, 30):
+        if cmd == "morning" and datetime.time(15, 30) <= now.time() < datetime.time(18, 30):
+            # too late for the morning job and too early for the evening one (NSE's day files come out about
+            # 18:00): do nothing, so a stray trigger cannot run the evening job before the day's data exists
+            log("morning trigger arrived at %s IST: nothing to do until the evening job (18:45)" % now.strftime("%H:%M"))
+            return 0
+        if cmd == "morning" and now.time() >= datetime.time(18, 30):
             # GitHub can start the 08:50 schedule hours late; by now the useful job is the evening one
             # (its own done marker stops it running twice)
             log("morning trigger arrived at %s IST, after the close: running the evening job instead"
