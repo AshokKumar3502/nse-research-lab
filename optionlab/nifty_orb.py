@@ -32,6 +32,36 @@ TARGET_R = (0.75, 1.5, 2.25)
 NEAR = 0.001          # "be ready" when the index is within 0.1% of its range edge (same as the Telegram alert)
 CANDLES = "https://api.upstox.com/v3/historical-candle/intraday/%s/minutes/1"
 PICKS = os.path.join(config.DATA, "picks")
+WIDTHS = os.path.join(PICKS, "range-widths.json")   # each instrument's 9:15-9:45 range width (% of price) on its trade days
+WIDTH_DAYS = 60       # PRIORITY = today's range wider than the median of the last 60 trade days (backtest 2023-26: best pick-2 rule)
+
+
+def _widths():
+    try:
+        with open(WIDTHS, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return {}
+
+
+def wide_ratio(index, day, width):
+    """Today's range width / the instrument's median width over its last 60 trade days before today (None if < 20 days)."""
+    past = [w for d, w in sorted(_widths().get(index, [])) if d < str(day)][-WIDTH_DAYS:]
+    if len(past) < 20:
+        return None
+    s = sorted(past)
+    med = (s[len(s) // 2] + s[(len(s) - 1) // 2]) / 2
+    return round(width / med, 3) if med > 0 else None
+
+
+def record_width(index, day, width):
+    """Remember today's width once the instrument has a signal (the median uses trade days, as in the backtest)."""
+    w = _widths()
+    rows = [r for r in w.get(index, []) if r[0] != str(day)] + [[str(day), round(width, 4)]]
+    w[index] = sorted(rows)[-(WIDTH_DAYS + 40):]
+    os.makedirs(PICKS, exist_ok=True)
+    with open(WIDTHS, "w", encoding="utf-8") as fh:
+        json.dump(w, fh, separators=(",", ":"))
 # the same rule on SENSEX (BSE weekly options), paper traded from 26 Nov 2026
 INDEXES = {
     "NIFTY": {"key": INDEX_KEY, "step": 50, "segment": "NSE_FO", "name": "NIFTY", "sl_from": OPTION_SL_FROM, "file": "nifty",
@@ -154,6 +184,9 @@ def run(day=None, log=print, index="NIFTY"):
         return _save(doc, p)
     rng = [b for b in idx if b[0].time() < RANGE_END]
     hi, lo = max(b[2] for b in rng), min(b[3] for b in rng)
+    width = (hi - lo) / rng[-1][4] * 100 if rng[-1][4] else 0.0
+    ratio = wide_ratio(index, day, width)
+    doc.update(range_width=round(width, 4), wide_ratio=ratio, priority=bool(ratio is not None and ratio > 1))
     doc.update(range_high=round(hi, 2), range_low=round(lo, 2), step=ix["step"],
                index_last=round(idx[-1][4], 2), index_last_at=(idx[-1][0] + dt.timedelta(minutes=1)).strftime("%H:%M"))
     sig = None
@@ -177,6 +210,7 @@ def run(day=None, log=print, index="NIFTY"):
                    note="No breakout of the 9:15-9:45 range by 13:00" if done else "Watching for a breakout until 13:00")
         return _save(doc, p)
     j, side, sig_ts = sig
+    record_width(index, day, width)
     entry_bar = idx[j]
     strike = round(entry_bar[1] / ix["step"]) * ix["step"]
     cs = [c for c in contracts(day, index) if c["type"] == side and c["strike"] == strike and c["expiry"] >= str(day)]
@@ -269,6 +303,7 @@ def trades():
         out.append({"id": "%s-%s" % (ix["id"], d["day"]), "kind": "option", "index": index, "side": "long", "symbol": d["symbol"],
                     "industry": "%s option · expiry %s" % (index, d["expiry"]), "signal_date": d["day"], "expiry": d["expiry"],
                     "sl_price": d.get("sl_option"), "path": d.get("path") or [], "near": d.get("near") or [],
+                    "priority": bool(d.get("priority")),
                     "entry_date": d["day"], "entry_at": d["entry_at"], "entry": d["entry"], "qty": d["lot"],
                     "sl": None, "sl_note": ("Rs %s" % d["sl_option"]) if d.get("sl_option") else "Index %s %s" % ("below" if d["side"] == "CE" else "above",
                                                             format(d["sl_index"], ",.2f")),

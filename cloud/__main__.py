@@ -325,7 +325,8 @@ def live(every_min=10, until=(15, 20)):
         with open(os.path.join(REPO, "docs", "data", "live.json"), "w", encoding="utf-8") as fh:
             json.dump(data, fh, default=str)
         log("live: %d stocks priced, %s" % (len(syms), data["updated"]["at"]))
-        for f in glob.glob(os.path.join(config.DATA, "picks", "option-*-%s.json" % today)):   # keep the day's trades
+        for f in glob.glob(os.path.join(config.DATA, "picks", "option-*-%s.json" % today)) + \
+                glob.glob(os.path.join(config.DATA, "picks", "range-widths.json")):   # keep the day's trades + range history
             _copy(f, os.path.join(STATE, "picks", os.path.basename(f)))
         _git_push(["docs/data/live.json", "docs/paper.json", "state/picks"],
                   "Live P&L %s" % datetime.datetime.now(config.IST).strftime("%Y-%m-%d %H:%M IST"))

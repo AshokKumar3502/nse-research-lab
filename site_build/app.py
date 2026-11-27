@@ -85,7 +85,8 @@ def collect():
             if p and os.path.exists(p):
                 with open(p, encoding="utf-8") as fh:
                     o = json.load(fh)
-                option_day[ix] = {"day": o.get("day"), "status": o.get("status"), "near": o.get("near") or []}
+                option_day[ix] = {"day": o.get("day"), "status": o.get("status"), "near": o.get("near") or [],
+                                  "priority": bool(o.get("priority"))}
     except Exception:          # noqa: BLE001
         pass
     sw, it = _latest("swing-"), _latest("intraday-")
@@ -293,7 +294,7 @@ h2{font-size:19px;font-weight:800;margin:26px 0 12px;letter-spacing:-.02em}h2 .s
 .kv b{display:block;font-size:14px;color:var(--text);font-family:var(--mono);font-weight:700;letter-spacing:0;text-transform:none;margin-top:2px}
 .kv b.dn{color:var(--dn)}.kv b.up{color:var(--up)}
 .pill{font-size:10.5px;font-weight:800;letter-spacing:.05em;padding:4px 9px;border-radius:999px;text-transform:uppercase;white-space:nowrap}
-.p-up{background:var(--upbg);color:var(--up)}.p-dn{background:var(--dnbg);color:var(--dn)}.p-warn{background:var(--warnbg);color:var(--warn)}
+.p-gold{background:#f5b301;color:#2a1c00}.p-up{background:var(--upbg);color:var(--up)}.p-dn{background:var(--dnbg);color:var(--dn)}.p-warn{background:var(--warnbg);color:var(--warn)}
 .p-info{background:var(--infobg);color:var(--info)}.p-mute{background:var(--surface2);color:var(--muted)}
 .up{color:var(--up)}.dn{color:var(--dn)}.muted{color:var(--muted)}.num{font-variant-numeric:tabular-nums;font-family:var(--mono)}
 .pnl{font-size:21px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em}
@@ -870,7 +871,7 @@ function openTrade(id, keepOpen) {
   $("#tdbody").innerHTML = `<div class="tdh" style="background:linear-gradient(135deg,${ic},color-mix(in srgb,${ic} 55%,#0a0f1d))"><span class="grab"></span><div><h3 id="tdh">${esc(t.symbol)}</h3><div style="font-size:12.5px;opacity:.9">${esc(fdl(t.signal_date))}${t.expiry ? " · expiry " + esc(fd(t.expiry)) : ""} · ${t.qty} qty (1 lot)</div>${pos >= 0 ? `<div class="tdpos">Trade ${pos + 1} of ${LST.length} · swipe sideways for others</div>` : ""}</div>
       <div class="tdnav"><button type="button" aria-label="Newer trade" data-step="-1" ${pos <= 0 ? "disabled" : ""}>‹</button><button type="button" aria-label="Older trade" data-step="1" ${pos < 0 || pos >= LST.length - 1 ? "disabled" : ""}>›</button>
       <button class="x" type="button" aria-label="Close" data-close>×</button></div></div>
-    <div class="tdb"><div class="row"><span class="pill ${t.status === "open" ? "p-warn" : v > 0 ? "p-up" : "p-dn"}">${t.status === "open" ? "Open" : v > 0 ? "Won" : "Lost"}</span>
+    <div class="tdb"><div class="row"><span style="display:flex;gap:6px"><span class="pill ${t.status === "open" ? "p-warn" : v > 0 ? "p-up" : "p-dn"}">${t.status === "open" ? "Open" : v > 0 ? "Won" : "Lost"}</span>${t.priority ? `<span class="pill p-gold">★ Priority</span>` : ""}</span>
       <span><span class="pnl ${cl(v)}">${sgn(v)}</span> <span class="${cl(v)}" style="font-size:13px">${pct(v, cap)}</span></span></div>
     <div class="tdkv" style="margin-top:12px"><div>Entry · ${esc(tm(t.entry_at))}<b>${inr(t.entry)}</b></div><div>${t.status === "closed" ? "Exit" : "Now"} · ${esc(t.status === "closed" ? (t.exit_time || "") : tm(t.last_at))}<b class="${cl(v)}">${inr(t.status === "closed" ? t.exit : t.last)}</b></div>
       <div>Stop-loss<b class="dn">${t.sl_price != null ? inr(t.sl_price) : esc(String(t.sl_note || "–").replace(/^Rs /, "₹"))}</b></div><div>Capital<b>${inr(Math.round(cap))}</b></div></div>
@@ -993,7 +994,7 @@ function liveBoard() {
     <div><div class="k">Open now</div><div class="v">${open}</div></div>${PER === "day" ? daySpark(ops.filter(t => t.signal_date === lastDay)) : ""}</div>${glance(ops, lastDay)}
     <h2 style="margin-top:14px">Live board<span class="sub">Latest paper trade for each instrument · tap one to open the trade, › for all its trades</span></h2>
     <div class="tools"><div class="seg" role="group" aria-label="Board view">${[["list", "List"], ["grid", "Grid"]].map(([k, l]) => `<button type="button" data-bv="${k}" aria-pressed="${boardView() === k}">${l}</button>`).join("")}</div>
-    <label class="sr" for="bsort">Sort the board</label><select id="bsort" class="sel">${[["default", "Default order"], ["pnl", "P&L: high to low"], ["pnl_asc", "P&L: low to high"], ["name", "Name A–Z"]]
+    <label class="sr" for="bsort">Sort the board</label><select id="bsort" class="sel">${[["default", "Default order"], ["pnl", "P&L: high to low"], ["pnl_asc", "P&L: low to high"], ["name", "Name A–Z"], ["pri", "Priority first"]]
       .map(([k, l]) => `<option value="${k}"${BSORT === k ? " selected" : ""}>${l}</option>`).join("")}</select></div>`;
   const items = BOARD.map(([ix, name]) => {
     const ts = ops.filter(t => ixOf(t) === ix).sort((a, b) => a.signal_date.localeCompare(b.signal_date));
@@ -1001,15 +1002,18 @@ function liveBoard() {
     let c = 0; const cum = ts.map(x => (c += val(x)));
     return {ix, name, ts, t, cum, v: t ? val(t) : null};
   });
-  const key = {pnl: x => -(x.v ?? -1e12), pnl_asc: x => (x.v ?? 1e12), name: x => x.name}[BSORT];
+  const key = {pnl: x => -(x.v ?? -1e12), pnl_asc: x => (x.v ?? 1e12), name: x => x.name,
+    pri: x => (((D.option_day || {})[x.ix] || {}).priority ? 0 : 1)}[BSORT];
   if (key) items.sort((a, b) => { const p = key(a), q = key(b); return typeof p === "string" ? p.localeCompare(q) : p - q; });
+  const PRI = `<span class="pill p-gold" title="Priority today">★ Priority</span>`;
+  const pri = ix => ((D.option_day || {})[ix] || {}).priority ? PRI : "";
   const pill = ({ix, t, v}) => !t ? (STARTS[ix] && STARTS[ix] > (D.last_session || "") ? `<span class="pill p-info">Starts ${esc(fd(STARTS[ix]))}</span>` : `<span class="pill p-mute">Watching</span>`)
     : t.status === "open" ? `<span class="pill p-warn">Open</span>` : `<span class="pill ${v > 0 ? "p-up" : "p-dn"}">${v > 0 ? "Won" : "Lost"}</span>`;
   const tg = t => t && t.targets ? [1, 2, 3].map(k => (t.target_hits || []).some(x => x.t === k) ? `<b class="up">T${k}✓</b>` : `T${k}`).join(" ") : "";
   if (boardView() === "list") {
     h += `<div class="blist">` + items.map(x => `<div class="brow" style="--ix:${IXC[x.ix]}" role="button" tabindex="0" ${x.t ? `data-trade="${esc(x.t.id)}"` : `data-ix="${x.ix}"`} aria-label="${esc(x.name)}">
       <span class="bbar"></span>
-      <div class="bmain"><div class="bname">${esc(x.name)} ${pill(x)}</div><div class="bsub">${x.t ? esc(x.t.symbol.split(" ").slice(1).join(" ")) + " · " + esc(fd(x.t.signal_date)) + (tg(x.t) ? " · " + tg(x.t) : "") : "No trades yet"}</div></div>
+      <div class="bmain"><div class="bname">${esc(x.name)} ${pill(x)}${pri(x.ix)}</div><div class="bsub">${x.t ? esc(x.t.symbol.split(" ").slice(1).join(" ")) + " · " + esc(fd(x.t.signal_date)) + (tg(x.t) ? " · " + tg(x.t) : "") : "No trades yet"}</div></div>
       <div class="bspark">${spark(x.cum, x.cum.length && x.cum[x.cum.length - 1] < 0 ? "var(--dn)" : "var(--up)")}</div>
       <div class="bright"><div class="bpl ${cl(x.v)}">${x.t ? sgn(x.v) : "–"}</div><div class="bsub">${x.ts.length} trade${x.ts.length === 1 ? "" : "s"}</div></div>
       <button type="button" class="bmore" data-ix="${x.ix}" aria-label="All ${esc(x.name)} trades">›</button></div>`).join("") + `</div>`;
@@ -1020,7 +1024,7 @@ function liveBoard() {
     const st = !t ? (STARTS[ix] && STARTS[ix] > (D.last_session || "") ? `<span class="pill p-info">Starts ${esc(fd(STARTS[ix]))}</span>` : `<span class="pill p-mute">Watching</span>`)
       : t.status === "open" ? `<span class="pill p-warn">Open</span>` : `<span class="pill ${v > 0 ? "p-up" : "p-dn"}">${v > 0 ? "Won" : "Lost"}</span>`;
     h += `<div class="card tile ${t ? (v > 0 ? "win" : "loss") : ""}" style="--ix:${IXC[ix]}" role="button" tabindex="0" ${t ? `data-trade="${esc(t.id)}"` : `data-ix="${ix}"`} aria-label="${esc(name)}${t ? " trade details" : " details"}">
-      <div class="row"><span class="nm">${ixDot(ix)}${esc(name)}</span>${st}</div>
+      <div class="row"><span class="nm">${ixDot(ix)}${esc(name)}</span><span style="display:flex;gap:6px">${pri(ix)}${st}</span></div>
       <div class="sy">${t ? esc(t.symbol) + " · " + esc(fd(t.signal_date)) : "No trades yet"}</div>
       <div class="pl ${cl(v)}">${t ? sgn(v) : "–"}</div>
       ${spark(cum, cum.length && cum[cum.length - 1] < 0 ? "var(--dn)" : "var(--up)")}
@@ -1034,11 +1038,12 @@ function liveBoard() {
 function todayTimeline(ops, lastDay) {
   const ev = [], od = D.option_day || {};
   const day = Object.values(od).reduce((m, x) => (x.day || "") > m ? x.day : m, lastDay || "");
-  Object.entries(od).forEach(([ix, x]) => { if (x.day === day) (x.near || []).forEach(n => ev.push([n.at, ix, "BE READY", (n.side === "CE" ? "Call" : "Put") + " side · " + n.strike + " " + n.side, "p-warn"])); });
+  const star = ix => ((od[ix] || {}).day === day && od[ix].priority) ? "★ Priority · " : "";
+  Object.entries(od).forEach(([ix, x]) => { if (x.day === day) (x.near || []).forEach(n => ev.push([n.at, ix, "BE READY", star(ix) + (n.side === "CE" ? "Call" : "Put") + " side · " + n.strike + " " + n.side, "p-warn"])); });
   ops.filter(t => t.signal_date === day).forEach(t => {
     const ix = ixOf(t), sp = t.symbol.split(" ").slice(1).join(" ");
     if (!Object.keys(od).length) (t.near || []).forEach(n => ev.push([n.at, ix, "BE READY", (n.side === "CE" ? "Call" : "Put") + " side · " + n.strike + " " + n.side, "p-warn"]));
-    ev.push([tm(t.entry_at), ix, "ENTRY", "Buy " + sp + " @ " + inr(t.entry), / CE$/.test(t.symbol) ? "p-up" : "p-dn"]);
+    ev.push([tm(t.entry_at), ix, "ENTRY", (t.priority ? "★ Priority · " : "") + "Buy " + sp + " @ " + inr(t.entry), / CE$/.test(t.symbol) ? "p-up" : "p-dn"]);
     (t.target_hits || []).forEach(x => ev.push([x.at, ix, "TARGET " + x.t, sp + " hit " + inr(x.price), "p-up"]));
     if (t.status === "closed") ev.push([t.exit_time || tm(t.last_at), ix, "EXIT", sp + " out " + inr(t.exit) + " · " + sgn(t.net), t.net > 0 ? "p-up" : "p-dn"]);
   });

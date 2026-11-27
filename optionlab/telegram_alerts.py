@@ -133,6 +133,8 @@ def deliver(event, text, doc):
         from .telegram_cards import card
         dot = "🟢" if (doc.get("side") == "CE" if event == "entry" else (doc.get("net") or 0) > 0) else "🔴"
         cap = CAPTION[event].format(ix=doc.get("index", "NIFTY"), dot=dot, sym=doc.get("symbol", ""), res="PROFIT" if (doc.get("net") or 0) > 0 else "LOSS")
+        if doc.get("priority") and event in ("range", "near_high", "near_low", "entry"):
+            cap = "⭐ PRIORITY · " + cap
         if event == "status":
             cap = "%s %s · P&L %s" % (cap, doc["symbol"], _rs(doc["gross"]))
         if send_photo(card(event, doc), cap + "\n" + FOOT):
@@ -175,6 +177,13 @@ def _rs(x):
 
 def messages(doc, sent):
     """The messages due for this trade document, given the event names already sent. Returns [(event, text)]."""
+    out = _messages(doc, sent)
+    if doc.get("priority"):
+        out = [(e, "⭐ PRIORITY today\n" + t) if e in ("range", "near_high", "near_low", "entry") else (e, t) for e, t in out]
+    return out
+
+
+def _messages(doc, sent):
     out = []
     st = doc.get("status")
     ix = doc.get("index", "NIFTY")
@@ -233,7 +242,7 @@ def board_rows(docs):
             continue
         ix = doc.get("index", "NIFTY")
         name = NAMES.get(ix, ix)
-        r = {"name": name, "pnl": None, "targets": []}
+        r = {"name": name, "pnl": None, "targets": [], "priority": bool(doc.get("priority")) and st in ("waiting", "open", "closed")}
         if st == "waiting":
             last, hi, lo = doc.get("index_last"), doc.get("range_high"), doc.get("range_low")
             near = None
@@ -263,7 +272,7 @@ def board_rows(docs):
         else:
             r.update(tag=str(st).upper(), tag_colour=GREY, line=doc.get("note") or "")
         rows.append(r)
-        lines.append("%s: %s%s" % (name, r["tag"], (" " + _rs(r["pnl"])) if r["pnl"] is not None else ""))
+        lines.append("%s%s: %s%s" % ("⭐ " if r["priority"] else "", name, r["tag"], (" " + _rs(r["pnl"])) if r["pnl"] is not None else ""))
     return rows, lines, total
 
 

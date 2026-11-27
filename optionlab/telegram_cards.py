@@ -73,6 +73,8 @@ class Card:
         self.y += size + 18
 
     def png(self, foot):
+        if getattr(self, "doc", None) is not None:
+            _badge(self, self.doc)
         self.d.line([48, H - 70, W - 48, H - 70], fill=LINE, width=2)
         self.d.text((48, H - 52), foot, font=font(24), fill=MUTED)
         b = io.BytesIO()
@@ -86,11 +88,46 @@ def _sl(doc):
     return "%s %s %s" % (doc.get("index", "NIFTY"), "<" if doc["side"] == "CE" else ">", format(doc["sl_index"], ",.0f"))
 
 
+GOLD = (245, 179, 1)
+
+
+def _star(d, cx, cy, r, fill):
+    """A filled 5-point star (the card font has no star glyph)."""
+    import math
+    pts = [(cx + (r if i % 2 == 0 else r * 0.42) * math.sin(i * math.pi / 5), cy - (r if i % 2 == 0 else r * 0.42) * math.cos(i * math.pi / 5))
+           for i in range(10)]
+    d.polygon(pts, fill=fill)
+
+
+def pill(d, x, y, h, size):
+    """Gold PRIORITY pill with a drawn star at (x, y); returns its width."""
+    f = font(size, True)
+    w = h * 0.55 + d.textlength("PRIORITY", font=f) + h * 0.9
+    d.rounded_rectangle([x, y, x + w, y + h], h // 2, fill=GOLD)
+    _star(d, x + h * 0.55, y + h / 2, h * 0.3, (40, 28, 0))
+    d.text((x + h * 0.95, y + (h - size) / 2 - 2), "PRIORITY", font=f, fill=(40, 28, 0))
+    return w
+
+
+def _badge(c, doc):
+    """Gold ★ PRIORITY badge in the top-right of the card header."""
+    if not doc.get("priority"):
+        return
+    w = 46 * 0.55 + c.d.textlength("PRIORITY", font=font(26, True)) + 46 * 0.9
+    pill(c.d, W - 48 - w, 26, 46, 26)
+
+
 def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
+    png = _card(event, doc, foot)
+    return png
+
+
+def _card(event, doc, foot):
     day = doc.get("day", "")
     name = {"NIFTY": "NIFTY 50"}.get(doc.get("index", "NIFTY"), doc.get("index", "NIFTY"))
     if event == "range":
         c = Card(BLUE, "%s · %s" % (name, day), "9:45 RANGE SET", "Waiting for a 1-minute close outside the range (until 13:00)")
+        c.doc = doc
         c.boxes([("Range HIGH  →  close above = BUY CALL", format(doc["range_high"], ",.2f"), LGREEN),
                  ("Range LOW  →  close below = BUY PUT", format(doc["range_low"], ",.2f"), LRED)], cols=1, h=120)
         return c.png(foot)
@@ -101,6 +138,7 @@ def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
         c = Card(AMBER, "%s · %s · NEAR RANGE %s" % (name, doc.get("index_last_at", ""), "HIGH" if up else "LOW"),
                  "BE READY %s %s SIDE" % ("▲" if up else "▼", "CALL" if up else "PUT"),
                  "Not entered yet: a 1-minute close %s %s takes the trade" % ("above" if up else "below", format(edge, ",.2f")))
+        c.doc = doc
         c.boxes([("%s now" % name, format(last, ",.2f"), TEXT),
                  ("Range %s" % ("high" if up else "low"), format(edge, ",.2f"), LGREEN if up else LRED),
                  ("Distance", "%s pts" % format(abs(edge - last), ",.2f"), AMBER),
@@ -118,6 +156,7 @@ def card(event, doc, foot="Paper trade · 1 lot · Not investment advice"):
                  "BUY %s %s" % ("▲" if call else "▼", doc["symbol"]),
                  ("%s option · expiry %s · 1 lot = %d qty" % ("Call" if call else "Put", doc["expiry"], lot)) if doc.get("public") else
                  "%s breakout · expiry %s · 1 lot = %d qty" % ("Upside" if call else "Downside", doc["expiry"], lot))
+        c.doc = doc
         c.boxes([("Entry price", px(doc["entry"]), TEXT),
                  ("Stop-loss (sell below)", _sl(doc), LRED),
                  ("Capital (1 lot)", rs(doc["entry"] * lot), TEXT),
@@ -212,6 +251,9 @@ def board_card(rows, stamp, total, foot="Paper trade · 1 lot each · targets ar
         tw = d.textlength(r["tag"], font=font(20, True)) + 24
         d.rounded_rectangle([tx, y + 18, tx + tw, y + 50], 14, fill=r["tag_colour"])
         d.text((tx + 12, y + 22), r["tag"], font=font(20, True), fill=(255, 255, 255))
+        if r.get("priority"):
+            px_ = tx + tw + 10
+            pill(d, px_, y + 18, 32, 20)
         d.text((72, y + 58), r["line"], font=font(23), fill=MUTED)
         x = 72
         for label, hit in r.get("targets") or []:
