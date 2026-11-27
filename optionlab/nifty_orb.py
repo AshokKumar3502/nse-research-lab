@@ -133,6 +133,9 @@ def run(day=None, log=print, index="NIFTY"):
         doc.update(status="not started", note="%s paper trading starts on %s" % (index, ix["start"]))
         return doc                           # not saved: no trade before the start day
     idx = [b for b in candles(ix["key"], day) if b[0] + dt.timedelta(minutes=1) <= now]
+    if not idx and day < config.today_ist():
+        doc.update(status="no data", note="No prices for this past day yet")
+        return doc                               # never overwrite a saved trade with an empty past day
     if not idx or idx[-1][0].time() < RANGE_END:
         doc["note"] = "The range builds from 9:15 to 9:45"
         return _save(doc, p)

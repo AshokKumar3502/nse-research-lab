@@ -73,7 +73,13 @@ def collect():
     try:
         from optionlab import nifty_orb
         files = glob.glob(os.path.join(nifty_orb.PICKS, "option-*-*.json"))
-        last = max((os.path.basename(f)[-15:-5] for f in files), default=None)
+        def _real(f):
+            try:
+                with open(f, encoding="utf-8") as fh:
+                    return json.load(fh).get("status") not in ("no market", "not started", "no data")
+            except (OSError, ValueError):
+                return False
+        last = max((os.path.basename(f)[-15:-5] for f in files if _real(f)), default=None)
         for ix, c in nifty_orb.INDEXES.items():
             p = os.path.join(nifty_orb.PICKS, "option-%s-%s.json" % (c["file"], last)) if last else ""
             if p and os.path.exists(p):

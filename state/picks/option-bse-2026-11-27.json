@@ -1,8 +1,7 @@
 {
  "day": "2026-11-27",
  "index": "BSE",
- "status": "waiting",
- "updated": "01:32",
- "rule": "BSE 9:15-9:45 range breakout, ATM option, SL = the option's own 9:15-9:45 low, exit 15:15",
- "note": "The range builds from 9:15 to 9:45"
+ "status": "no trade",
+ "updated": "15:20",
+ "note": "No breakout of the 9:15-9:45 range by 13:00"
 }
