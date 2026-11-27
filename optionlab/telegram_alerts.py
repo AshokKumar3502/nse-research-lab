@@ -67,11 +67,19 @@ def send_reel(day, docs, log=print, force=False, note=""):
     if os.path.exists(p) and not force:
         return False
     out = os.path.join(tempfile.mkdtemp(), "option-lab-%s.mp4" % day)
-    try:
-        made = reel.make(day, docs, out, watch_rows=reel.watchlist_rows(day))
+    rows = reel.watchlist_rows(day)
+    try:                                         # the animated video; the simple slideshow if that fails
+        from . import motion
+        made = motion.make(day, [reel.public(d) for d in docs], out, watch_rows=rows)
     except Exception as e:     # noqa: BLE001
-        log("reel: %s" % e)
-        return False
+        log("reel (animated): %s, using the slideshow" % e)
+        made = None
+    if not made:
+        try:
+            made = reel.make(day, docs, out, watch_rows=rows)
+        except Exception as e:     # noqa: BLE001
+            log("reel: %s" % e)
+            return False
     if not made:
         log("reel: nothing to make (or no ffmpeg)")
         return False
