@@ -20,6 +20,10 @@ on:
         description: "Send today's live board (all instruments, one card)"
         type: boolean
         default: false
+      priority:
+        description: "Send sample PRIORITY cards (range, BE READY, entry, live board)"
+        type: boolean
+        default: false
       instant:
         description: "Send sample instant alerts (GET READY + entry)"
         type: boolean
@@ -57,7 +61,7 @@ jobs:
       - run: pip install -r requirements.txt
       - name: ffmpeg (for the daily reel)
         run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
-      - run: python -m optionlab.telegram_alerts ${{ inputs.reel_store && '--reel --no-send' || inputs.reel && '--reel --preview' || inputs.instant && '--sample-instant' || inputs.board && '--board --preview' || inputs.targets && '--sample-targets' || (inputs.watchlist && '--watchlist' || (inputs.sample && '--sample' || '--test')) }}
+      - run: python -m optionlab.telegram_alerts ${{ inputs.reel_store && '--reel --no-send' || inputs.reel && '--reel --preview' || inputs.priority && '--sample-priority' || inputs.instant && '--sample-instant' || inputs.board && '--board --preview' || inputs.targets && '--sample-targets' || (inputs.watchlist && '--watchlist' || (inputs.sample && '--sample' || '--test')) }}
       - name: Keep a stored reel in the app list
         if: ${{ inputs.reel || inputs.reel_store }}
         run: |

@@ -376,6 +376,22 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
         print("\n".join(lines))
         print("sent" if ok else "NOT sent")
         sys.exit(0 if ok else 1)
+    if "--sample-priority" in sys.argv:  # the PRIORITY mark on range, BE READY, entry and the live board (made-up numbers)
+        w = {"day": "SAMPLE", "index": "NIFTY", "status": "waiting", "range_high": 25978.0, "range_low": 25890.0, "step": 50,
+             "index_last": 25960.5, "index_last_at": "10:12", "priority": True}
+        e = dict(w, status="open", symbol="NIFTY 26000 CE", side="CE", strike=26000, expiry="2026-12-01", lot=65, entry=210.0,
+                 entry_at="2026-11-30 10:19", sl_option=165.0, sl_index=25890.0, last=228.0, last_at="2026-11-30 10:30", gross=1170.0,
+                 targets=[243.75, 277.5, 311.25], target_hits=[])
+        send("SAMPLE (made-up numbers): the gold ⭐ PRIORITY mark. From Monday it appears on the instruments to give "
+             "priority to when you can take only 2-3 trades. Take the starred ones in the order they trigger.")
+        msgs = dict(messages(w, set()))
+        ok = deliver("range", msgs.get("range", ""), w) + deliver("near_high", msgs.get("near_high", ""), w) +             deliver("entry", dict(messages(e, set())).get("entry", ""), e)
+        from .telegram_cards import board_card
+        rows, lines, total = board_rows([e, dict(w, index="SENSEX", priority=False, range_high=85420.0, range_low=85105.0, index_last=85250.0),
+                                         dict(w, index="PNB", priority=True, range_high=118.4, range_low=116.9, index_last=118.1, step=1)])
+        ok += send_photo(board_card(rows, "SAMPLE · 10:30", total), "📊 SAMPLE live board" + chr(10) + chr(10).join(lines) + chr(10) + FOOT)
+        print("sent %d of 4 priority samples" % ok)
+        sys.exit(0 if ok == 4 else 1)
     if "--sample-instant" in sys.argv:   # the two instant alerts: GET READY (text) and the entry card (made-up numbers)
         w = {"day": "SAMPLE", "index": "NIFTY", "status": "waiting", "range_high": 25978.0, "range_low": 25890.0, "step": 50,
              "index_last": 25960.5, "index_last_at": "10:12"}
