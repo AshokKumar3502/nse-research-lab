@@ -408,7 +408,7 @@ def scene_timeline(rows, page, pages):
 
 
 # ---------------------------------------------------------------- render
-def make(day, docs, out_path, watch_rows=None):
+def make(day, docs, out_path, watch_rows=None, target=60.0):
     exe = _ffmpeg()
     if not exe:
         return None
@@ -434,6 +434,8 @@ def make(day, docs, out_path, watch_rows=None):
     scenes += [(scene_trade(x, i, len(trades)), per) for i, x in enumerate(trades)]
     scenes += [(scene_scores(items), 4.0), (scene_total(total, won, lost, len(docs) - len(trades), day.toordinal()), 3.6),
                (scene_outro(day), 2.2)]
+    k = min(1.8, max(1.0, target / sum(sec for _d, sec in scenes)))   # slow every scene evenly to about a minute
+    scenes = [(draw, sec * k) for draw, sec in scenes]
     p = subprocess.Popen([exe, "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", "%dx%d" % (W, H), "-r", str(FPS),
                           "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-pix_fmt", "yuv420p",
                           "-movflags", "+faststart", out_path], stdin=subprocess.PIPE)
