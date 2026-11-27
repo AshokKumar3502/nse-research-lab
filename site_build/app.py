@@ -162,7 +162,7 @@ def build():
         msgs.append({"id": "intraday-%s" % it.get("day"), "ts": now, "title": "Intraday picks (paper only)",
                      "text": "Buy: %s" % names_i})
     msgs = []                     # option-only app: no stock-pick messages
-    for ixn in ("NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE"):
+    for ixn in ("NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "RBLBANK", "DLF", "ABB", "POLYCAB"):
         ops = sorted((t for t in data.get("trades", []) if t.get("kind") == "option"
                       and (t.get("index") or ("SENSEX" if str(t.get("symbol", "")).startswith("SENSEX") else "NIFTY")) == ixn),
                      key=lambda t: t["signal_date"])
@@ -596,14 +596,14 @@ function drawHighs(tr) {
 let BT = null, BTI = "NIFTY";
 const BTS = {};
 const BTF = {month: "all", kind: "all", limit: 30};
-const IXN = {NIFTY: "NIFTY", SENSEX: "SENSEX", BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB", LAURUSLABS: "Laurus Labs", BAJFINANCE: "Bajaj Finance"};
-const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE"].map(i =>
+const IXN = {NIFTY: "NIFTY", SENSEX: "SENSEX", BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB", LAURUSLABS: "Laurus Labs", BAJFINANCE: "Bajaj Finance", RBLBANK: "RBL Bank", DLF: "DLF", ABB: "ABB", POLYCAB: "Polycab"};
+const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "RBLBANK", "DLF", "ABB", "POLYCAB"].map(i =>
   `<button type="button" data-bti="${i}" aria-pressed="${BTI === i}">${ixDot(i)}${IXN[i]}</button>`).join("")}</div></div>`;
 async function fetchBT(i) {
   if (BTS[i]) return BTS[i];
   const r = await fetch(({SENSEX: "data/backtest-sensex.json", BSE: "data/backtest-bse.json", ADANIENT: "data/backtest-adanient.json",
     DIXON: "data/backtest-dixon.json", PNB: "data/backtest-pnb.json", LAURUSLABS: "data/backtest-lauruslabs.json",
-    BAJFINANCE: "data/backtest-bajfinance.json"}[i] || "data/backtest.json") + "?t=" + Date.now(), {cache: "no-store"});
+    BAJFINANCE: "data/backtest-bajfinance.json", RBLBANK: "data/backtest-rblbank.json", DLF: "data/backtest-dlf.json", ABB: "data/backtest-abb.json", POLYCAB: "data/backtest-polycab.json"}[i] || "data/backtest.json") + "?t=" + Date.now(), {cache: "no-store"});
   if (!r.ok) throw new Error("HTTP " + r.status);
   return (BTS[i] = await r.json());
 }
@@ -888,10 +888,10 @@ function glance(ops, lastDay) {
 }
 
 // ---------- LIVE BOARD (Today): one tile per instrument from the paper-trade data already in the app
-const IXC = {NIFTY: "#818cf8", SENSEX: "#22d3ee", BSE: "#f472b6", ADANIENT: "#fbbf24", DIXON: "#34d399", PNB: "#f97316", LAURUSLABS: "#60a5fa", BAJFINANCE: "#e879f9"};
+const IXC = {NIFTY: "#818cf8", SENSEX: "#22d3ee", BSE: "#f472b6", ADANIENT: "#fbbf24", DIXON: "#34d399", PNB: "#f97316", LAURUSLABS: "#60a5fa", BAJFINANCE: "#e879f9", RBLBANK: "#2dd4bf", DLF: "#fde047", ABB: "#94a3b8", POLYCAB: "#c2410c"};
 const ixDot = ix => `<span class="ixd" style="--ix:${IXC[ix] || "var(--brand)"}" aria-hidden="true"></span>`;
-const BOARD = [["NIFTY", "NIFTY 50", "option"], ["SENSEX", "SENSEX", "sensex"], ["BSE", "BSE Ltd", "bse"], ["ADANIENT", "Adani Ent", "adanient"], ["DIXON", "Dixon", "dixon"], ["PNB", "PNB", "pnb"], ["LAURUSLABS", "Laurus Labs", "lauruslabs"], ["BAJFINANCE", "Bajaj Finance", "bajfinance"]];
-const STARTS = {BSE: "2026-11-27", ADANIENT: "2026-11-27", DIXON: "2026-11-27", PNB: "2026-11-27", LAURUSLABS: "2026-11-30", BAJFINANCE: "2026-11-30"};
+const BOARD = [["NIFTY", "NIFTY 50", "option"], ["SENSEX", "SENSEX", "sensex"], ["BSE", "BSE Ltd", "bse"], ["ADANIENT", "Adani Ent", "adanient"], ["DIXON", "Dixon", "dixon"], ["PNB", "PNB", "pnb"], ["LAURUSLABS", "Laurus Labs", "lauruslabs"], ["BAJFINANCE", "Bajaj Finance", "bajfinance"], ["RBLBANK", "RBL Bank", "rblbank"], ["DLF", "DLF", "dlf"], ["ABB", "ABB", "abb"], ["POLYCAB", "Polycab", "polycab"]];
+const STARTS = {BSE: "2026-11-27", ADANIENT: "2026-11-27", DIXON: "2026-11-27", PNB: "2026-11-27", LAURUSLABS: "2026-11-30", BAJFINANCE: "2026-11-30", RBLBANK: "2026-11-30", DLF: "2026-11-30", ABB: "2026-11-30", POLYCAB: "2026-11-30"};
 function spark(vals, color) {
   if (vals.length < 2) return `<svg viewBox="0 0 100 34" aria-hidden="true"><line x1="0" x2="100" y1="17" y2="17" stroke="var(--line)" stroke-dasharray="3 3"/></svg>`;
   const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals), sp = (hi - lo) || 1;
@@ -1055,7 +1055,7 @@ function weekdayTable() {
 }
 
 // ---------- COMPARE: all backtests side by side (same files as the Backtest tab)
-const CMP = [["NIFTY", "#818cf8"], ["SENSEX", "#22d3ee"], ["BSE", "#f472b6"], ["ADANIENT", "#fbbf24"], ["DIXON", "#34d399"], ["PNB", "#f97316"], ["LAURUSLABS", "#60a5fa"], ["BAJFINANCE", "#e879f9"]];
+const CMP = [["NIFTY", "#818cf8"], ["SENSEX", "#22d3ee"], ["BSE", "#f472b6"], ["ADANIENT", "#fbbf24"], ["DIXON", "#34d399"], ["PNB", "#f97316"], ["LAURUSLABS", "#60a5fa"], ["BAJFINANCE", "#e879f9"], ["RBLBANK", "#2dd4bf"], ["DLF", "#fde047"], ["ABB", "#94a3b8"], ["POLYCAB", "#c2410c"]];
 async function loadCompare() {
   const box = $("#v-compare");
   box.innerHTML = `<h2>Compare<span class="sub">All backtests side by side</span></h2><div class="empty" role="status">Loading the backtests…</div>`;
@@ -1113,7 +1113,7 @@ let ODAILY = [];
 const kindPill = t => t.kind === "momentum" ? `<span class="pill p-info">Momentum</span>` : t.kind === "results" ? `<span class="pill p-info">Results</span>`
   : t.kind === "option" ? `<span class="pill p-warn">Option</span>` : t.kind === "swing" ? `<span class="pill p-info">Swing</span>`
   : `<span class="pill ${t.side === "long" ? "p-up" : "p-dn"}">${t.side === "long" ? "Buy" : "Sell"}</span>`;
-const IXT = {BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB", LAURUSLABS: "Laurus Labs", BAJFINANCE: "Bajaj Finance"};
+const IXT = {BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB", LAURUSLABS: "Laurus Labs", BAJFINANCE: "Bajaj Finance", RBLBANK: "RBL Bank", DLF: "DLF", ABB: "ABB", POLYCAB: "Polycab"};
 const ixOf = t => t.index || (/^SENSEX/.test(t.symbol || "") ? "SENSEX" : "NIFTY");
 const reduceMotion = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.addEventListener("click", e => {
@@ -1276,7 +1276,7 @@ ODAILY = (() => {
   let h = `<h2>Option paper trading<span class="sub">NIFTY, SENSEX, BSE Ltd, Adani Ent, Dixon and PNB · 1 lot each a day on real option prices, after charges</span></h2><div class="kpis">` +
     k.map(([l, v, c, s]) => `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div><div class="s">${esc(s)}</div></div>`).join("") + `</div>`;
   h += `<h2>By index<span class="sub">Closed trades plus any open one</span></h2><div class="list"><table><caption class="sr">P&L by index</caption><thead><tr><th scope="col">Index</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Won</th><th scope="col" class="r">Net</th></tr></thead><tbody>${
-    ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
+    ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "RBLBANK", "DLF", "ABB", "POLYCAB"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
       n = ts.reduce((a, t) => a + (t.status === "closed" ? t.net : (t.gross || 0)), 0);
       return `<tr data-ix="${ix}" style="cursor:pointer"><td>${ixDot(ix)}${IXT[ix] || ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
   if (!MULTI.length) {
@@ -1401,7 +1401,7 @@ ODAILY = (() => {
   const closed = T.filter(t => t.status === "closed");
   const grp = (name, f) => { const ts = closed.filter(f), w = ts.filter(t => t.net > 0).length, tot = ts.reduce((a, t) => a + t.net, 0);
     return [name, ts.length, ts.length ? Math.round(w / ts.length * 100) + "%" : "–", ts.length ? sgn(tot / ts.length) : "–", tot, ts.length]; };
-  const g = [grp("NIFTY", t => ixOf(t) === "NIFTY"), grp("SENSEX", t => ixOf(t) === "SENSEX"), grp("BSE Ltd", t => ixOf(t) === "BSE"), grp("Adani Ent", t => ixOf(t) === "ADANIENT"), grp("Dixon", t => ixOf(t) === "DIXON"), grp("PNB", t => ixOf(t) === "PNB"), grp("Laurus Labs", t => ixOf(t) === "LAURUSLABS"), grp("Bajaj Finance", t => ixOf(t) === "BAJFINANCE"), grp("Calls (CE)", t => / CE$/.test(t.symbol)),
+  const g = [grp("NIFTY", t => ixOf(t) === "NIFTY"), grp("SENSEX", t => ixOf(t) === "SENSEX"), grp("BSE Ltd", t => ixOf(t) === "BSE"), grp("Adani Ent", t => ixOf(t) === "ADANIENT"), grp("Dixon", t => ixOf(t) === "DIXON"), grp("PNB", t => ixOf(t) === "PNB"), grp("Laurus Labs", t => ixOf(t) === "LAURUSLABS"), grp("Bajaj Finance", t => ixOf(t) === "BAJFINANCE"), grp("RBL Bank", t => ixOf(t) === "RBLBANK"), grp("DLF", t => ixOf(t) === "DLF"), grp("ABB", t => ixOf(t) === "ABB"), grp("Polycab", t => ixOf(t) === "POLYCAB"), grp("Calls (CE)", t => / CE$/.test(t.symbol)),
     grp("Puts (PE)", t => / PE$/.test(t.symbol)), grp("All option trades", t => true)];
   h += `<h2>NIFTY vs SENSEX · calls vs puts</h2><div class="list"><table><thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Won</th><th class="r">Avg</th><th class="r">Total</th></tr></thead><tbody>${
     g.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td class="r">${r[2]}</td><td class="r">${r[3]}</td><td class="r ${cl(r[4])}"><b>${r[5] ? sgn(r[4]) : "–"}</b></td></tr>`).join("")}</tbody></table></div>`;

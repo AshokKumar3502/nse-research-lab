@@ -18,7 +18,7 @@ from .telegram_cards import (AMBER, BG, BLUE, GREEN, LGREEN, LRED, LINE, MUTED, 
 
 RW, RH = 1080, 1920
 NAMES = {"NIFTY": "NIFTY 50", "SENSEX": "SENSEX", "BSE": "BSE Ltd", "ADANIENT": "Adani Ent", "DIXON": "Dixon", "PNB": "PNB",
-         "LAURUSLABS": "Laurus Labs", "BAJFINANCE": "Bajaj Finance"}
+         "LAURUSLABS": "Laurus Labs", "BAJFINANCE": "Bajaj Finance", "RBLBANK": "RBL Bank", "DLF": "DLF", "ABB": "ABB", "POLYCAB": "Polycab"}
 
 
 def _ffmpeg():

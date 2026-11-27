@@ -59,6 +59,19 @@ INDEXES = {
     "BAJFINANCE": {"key": "NSE_EQ|INE296A01032", "step": 10, "segment": "NSE_FO", "name": "BAJAJ FINANCE LIMITED",
                    "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "bajfinance",
                    "list": minute.INSTRUMENTS_URL, "id": "OF"},
+    # high-profit F&O stocks (2022-2026), added 28 Nov 2026
+    "RBLBANK": {"key": "NSE_EQ|INE976G01028", "step": 5, "segment": "NSE_FO", "name": "RBL BANK LIMITED",
+            "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "rblbank",
+            "list": minute.INSTRUMENTS_URL, "id": "OR"},
+    "DLF": {"key": "NSE_EQ|INE271C01023", "step": 10, "segment": "NSE_FO", "name": "DLF LIMITED",
+            "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "dlf",
+            "list": minute.INSTRUMENTS_URL, "id": "OQ"},
+    "ABB": {"key": "NSE_EQ|INE117A01022", "step": 100, "segment": "NSE_FO", "name": "ABB INDIA LIMITED",
+            "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "abb",
+            "list": minute.INSTRUMENTS_URL, "id": "OW"},
+    "POLYCAB": {"key": "NSE_EQ|INE455K01017", "step": 100, "segment": "NSE_FO", "name": "POLYCAB INDIA LIMITED",
+            "sl_from": dt.date(2026, 11, 30), "start": dt.date(2026, 11, 30), "file": "polycab",
+            "list": minute.INSTRUMENTS_URL, "id": "OY"},
 }
 
 
@@ -159,7 +172,7 @@ def run(day=None, log=print, index="NIFTY"):
             break
     doc["near"] = near
     if sig is None:
-        done = now.time() >= dt.time(13, 1)
+        done = day < now.date() or now.time() >= dt.time(13, 1)   # a past day is always finished
         doc.update(status="no trade" if done else "waiting",
                    note="No breakout of the 9:15-9:45 range by 13:00" if done else "Watching for a breakout until 13:00")
         return _save(doc, p)

@@ -20,7 +20,7 @@ BG0, BG1 = (6, 10, 22), (14, 21, 39)
 TEXT, MUTED, LINE, PANEL = (236, 240, 248), (139, 151, 180), (40, 52, 82), (16, 23, 41)
 UP, DN, AMB = (52, 211, 153), (251, 113, 133), (251, 191, 36)
 IXC = {"NIFTY": (129, 140, 248), "SENSEX": (34, 211, 238), "BSE": (244, 114, 182), "ADANIENT": (251, 191, 36),
-       "DIXON": (52, 211, 153), "PNB": (249, 115, 22), "LAURUSLABS": (96, 165, 250), "BAJFINANCE": (232, 121, 249)}
+       "DIXON": (52, 211, 153), "PNB": (249, 115, 22), "LAURUSLABS": (96, 165, 250), "BAJFINANCE": (232, 121, 249), "RBLBANK": (45, 212, 191), "DLF": (253, 224, 71), "ABB": (148, 163, 184), "POLYCAB": (194, 65, 12)}
 GRAD = [(99, 102, 241), (168, 85, 247), (34, 211, 238)]
 
 
@@ -167,7 +167,8 @@ def scene_watch(rows):
         header(im, "Today's watchlist", frame, t)
         d = ImageDraw.Draw(im)
         for i, (ix, name, price, lot, exp) in enumerate(rows):
-            k = eo(seg(t, 0.08 + i * 0.08, 0.38 + i * 0.08))
+            st = min(0.08, 0.5 / max(1, len(rows)))
+            k = eo(seg(t, 0.08 + i * st, 0.38 + i * st))
             if k <= 0:
                 continue
             gap = min(190, int(1330 / max(1, len(rows))))
@@ -177,8 +178,8 @@ def scene_watch(rows):
             hh = gap - 30
             d.rounded_rectangle([x, y, x + W - 140, y + hh], 28, fill=PANEL, outline=LINE, width=2)
             d.rounded_rectangle([x, y, x + 12, y + hh], 6, fill=col)
-            big, small = (50, 28) if hh >= 150 else (40, 24)
-            y1, y2 = y + int(hh * 0.16), y + int(hh * 0.62)
+            big, small = (50, 28) if hh >= 150 else (40, 24) if hh >= 110 else (32, 20)
+            y1, y2 = y + int(hh * 0.14), y + int(hh * 0.60)
             d.ellipse([x + 44, y1 + 10, x + 72, y1 + 38], fill=col)
             d.text((x + 92, y1), name, font=F(big), fill=TEXT)
             d.text((x + 92, y2), "Lot %s · expiry %s" % (lot, exp[5:] if exp else "–"), font=F(small, False), fill=MUTED)
@@ -302,25 +303,28 @@ def scene_scores(items):
         for i, (ix, name, p) in enumerate(items):
             gap = min(205, int(1340 / max(1, len(items))))
             y = 340 + i * gap
-            k = eo(seg(t, 0.08 + i * 0.07, 0.55 + i * 0.07))
-            a = eo(seg(t, 0.02 + i * 0.07, 0.25 + i * 0.07))
+            st = min(0.07, 0.4 / max(1, len(items)))
+            k = eo(seg(t, 0.08 + i * st, 0.55 + i * st))
+            a = eo(seg(t, 0.02 + i * st, 0.25 + i * st))
             if a <= 0:
                 continue
             d.rounded_rectangle([bx0, y, bx1, y + gap - 30], 26, fill=PANEL, outline=LINE, width=2)
             hh = gap - 30
-            by = y + hh - 36
-            d.ellipse([bx0 + 34, y + 30, bx0 + 62, y + 58], fill=IXC.get(ix, GRAD[0]))
-            d.text((bx0 + 80, y + 20), name, font=F(42 if hh >= 150 else 36), fill=TEXT)
+            tiny = hh < 110
+            by = y + hh - (22 if tiny else 36)
+            d.ellipse([bx0 + 34, y + (16 if tiny else 30), bx0 + 58, y + (40 if tiny else 58)], fill=IXC.get(ix, GRAD[0]))
+            d.text((bx0 + 74, y + (8 if tiny else 20)), name, font=F(42 if hh >= 150 else 36 if not tiny else 30), fill=TEXT)
             if p is None:
-                d.text((bx1 - 34, y + 24), "No trade", font=F(34, False), fill=MUTED, anchor="ra")
-                d.rounded_rectangle([bx0 + 34, by, bx1 - 34, by + 22], 11, fill=LINE)
+                d.text((bx1 - 34, y + (10 if tiny else 24)), "No trade", font=F(28 if tiny else 34, False), fill=MUTED, anchor="ra")
+                d.rounded_rectangle([bx0 + 34, by, bx1 - 34, by + (12 if tiny else 22)], 6, fill=LINE)
                 continue
             c = UP if p >= 0 else DN
-            d.text((bx1 - 34, y + 16), rs(p * k), font=F(48 if hh >= 150 else 40), fill=c, anchor="ra")
+            d.text((bx1 - 34, y + (6 if tiny else 16)), rs(p * k), font=F(48 if hh >= 150 else 40 if not tiny else 32), fill=c, anchor="ra")
             full = (bx1 - 34) - (bx0 + 34)
             L = max(28, full * abs(p) / mx * k)
-            d.rounded_rectangle([bx0 + 34, by, bx1 - 34, by + 22], 11, fill=LINE)
-            d.rounded_rectangle([bx0 + 34, by, bx0 + 34 + L, by + 22], 11, fill=c)
+            bh = 12 if tiny else 22
+            d.rounded_rectangle([bx0 + 34, by, bx1 - 34, by + bh], 6, fill=LINE)
+            d.rounded_rectangle([bx0 + 34, by, bx0 + 34 + L, by + bh], 6, fill=c)
         footer(im)
     return draw
 

@@ -49,7 +49,15 @@ IX = {"NIFTY": {"lot": LOT, "step": STEP, "out": OUT, "file": "nifty", "first": 
       "LAURUSLABS": {"lot": 425, "step": 20, "out": os.path.join(config.ROOT, "docs", "data", "backtest-lauruslabs.json"),
                      "file": "lauruslabs", "first": dt.date(2022, 1, 3), "symbol": "LAURUSLABS", "name": "Laurus Labs"},
       "BAJFINANCE": {"lot": 750, "step": 10, "out": os.path.join(config.ROOT, "docs", "data", "backtest-bajfinance.json"),
-                     "file": "bajfinance", "first": dt.date(2022, 1, 3), "symbol": "BAJFINANCE", "name": "Bajaj Finance"}}
+                     "file": "bajfinance", "first": dt.date(2022, 1, 3), "symbol": "BAJFINANCE", "name": "Bajaj Finance"},
+      "RBLBANK": {"lot": 3175, "step": 5, "out": os.path.join(config.ROOT, "docs", "data", "backtest-rblbank.json"),
+              "file": "rblbank", "first": dt.date(2022, 1, 3), "symbol": "RBLBANK", "name": "RBL Bank"},
+      "DLF": {"lot": 950, "step": 10, "out": os.path.join(config.ROOT, "docs", "data", "backtest-dlf.json"),
+              "file": "dlf", "first": dt.date(2022, 1, 3), "symbol": "DLF", "name": "DLF"},
+      "ABB": {"lot": 125, "step": 100, "out": os.path.join(config.ROOT, "docs", "data", "backtest-abb.json"),
+              "file": "abb", "first": dt.date(2022, 1, 3), "symbol": "ABB", "name": "ABB"},
+      "POLYCAB": {"lot": 75, "step": 100, "out": os.path.join(config.ROOT, "docs", "data", "backtest-polycab.json"),
+              "file": "polycab", "first": dt.date(2022, 1, 3), "symbol": "POLYCAB", "name": "Polycab"}}
 SNAP = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10]
 
 
@@ -461,7 +469,7 @@ def build(months=6, log=print, index="NIFTY", rows=None):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--months", type=int, default=6)
-    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb", "lauruslabs", "bajfinance", "all"])
+    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb", "lauruslabs", "bajfinance", "rblbank", "dlf", "abb", "polycab", "all"])
     ap.add_argument("--extend", action="store_true", help="add only the new days to the existing files")
     a = ap.parse_args()
     for ix in (list(IX) if a.index == "all" else [a.index.upper()]):
