@@ -40,7 +40,7 @@ def updated_by():
                                          env.get("GITHUB_REPOSITORY", ""), env.get("GITHUB_RUN_ID", ""))
     else:
         who, url = "Laptop", None
-    base = {"at": now.strftime("%d %b %Y, %H:%M IST"), "ts": int(now.timestamp()), "by": who, "url": url}
+    base = {"at": now.strftime("%d %b %Y, %H:%M IST"), "ts": int(now.timestamp()), "by": who, "url": None}   # no link: keeps the account name out of the app
     if env.get("PHASE") == "live" and now.time() < datetime.time(15, 20):
         base["by"] = "GitHub cloud · live prices every 10 min (run #%s)" % env.get("GITHUB_RUN_NUMBER", "?")
         nxt = now + datetime.timedelta(minutes=10)
@@ -1302,7 +1302,11 @@ renderAll(); decorate();
 show(location.hash.slice(1) || "today");
 
 // ---------- live prices: GitHub refreshes data/live.json every 10 minutes in market hours
-const LIVE = "https://raw.githubusercontent.com/AshokKumar3502/nse-research-lab/main/docs/data/live.json";
+// on *.github.io the fresh file comes straight from the repository (address built from this page's own address);
+// on any other address (the shared link) a small proxy serves data/live.json from the same place
+const LIVE = location.hostname.endsWith(".github.io")
+  ? "https://raw.githubusercontent.com/" + location.hostname.split(".")[0] + "/" + location.pathname.split("/")[1] + "/main/docs/data/live.json"
+  : "data/live.json";
 async function pullLive() {
   try {
     const r = await fetch(LIVE + "?t=" + Date.now(), {cache: "no-store"});
