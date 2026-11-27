@@ -362,11 +362,35 @@ def real_vs_model(log=print):
     return doc
 
 
-def build(months=6, log=print, index="NIFTY"):
+def extend(index, log=print):
+    """Add the days after the backtest file's last model day (model prices), then the real paper-trade days."""
+    out = IX[index]["out"]
+    if not os.path.exists(out):
+        log("extend %s: no file yet" % index)
+        return None
+    with open(out, encoding="utf-8") as fh:
+        old = json.load(fh)
     con = db.connect(read_only=True)
     end = con.execute("SELECT max(date) FROM minute_bars WHERE symbol = 'NIFTY 50'").fetchone()[0]
-    start = max((pd.Timestamp(end) - pd.DateOffset(months=months)).date(), IX[index]["first"])
-    rows = (replay_stock(con, start, end, index) if "symbol" in IX[index] else replay(con, start, end, index)) + real_trades(end, index)
+    last = max((r["date"] for r in old["days"] if r.get("source") != "real"), default=None)
+    if last is None:
+        return None
+    start = dt.date.fromisoformat(last) + dt.timedelta(days=1)
+    new = []
+    if start <= end:
+        new = replay_stock(con, start, end, index) if "symbol" in IX[index] else replay(con, start, end, index)
+    keep = [{k: v for k, v in r.items() if k != "cum"} for r in old["days"] if r.get("source") != "real" and r["date"] <= last]
+    rows = {r["date"]: r for r in keep + new + real_trades(end, index)}
+    log("extend %s: %d new model days through %s" % (index, len(new), end))
+    return build(log=log, index=index, rows=sorted(rows.values(), key=lambda r: r["date"]))
+
+
+def build(months=6, log=print, index="NIFTY", rows=None):
+    if rows is None:
+        con = db.connect(read_only=True)
+        end = con.execute("SELECT max(date) FROM minute_bars WHERE symbol = 'NIFTY 50'").fetchone()[0]
+        start = max((pd.Timestamp(end) - pd.DateOffset(months=months)).date(), IX[index]["first"])
+        rows = (replay_stock(con, start, end, index) if "symbol" in IX[index] else replay(con, start, end, index)) + real_trades(end, index)
     rows.sort(key=lambda r: r["date"])
     cum = 0
     for r in rows:
@@ -431,6 +455,11 @@ def build(months=6, log=print, index="NIFTY"):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--months", type=int, default=6)
-    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb"])
+    ap.add_argument("--index", default="nifty", choices=["nifty", "sensex", "bse", "adanient", "dixon", "pnb", "all"])
+    ap.add_argument("--extend", action="store_true", help="add only the new days to the existing files")
     a = ap.parse_args()
-    build(a.months, index=a.index.upper())
+    for ix in (list(IX) if a.index == "all" else [a.index.upper()]):
+        try:
+            extend(ix) if a.extend else build(a.months, index=ix)
+        except Exception as e:     # noqa: BLE001 - one instrument failing must not stop the others
+            print("%s: %s" % (ix, e))

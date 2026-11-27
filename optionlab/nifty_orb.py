@@ -245,7 +245,7 @@ def trades():
             continue
         out.append({"id": "%s-%s" % (ix["id"], d["day"]), "kind": "option", "index": index, "side": "long", "symbol": d["symbol"],
                     "industry": "%s option · expiry %s" % (index, d["expiry"]), "signal_date": d["day"], "expiry": d["expiry"],
-                    "sl_price": d.get("sl_option"), "path": d.get("path") or [],
+                    "sl_price": d.get("sl_option"), "path": d.get("path") or [], "near": d.get("near") or [],
                     "entry_date": d["day"], "entry_at": d["entry_at"], "entry": d["entry"], "qty": d["lot"],
                     "sl": None, "sl_note": ("Rs %s" % d["sl_option"]) if d.get("sl_option") else "Index %s %s" % ("below" if d["side"] == "CE" else "above",
                                                             format(d["sl_index"], ",.2f")),

@@ -86,6 +86,13 @@ def send_reel(day, docs, log=print, force=False, note=""):
     _rows, _lines, total = board_rows([reel.public(d) for d in docs])
     cap = "🎬 Daily reel · %s · total %s\n%sReady for Instagram (9:16). %s" % (day.strftime("%d %b %Y"), _rs(total), note, FOOT)
     ok = send_video(made, cap)
+    try:                                         # keep it for the app's Reels tab
+        from . import reels
+        tr = [d for d in docs if d.get("status") in ("open", "closed")]
+        reels.publish(day, made, total, len(tr), sum(1 for d in tr if (d.get("net") or 0) > 0 and d.get("status") == "closed"),
+                      sum(1 for d in tr if (d.get("net") or 0) <= 0 and d.get("status") == "closed"), log=log)
+    except Exception as e:     # noqa: BLE001
+        log("reels: %s" % e)
     if ok and not force:
         os.makedirs(STATE, exist_ok=True)
         with open(p, "w", encoding="utf-8") as fh:
@@ -410,6 +417,15 @@ if __name__ == "__main__":       # python -m optionlab.telegram_alerts --test  (
                 c["sl_from"] = min(c["sl_from"], day)
             note = "PREVIEW with real prices. "
         docs = [nifty_orb.run(day, log=lambda *a: None, index=ix) for ix in nifty_orb.INDEXES]
+        if "--no-send" in sys.argv:             # store in the app's Reels list only, no Telegram post
+            from . import motion, reel, reels
+            out = os.path.join(tempfile.mkdtemp(), "reel-%s.mp4" % day)
+            made = motion.make(day, [reel.public(d) for d in docs], out, watch_rows=reel.watchlist_rows(day))
+            _r, _l, tot = board_rows([reel.public(d) for d in docs])
+            tr = [d for d in docs if d.get("status") in ("open", "closed")]
+            ok = reels.publish(day, made, tot, len(tr), sum(1 for d in tr if (d.get("net") or 0) > 0), sum(1 for d in tr if (d.get("net") or 0) <= 0))
+            print("reel stored" if ok else "reel NOT stored")
+            sys.exit(0 if ok else 1)
         ok = send_reel(day, docs, force=True, note=note)
         print("reel", "sent" if ok else "NOT sent")
         sys.exit(0 if ok else 1)

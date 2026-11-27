@@ -75,6 +75,8 @@ jobs:
           restore-keys: wh-
 
       - name: Run the ${{ env.PHASE }} job
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python -m cloud "$PHASE" ${{ inputs.force && '--force' || '' }}
 
       - name: Save the slim warehouse

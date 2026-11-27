@@ -5,6 +5,7 @@ Data is embedded in the page (so it also works inside the Android app and when o
 written to docs/data/app.json; docs/data/notify.json tells the Android app when new picks are out.
 """
 import datetime
+import glob
 import json
 import os
 
@@ -68,6 +69,19 @@ def collect():
                 t["exit_reason"] = "Stop-loss" if w.startswith(("SL", "Stop")) else "Time exit" if "15:15" in w or w.startswith("Time") else w
             n = str(t.get("sl_note") or "")
             t["sl_note"] = n.replace("Option below Rs ", "Rs ")
+    option_day = {}                          # latest session: status and BE READY moments per instrument (for the app timeline)
+    try:
+        from optionlab import nifty_orb
+        files = glob.glob(os.path.join(nifty_orb.PICKS, "option-*-*.json"))
+        last = max((os.path.basename(f)[-15:-5] for f in files), default=None)
+        for ix, c in nifty_orb.INDEXES.items():
+            p = os.path.join(nifty_orb.PICKS, "option-%s-%s.json" % (c["file"], last)) if last else ""
+            if p and os.path.exists(p):
+                with open(p, encoding="utf-8") as fh:
+                    o = json.load(fh)
+                option_day[ix] = {"day": o.get("day"), "status": o.get("status"), "near": o.get("near") or []}
+    except Exception:          # noqa: BLE001
+        pass
     sw, it = _latest("swing-"), _latest("intraday-")
     ind = {}
     p = os.path.join(config.SETS, "industries", "all.parquet")
@@ -120,7 +134,7 @@ def collect():
             "regime": (sw or {}).get("regime"), "swing_session": (sw or {}).get("session"),
             "swing_status": (sw or {}).get("status"), "swing_today": swing_today, "intraday_today": intraday_today,
             "summary": book.get("summary", {}), "daily": book.get("daily", []), "trades": book.get("trades", []),
-            "verdicts": verdicts}
+            "verdicts": verdicts, "option_day": option_day}
 
 
 def build():
@@ -356,6 +370,9 @@ h3.month{display:flex;justify-content:space-between;margin:24px 2px 2px;font-siz
 .tdnav{display:flex;gap:6px}.tdnav button{border:0;background:rgba(255,255,255,.18);color:#fff;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer}.tdnav button[disabled]{opacity:.35}
 .tdpos{font-size:11.5px;opacity:.85;margin-top:2px}
 #install{display:none}
+/* reels */
+.reels{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.reel video{width:100%;aspect-ratio:9/16;border-radius:14px;background:#000;display:block}
 /* market status bar */
 .mkt{max-width:1180px;margin:0 auto;padding:0 16px 8px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
 .mkt .st{display:inline-flex;align-items:center;gap:7px;font-weight:700;color:var(--text)}.mkt .st .dot{width:9px;height:9px}
@@ -417,7 +434,7 @@ background:var(--grad);color:#fff;border-radius:18px;box-shadow:0 10px 30px var(
 .bnav{display:none}
 @media (max-width:820px){nav.tabs{display:none}nav.tabs+.iconbtn{margin-left:auto}
  .lastupd{bottom:calc(62px + env(safe-area-inset-bottom));font-size:11.5px}main{padding-bottom:136px}
- .bnav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--surface) 90%,transparent);
+ .bnav{display:grid;grid-template-columns:repeat(7,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--surface) 90%,transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 2px calc(6px + env(safe-area-inset-bottom))}
  .bnav button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:5px 1px;border-radius:12px;margin:0 2px}
  .bnav button svg{width:21px;height:21px}.bnav button[aria-current=page]{color:var(--brand);background:color-mix(in srgb,var(--brand) 13%,transparent)}
@@ -437,6 +454,7 @@ background:var(--grad);color:#fff;border-radius:18px;box-shadow:0 10px 30px var(
 <section class="view" id="v-stats"><div id="v-portfolio"></div><div id="v-stats-in"></div></section>
 <section class="view" id="v-backtest"></section>
 <section class="view" id="v-compare"></section>
+<section class="view" id="v-reels"></section>
 <section class="view" id="v-highs"></section>
 <footer>Paper trading 1 lot of NIFTY options a day on real NSE option prices, after Zerodha charges. For education and research only; not
 investment advice, and the author is not a SEBI-registered adviser. Nothing here places orders.</footer>
@@ -462,6 +480,7 @@ const I = {
  history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>',
  backtest: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v4M7 15v6M17 3v8M17 17v4"/><rect x="4.5" y="7" width="5" height="8" rx="1"/><rect x="14.5" y="11" width="5" height="6" rx="1"/></svg>',
  highs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M5 16l4-6 4 3 6-9"/><circle cx="19" cy="4" r="1.6"/></svg>',
+ reels: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 8h18M8 3l3 5M14 3l3 5"/><path d="M10 12l5 3-5 3z" fill="currentColor"/></svg>',
  compare: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-6"/><path d="M7 19l4-3 3 1 5-4" opacity=".5"/></svg>',
  stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
@@ -482,7 +501,7 @@ setTheme(cur);
 $("#theme").onclick = () => { cur = themes[(themes.indexOf(cur) + 1) % 3]; setTheme(cur); };
 
 // ---------- navigation
-const views = [["today", "Dashboard"], ["backtest", "Backtest"], ["compare", "Compare"], ["highs", "Exit vs High"], ["history", "History"], ["stats", "Stats"]];
+const views = [["today", "Dashboard"], ["backtest", "Backtest"], ["compare", "Compare"], ["reels", "Reels"], ["highs", "Exit vs High"], ["history", "History"], ["stats", "Stats"]];
 $("nav.tabs").innerHTML = views.map(([k, l]) => `<button data-v="${k}">${l}</button>`).join("");
 $(".bnav").innerHTML = views.map(([k, l]) => `<button data-v="${k}" aria-label="${l}">${I[k]}<span>${{highs: "Highs", today: "Home"}[k] || l}</span></button>`).join("");
 function show(v) {
@@ -494,6 +513,7 @@ function show(v) {
   if (v === "backtest") loadBacktest();
   if (v === "highs") loadHighs();
   if (v === "compare") loadCompare();
+  if (v === "reels") loadReels();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("[data-v]").forEach(b => b.onclick = () => show(b.dataset.v));
@@ -872,18 +892,32 @@ function spark(vals, color) {
   return `<svg viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="100" y1="${(31 - (0 - lo) / sp * 28).toFixed(1)}" y2="${(31 - (0 - lo) / sp * 28).toFixed(1)}" stroke="var(--line)" stroke-dasharray="3 3"/>
     <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
 }
+// ---------- period switch for the dashboard totals
+let PER = "day";
+try { PER = localStorage.getItem("period") || "day"; } catch (e) {}
+function inPeriod(d, lastDay) {
+  if (!lastDay) return false;
+  if (PER === "all") return true;
+  if (PER === "day") return d === lastDay;
+  if (PER === "month") return d.slice(0, 7) === lastDay.slice(0, 7);
+  const L = new Date(lastDay + "T00:00:00"), mon = new Date(L); mon.setDate(L.getDate() - ((L.getDay() + 6) % 7));
+  return d >= mon.toISOString().slice(0, 10) && d <= lastDay;
+}
 function liveBoard() {
   const ops = (D.trades || []).filter(t => t.kind === "option" && t.status !== "pending");
   const lastDay = ops.reduce((m, t) => t.signal_date > m ? t.signal_date : m, "");
   const val = t => t.status === "closed" ? t.net : (t.gross || 0);
-  const dayTot = ops.filter(t => t.signal_date === lastDay).reduce((a, t) => a + val(t), 0);
-  const allTot = ops.reduce((a, t) => a + val(t), 0), open = ops.filter(t => t.status === "open").length;
-  let h = `<div class="sumbar" role="group" aria-label="Paper trading summary">
-    <div><div class="k">Latest day${lastDay ? " · " + esc(fd(lastDay)) : ""}</div><div class="v">${lastDay ? sgn(dayTot) : "–"}</div></div>
-    <div><div class="k">All paper trades</div><div class="v">${sgn(allTot)}</div></div>
-    <div><div class="k">Open now</div><div class="v">${open}</div></div>
-    <div><div class="k">Trades</div><div class="v">${ops.length}</div></div>${daySpark(ops.filter(t => t.signal_date === lastDay))}</div>${glance(ops, lastDay)}
-    <h2 style="margin-top:14px">Live board<span class="sub">Latest paper trade for each instrument · tap a tile to open the trade</span></h2><div class="board">`;
+  const ps = ops.filter(t => inPeriod(t.signal_date, lastDay)), pc = ps.filter(t => t.status === "closed");
+  const ptot = ps.reduce((a, t) => a + val(t), 0), open = ops.filter(t => t.status === "open").length;
+  const plab = {day: lastDay ? "Latest day · " + fd(lastDay) : "Latest day", week: "This week", month: "This month", all: "All time"}[PER];
+  let h = `<div class="tools" style="margin:6px 0 8px"><div class="seg" role="group" aria-label="Period">${[["day", "Today"], ["week", "Week"], ["month", "Month"], ["all", "All time"]]
+      .map(([k, l]) => `<button type="button" data-per="${k}" aria-pressed="${PER === k}">${l}</button>`).join("")}</div></div>
+    <div class="sumbar" role="group" aria-label="Paper trading summary">
+    <div><div class="k">${esc(plab)}</div><div class="v">${ps.length ? sgn(ptot) : "–"}</div></div>
+    <div><div class="k">Trades</div><div class="v">${ps.length}</div></div>
+    <div><div class="k">Win rate</div><div class="v">${pc.length ? Math.round(pc.filter(t => t.net > 0).length / pc.length * 100) + "%" : "–"}</div></div>
+    <div><div class="k">Open now</div><div class="v">${open}</div></div>${PER === "day" ? daySpark(ops.filter(t => t.signal_date === lastDay)) : ""}</div>${glance(ops, lastDay)}
+    <h2 style="margin-top:14px">Live board<span class="sub">Latest paper trade for each instrument · tap a tile to open the trade, or "All trades" for the instrument</span></h2><div class="board">`;
   BOARD.forEach(([ix, name, id]) => {
     const ts = ops.filter(t => ixOf(t) === ix).sort((a, b) => a.signal_date.localeCompare(b.signal_date));
     const t = ts[ts.length - 1];
@@ -891,14 +925,90 @@ function liveBoard() {
     const v = t ? val(t) : null;
     const st = !t ? (STARTS[ix] && STARTS[ix] > (D.last_session || "") ? `<span class="pill p-info">Starts ${esc(fd(STARTS[ix]))}</span>` : `<span class="pill p-mute">Watching</span>`)
       : t.status === "open" ? `<span class="pill p-warn">Open</span>` : `<span class="pill ${v > 0 ? "p-up" : "p-dn"}">${v > 0 ? "Won" : "Lost"}</span>`;
-    h += `<div class="card tile ${t ? (v > 0 ? "win" : "loss") : ""}" style="--ix:${IXC[ix]}" role="button" tabindex="0" ${t ? `data-trade="${esc(t.id)}"` : ""} aria-label="${esc(name)}${t ? " trade details" : ""}">
+    h += `<div class="card tile ${t ? (v > 0 ? "win" : "loss") : ""}" style="--ix:${IXC[ix]}" role="button" tabindex="0" ${t ? `data-trade="${esc(t.id)}"` : `data-ix="${ix}"`} aria-label="${esc(name)}${t ? " trade details" : " details"}">
       <div class="row"><span class="nm">${ixDot(ix)}${esc(name)}</span>${st}</div>
       <div class="sy">${t ? esc(t.symbol) + " · " + esc(fd(t.signal_date)) : "No trades yet"}</div>
       <div class="pl ${cl(v)}">${t ? sgn(v) : "–"}</div>
       ${spark(cum, cum.length && cum[cum.length - 1] < 0 ? "var(--dn)" : "var(--up)")}
-      <div class="ind" style="margin-top:2px">${t && t.targets ? [1, 2, 3].map(k => (t.target_hits || []).some(x => x.t === k) ? `<b class="up">T${k}✓</b>` : `T${k}`).join(" ") + " · " : ""}${ts.length} trade${ts.length === 1 ? "" : "s"} · total ${ts.length ? sgn(cum[cum.length - 1]) : "–"}</div></div>`;
+      <div class="ind" style="margin-top:2px">${t && t.targets ? [1, 2, 3].map(k => (t.target_hits || []).some(x => x.t === k) ? `<b class="up">T${k}✓</b>` : `T${k}`).join(" ") + " · " : ""}${ts.length} trade${ts.length === 1 ? "" : "s"} · total ${ts.length ? sgn(cum[cum.length - 1]) : "–"}</div>
+      <button type="button" class="linkbtn" data-ix="${ix}" style="margin-top:4px">All ${esc(name)} trades ›</button></div>`;
   });
-  return h + `</div>`;
+  return h + `</div>` + todayTimeline(ops, lastDay);
+}
+
+// ---------- today's timeline in the app: be ready -> entry -> targets -> exit, with time, call/put and strike
+function todayTimeline(ops, lastDay) {
+  const ev = [], od = D.option_day || {};
+  const day = Object.values(od).reduce((m, x) => (x.day || "") > m ? x.day : m, lastDay || "");
+  Object.entries(od).forEach(([ix, x]) => { if (x.day === day) (x.near || []).forEach(n => ev.push([n.at, ix, "BE READY", (n.side === "CE" ? "Call" : "Put") + " side · " + n.strike + " " + n.side, "p-warn"])); });
+  ops.filter(t => t.signal_date === day).forEach(t => {
+    const ix = ixOf(t), sp = t.symbol.split(" ").slice(1).join(" ");
+    if (!Object.keys(od).length) (t.near || []).forEach(n => ev.push([n.at, ix, "BE READY", (n.side === "CE" ? "Call" : "Put") + " side · " + n.strike + " " + n.side, "p-warn"]));
+    ev.push([tm(t.entry_at), ix, "ENTRY", "Buy " + sp + " @ " + inr(t.entry), / CE$/.test(t.symbol) ? "p-up" : "p-dn"]);
+    (t.target_hits || []).forEach(x => ev.push([x.at, ix, "TARGET " + x.t, sp + " hit " + inr(x.price), "p-up"]));
+    if (t.status === "closed") ev.push([t.exit_time || tm(t.last_at), ix, "EXIT", sp + " out " + inr(t.exit) + " · " + sgn(t.net), t.net > 0 ? "p-up" : "p-dn"]);
+  });
+  Object.entries(od).forEach(([ix, x]) => { if (x.day === day && x.status === "no trade") ev.push(["13:00", ix, "NO TRADE", "No trade today", "p-mute"]); });
+  ev.sort((a, b) => (a[0] || "").localeCompare(b[0] || ""));
+  return `<h2>Today's timeline<span class="sub">${day ? esc(fdl(day)) + " · " : ""}every alert in time order</span></h2>` + (ev.length ? `<div class="list">` + ev.map(([hm, ix, tag, det, pcl]) =>
+    `<div class="li"><div style="display:flex;gap:12px;align-items:center"><span class="num muted" style="min-width:44px">${esc(hm || "–")}</span>${ixDot(ix)}<div><b>${esc(IXN[ix] || ix)}</b><div class="d">${esc(det)}</div></div></div><span class="pill ${pcl}">${esc(tag)}</span></div>`).join("") + `</div>`
+    : `<div class="empty">No alerts yet today.</div>`);
+}
+
+// ---------- instrument page (opens in the trade sheet)
+async function openIx(ix) {
+  const ops = (D.trades || []).filter(t => t.kind === "option" && t.status !== "pending" && ixOf(t) === ix).sort((a, b) => b.signal_date.localeCompare(a.signal_date));
+  const cls = ops.filter(t => t.status === "closed"), val = t => t.status === "closed" ? t.net : (t.gross || 0);
+  const tot = ops.reduce((a, t) => a + val(t), 0), w = cls.filter(t => t.net > 0).length;
+  const tgt = k => { const z = ops.filter(t => t.targets); return z.length ? Math.round(z.filter(t => (t.target_hits || []).some(x => x.t === k)).length / z.length * 100) + "%" : "–"; };
+  let c = 0; const cum = ops.slice().reverse().map(t => (c += val(t)));
+  const ic = IXC[ix] || "#6366f1", name = IXN[ix] || ix;
+  CUR = null;
+  $("#tdbody").innerHTML = `<div class="tdh" style="background:linear-gradient(135deg,${ic},color-mix(in srgb,${ic} 55%,#0a0f1d))"><span class="grab"></span><div><h3 id="tdh">${esc(name)}</h3><div style="font-size:12.5px;opacity:.9">Paper trades on real option prices · 1 lot each</div></div>
+      <div class="tdnav"><button class="x" type="button" aria-label="Close" data-close>×</button></div></div>
+    <div class="tdb"><div class="tdkv"><div>Trades<b>${ops.length}</b></div><div>Win rate<b>${cls.length ? Math.round(w / cls.length * 100) + "%" : "–"}</b></div>
+      <div>Net P&L<b class="${cl(tot)}">${ops.length ? sgn(tot) : "–"}</b></div><div>Avg / trade<b class="${cl(tot)}">${ops.length ? sgn(tot / ops.length) : "–"}</b></div></div>
+    <div class="tdkv" style="margin-top:8px"><div>Best<b class="up">${cls.length ? sgn(Math.max(...cls.map(t => t.net))) : "–"}</b></div><div>Worst<b class="dn">${cls.length ? sgn(Math.min(...cls.map(t => t.net))) : "–"}</b></div>
+      <div>T1 / T2 / T3 reached<b>${tgt(1)} · ${tgt(2)} · ${tgt(3)}</b></div><div>Lot<b>${ops[0] ? ops[0].qty + " qty" : "–"}</b></div></div>
+    <div class="chart" style="margin-top:12px"><b style="font-size:13px">Running total (paper trades)</b>${spark(cum, tot < 0 ? "var(--dn)" : "var(--up)")}</div>
+    <div id="ixbt" class="card" style="margin-top:12px"><span class="muted">Loading the backtest…</span></div>
+    <h3 style="margin:16px 0 6px;font-size:14px">All trades</h3>${ops.length ? `<div class="list">` + ops.map(t => { const v = val(t);
+      return `<div class="li" role="button" tabindex="0" data-trade="${esc(t.id)}" style="cursor:pointer"><div><b>${esc(t.symbol)}</b> <span class="muted">${esc(fd(t.signal_date))}</span>
+        <div class="d">In ${esc(tm(t.entry_at))} ${inr(t.entry)} → ${t.status === "closed" ? "out" : "now"} ${inr(t.status === "closed" ? t.exit : t.last)}${t.exit_reason ? " · " + esc(t.exit_reason) : ""}</div></div><span class="r ${cl(v)}">${sgn(v)}</span></div>`; }).join("") + `</div>`
+      : `<div class="empty">No paper trades yet${STARTS[ix] ? " · starts " + esc(fd(STARTS[ix])) : ""}.</div>`}</div>`;
+  const dlg = $("#tradedlg"); if (!dlg.open) { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", ""); }
+  decorate($("#tdbody"));
+  try {
+    const B = await fetchBT(ix), S = B.summary;
+    $("#ixbt").innerHTML = `<div class="row"><b>Backtest (model prices)</b><span class="muted" style="font-size:12px">${esc(String(B.from).slice(0, 7))} – ${esc(String(B.to).slice(0, 7))}</span></div>
+      <div class="tdkv" style="margin-top:8px"><div>Trades<b>${S.trades}</b></div><div>Win rate<b>${S.win_pct}%</b></div><div>Net P&L<b class="${cl(S.net)}">${sgn(S.net)}</b></div><div>Avg capital<b>${inr(S.capital_avg)}</b></div></div>`;
+  } catch (e) { $("#ixbt").innerHTML = `<span class="muted">No backtest for this instrument.</span>`; }
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-ix]");
+  if (b) { e.stopPropagation(); e.preventDefault(); openIx(b.dataset.ix); return; }
+  const pb = e.target.closest && e.target.closest("[data-per]");
+  if (pb) { PER = pb.dataset.per; try { localStorage.setItem("period", PER); } catch (er) {} const y = window.scrollY; renderAll(); show("today"); window.scrollTo(0, y); decorate(); }
+}, true);
+
+// ---------- REELS: every daily video, newest first (stored in the repository's "reels" release)
+function reelUrl(file) {
+  return location.hostname.endsWith(".github.io")
+    ? "https://github.com/" + location.hostname.split(".")[0] + "/" + location.pathname.split("/")[1] + "/releases/download/reels/" + file
+    : "reels/" + file;
+}
+async function loadReels() {
+  const box = $("#v-reels");
+  box.innerHTML = `<h2>Reels<span class="sub">The daily recap video · made after each close · ready for Instagram</span></h2><div class="empty" role="status">Loading…</div>`;
+  let doc;
+  try { const r = await fetch("data/reels.json?t=" + Date.now(), {cache: "no-store"}); if (!r.ok) throw 0; doc = await r.json(); }
+  catch (e) { box.innerHTML = `<h2>Reels</h2><div class="empty">The first reel appears here after the next close.</div>`; return; }
+  const it = doc.items || [];
+  box.innerHTML = `<h2>Reels<span class="sub">${it.length} daily recap video${it.length === 1 ? "" : "s"} · tap to play · use "Open" to save</span></h2>` + (it.length ? `<div class="reels">` + it.map(x =>
+    `<div class="card reel"><video preload="none" controls playsinline src="${esc(reelUrl(x.file))}"></video>
+      <div class="row" style="margin-top:10px"><b>${esc(fdl(x.date))}</b><span class="pnl ${cl(x.total)}" style="font-size:16px">${sgn(x.total)}</span></div>
+      <div class="row" style="margin-top:4px"><span class="ind">${x.trades} trade${x.trades === 1 ? "" : "s"} · ${x.won} won · ${x.lost} lost</span>
+      <a class="linkbtn" href="${esc(reelUrl(x.file))}" target="_blank" rel="noopener">Open ↗</a></div></div>`).join("") + `</div>` : `<div class="empty">No reels yet.</div>`);
 }
 document.addEventListener("keydown", e => { const t = e.target.closest && e.target.closest(".tile"); if (t && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); t.click(); } });
 
@@ -1161,7 +1271,7 @@ ODAILY = (() => {
   h += `<h2>By index<span class="sub">Closed trades plus any open one</span></h2><div class="list"><table><caption class="sr">P&L by index</caption><thead><tr><th scope="col">Index</th><th scope="col" class="r">Trades</th><th scope="col" class="r">Won</th><th scope="col" class="r">Net</th></tr></thead><tbody>${
     ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB"].map(ix => { const ts = T.filter(t => ixOf(t) === ix && t.status !== "pending"), c = ts.filter(t => t.status === "closed"),
       n = ts.reduce((a, t) => a + (t.status === "closed" ? t.net : (t.gross || 0)), 0);
-      return `<tr><td>${ixDot(ix)}${IXT[ix] || ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
+      return `<tr data-ix="${ix}" style="cursor:pointer"><td>${ixDot(ix)}${IXT[ix] || ix}</td><td class="r">${ts.length}</td><td class="r">${c.length ? Math.round(c.filter(t => t.net > 0).length / c.length * 100) + "%" : "–"}</td><td class="r ${cl(n)}"><b>${ts.length ? sgn(n) : "–"}</b></td></tr>`; }).join("")}</tbody></table></div>`;
   if (!MULTI.length) {
     const mon = {};
     T.filter(t => t.status === "closed").forEach(t => { const k = String(t.signal_date).slice(0, 7); (mon[k] = mon[k] || []).push(t.net); });

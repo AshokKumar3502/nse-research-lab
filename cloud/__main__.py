@@ -359,7 +359,7 @@ def live(every_min=10, until=(15, 20)):
             try:                                   # the day's reel (9:16 video) to the Telegram channel, once
                 rdocs = [nifty_orb.run(log=lambda *a: None, index=ix) for ix in nifty_orb.INDEXES]
                 telegram_alerts.send_reel(config.today_ist(), rdocs, log=log)
-                _git_push(["state/picks"], "Daily reel %s" % config.today_ist())
+                _git_push(["state/picks", "docs/data/reels.json"], "Daily reel %s" % config.today_ist())
             except Exception as e:     # noqa: BLE001
                 log("reel: %s" % e)
             break

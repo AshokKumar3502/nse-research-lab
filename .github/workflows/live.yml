@@ -53,6 +53,8 @@ jobs:
           restore-keys: wh-
 
       - name: Live prices every 10 minutes until 15:20 IST
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "nse-research-lab bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
