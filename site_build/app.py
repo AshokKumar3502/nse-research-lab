@@ -376,6 +376,27 @@ h3.month{display:flex;justify-content:space-between;margin:24px 2px 2px;font-siz
 .tdnav{display:flex;gap:6px}.tdnav button{border:0;background:rgba(255,255,255,.18);color:#fff;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer}.tdnav button[disabled]{opacity:.35}
 .tdpos{font-size:11.5px;opacity:.85;margin-top:2px}
 #install{display:none}
+/* instrument picker */
+.ixpick{display:inline-flex;align-items:center;gap:10px;font:inherit;font-weight:800;font-size:15px;color:var(--text);background:var(--surface);border:1px solid var(--line);
+  border-left:4px solid var(--ix);border-radius:14px;padding:10px 14px;cursor:pointer;box-shadow:var(--shadow)}
+.ixpick:hover{border-color:var(--ix)}.ixpick .chev2{color:var(--muted);font-size:12px;margin-left:4px}
+.ixgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ixchip{display:flex;align-items:center;gap:10px;font:inherit;font-weight:700;font-size:14px;color:var(--text);background:var(--surface2);border:1px solid var(--line);
+  border-left:4px solid var(--ix);border-radius:12px;padding:12px;cursor:pointer;text-align:left}
+.ixchip.on{background:color-mix(in srgb,var(--ix) 16%,var(--surface));border-color:var(--ix)}
+@media (max-width:520px){.ixgrid{grid-template-columns:repeat(2,1fr)}}
+/* live board list */
+.blist{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.brow{display:grid;grid-template-columns:5px minmax(0,1fr) 90px auto 34px;gap:12px;align-items:center;padding:11px 10px 11px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s}
+.brow:last-child{border-bottom:0}.brow:hover{background:var(--surface2)}
+.bbar{align-self:stretch;background:var(--ix);border-radius:0 4px 4px 0}
+.bname{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;white-space:nowrap;min-width:0}.bname .pill{font-size:9.5px;padding:3px 7px}
+.bsub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.bspark svg{display:block;width:90px;height:30px}
+.bright{text-align:right;white-space:nowrap}.bpl{font-family:var(--mono);font-weight:700;font-size:16px}
+.bmore{border:0;background:var(--surface2);color:var(--muted);width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer}
+.bmore:hover{color:var(--text)}
+@media (max-width:420px){.brow{grid-template-columns:5px minmax(0,1fr) auto 30px;gap:10px}.bspark{display:none}}
 /* reels */
 .reels{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 .reel video{width:100%;aspect-ratio:9/16;border-radius:14px;background:#000;display:block}
@@ -597,8 +618,26 @@ let BT = null, BTI = "NIFTY";
 const BTS = {};
 const BTF = {month: "all", kind: "all", limit: 30};
 const IXN = {NIFTY: "NIFTY", SENSEX: "SENSEX", BSE: "BSE Ltd", ADANIENT: "Adani Ent", DIXON: "Dixon", PNB: "PNB", LAURUSLABS: "Laurus Labs", BAJFINANCE: "Bajaj Finance", RBLBANK: "RBL Bank", DLF: "DLF", ABB: "ABB", POLYCAB: "Polycab"};
-const ixSeg = () => `<div class="tools"><div class="seg" role="group" aria-label="Index">${["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "RBLBANK", "DLF", "ABB", "POLYCAB"].map(i =>
-  `<button type="button" data-bti="${i}" aria-pressed="${BTI === i}">${ixDot(i)}${IXN[i]}</button>`).join("")}</div></div>`;
+const ALLIX = ["NIFTY", "SENSEX", "BSE", "ADANIENT", "DIXON", "PNB", "LAURUSLABS", "BAJFINANCE", "RBLBANK", "DLF", "ABB", "POLYCAB"];
+const ixSeg = () => `<div class="tools"><button type="button" class="ixpick" data-ixpick aria-haspopup="dialog" style="--ix:${IXC[BTI] || "var(--brand)"}">
+  <span class="ixd" style="--ix:${IXC[BTI] || "var(--brand)"}"></span><span>${esc(IXN[BTI] || BTI)}</span><span class="chev2" aria-hidden="true">▾</span></button>
+  <span class="muted" style="font-size:12.5px">${ALLIX.length} instruments · tap to switch</span></div>`;
+function openPicker() {
+  $("#tdbody").innerHTML = `<div class="tdh" style="background:var(--grad)"><span class="grab"></span><div><h3 id="tdh">Choose instrument</h3><div style="font-size:12.5px;opacity:.9">Backtest and Exit vs High follow your choice</div></div>
+    <div class="tdnav"><button class="x" type="button" aria-label="Close" data-close>×</button></div></div>
+    <div class="tdb"><div class="ixgrid">${ALLIX.map(i => `<button type="button" class="ixchip${BTI === i ? " on" : ""}" data-bpick="${i}" style="--ix:${IXC[i]}" aria-pressed="${BTI === i}">
+      <span class="ixd" style="--ix:${IXC[i]}"></span><span>${esc(IXN[i])}</span></button>`).join("")}</div></div>`;
+  const dlg = $("#tradedlg"); if (!dlg.open) { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", ""); }
+}
+document.addEventListener("click", e => {
+  if (e.target.closest && e.target.closest("[data-ixpick]")) { openPicker(); return; }
+  const c = e.target.closest && e.target.closest("[data-bpick]");
+  if (!c) return;
+  const v = location.hash.slice(1) || "today";
+  BTI = c.dataset.bpick; BT = BTS[BTI] || null; BTF.month = "all"; BTF.limit = 30; HF.year = "all"; HF.limit = 30;
+  $("#tradedlg").close();
+  if (v === "highs") loadHighs(); else loadBacktest();
+});
 async function fetchBT(i) {
   if (BTS[i]) return BTS[i];
   const r = await fetch(({SENSEX: "data/backtest-sensex.json", BSE: "data/backtest-bse.json", ADANIENT: "data/backtest-adanient.json",
@@ -910,6 +949,11 @@ function inPeriod(d, lastDay) {
   const L = new Date(lastDay + "T00:00:00"), mon = new Date(L); mon.setDate(L.getDate() - ((L.getDay() + 6) % 7));
   return d >= mon.toISOString().slice(0, 10) && d <= lastDay;
 }
+let BVIEW = null, BSORT = "default";
+try { BVIEW = localStorage.getItem("boardView"); BSORT = localStorage.getItem("boardSort") || "default"; } catch (e) {}
+const boardView = () => BVIEW || (innerWidth < 640 ? "list" : "grid");
+function rerenderHome() { const y = window.scrollY; renderAll(); show("today"); window.scrollTo(0, y); decorate(); }
+document.addEventListener("change", e => { if (e.target.id === "bsort") { BSORT = e.target.value; try { localStorage.setItem("boardSort", BSORT); } catch (er) {} rerenderHome(); } });
 function liveBoard() {
   const ops = (D.trades || []).filter(t => t.kind === "option" && t.status !== "pending");
   const lastDay = ops.reduce((m, t) => t.signal_date > m ? t.signal_date : m, "");
@@ -924,12 +968,32 @@ function liveBoard() {
     <div><div class="k">Trades</div><div class="v">${ps.length}</div></div>
     <div><div class="k">Win rate</div><div class="v">${pc.length ? Math.round(pc.filter(t => t.net > 0).length / pc.length * 100) + "%" : "–"}</div></div>
     <div><div class="k">Open now</div><div class="v">${open}</div></div>${PER === "day" ? daySpark(ops.filter(t => t.signal_date === lastDay)) : ""}</div>${glance(ops, lastDay)}
-    <h2 style="margin-top:14px">Live board<span class="sub">Latest paper trade for each instrument · tap a tile to open the trade, or "All trades" for the instrument</span></h2><div class="board">`;
-  BOARD.forEach(([ix, name, id]) => {
+    <h2 style="margin-top:14px">Live board<span class="sub">Latest paper trade for each instrument · tap one to open the trade, › for all its trades</span></h2>
+    <div class="tools"><div class="seg" role="group" aria-label="Board view">${[["list", "List"], ["grid", "Grid"]].map(([k, l]) => `<button type="button" data-bv="${k}" aria-pressed="${boardView() === k}">${l}</button>`).join("")}</div>
+    <label class="sr" for="bsort">Sort the board</label><select id="bsort" class="sel">${[["default", "Default order"], ["pnl", "P&L: high to low"], ["pnl_asc", "P&L: low to high"], ["name", "Name A–Z"]]
+      .map(([k, l]) => `<option value="${k}"${BSORT === k ? " selected" : ""}>${l}</option>`).join("")}</select></div>`;
+  const items = BOARD.map(([ix, name]) => {
     const ts = ops.filter(t => ixOf(t) === ix).sort((a, b) => a.signal_date.localeCompare(b.signal_date));
     const t = ts[ts.length - 1];
     let c = 0; const cum = ts.map(x => (c += val(x)));
-    const v = t ? val(t) : null;
+    return {ix, name, ts, t, cum, v: t ? val(t) : null};
+  });
+  const key = {pnl: x => -(x.v ?? -1e12), pnl_asc: x => (x.v ?? 1e12), name: x => x.name}[BSORT];
+  if (key) items.sort((a, b) => { const p = key(a), q = key(b); return typeof p === "string" ? p.localeCompare(q) : p - q; });
+  const pill = ({ix, t, v}) => !t ? (STARTS[ix] && STARTS[ix] > (D.last_session || "") ? `<span class="pill p-info">Starts ${esc(fd(STARTS[ix]))}</span>` : `<span class="pill p-mute">Watching</span>`)
+    : t.status === "open" ? `<span class="pill p-warn">Open</span>` : `<span class="pill ${v > 0 ? "p-up" : "p-dn"}">${v > 0 ? "Won" : "Lost"}</span>`;
+  const tg = t => t && t.targets ? [1, 2, 3].map(k => (t.target_hits || []).some(x => x.t === k) ? `<b class="up">T${k}✓</b>` : `T${k}`).join(" ") : "";
+  if (boardView() === "list") {
+    h += `<div class="blist">` + items.map(x => `<div class="brow" style="--ix:${IXC[x.ix]}" role="button" tabindex="0" ${x.t ? `data-trade="${esc(x.t.id)}"` : `data-ix="${x.ix}"`} aria-label="${esc(x.name)}">
+      <span class="bbar"></span>
+      <div class="bmain"><div class="bname">${esc(x.name)} ${pill(x)}</div><div class="bsub">${x.t ? esc(x.t.symbol.split(" ").slice(1).join(" ")) + " · " + esc(fd(x.t.signal_date)) + (tg(x.t) ? " · " + tg(x.t) : "") : "No trades yet"}</div></div>
+      <div class="bspark">${spark(x.cum, x.cum.length && x.cum[x.cum.length - 1] < 0 ? "var(--dn)" : "var(--up)")}</div>
+      <div class="bright"><div class="bpl ${cl(x.v)}">${x.t ? sgn(x.v) : "–"}</div><div class="bsub">${x.ts.length} trade${x.ts.length === 1 ? "" : "s"}</div></div>
+      <button type="button" class="bmore" data-ix="${x.ix}" aria-label="All ${esc(x.name)} trades">›</button></div>`).join("") + `</div>`;
+    return h + todayTimeline(ops, lastDay);
+  }
+  h += `<div class="board">`;
+  items.forEach(({ix, name, ts, t, cum, v}) => {
     const st = !t ? (STARTS[ix] && STARTS[ix] > (D.last_session || "") ? `<span class="pill p-info">Starts ${esc(fd(STARTS[ix]))}</span>` : `<span class="pill p-mute">Watching</span>`)
       : t.status === "open" ? `<span class="pill p-warn">Open</span>` : `<span class="pill ${v > 0 ? "p-up" : "p-dn"}">${v > 0 ? "Won" : "Lost"}</span>`;
     h += `<div class="card tile ${t ? (v > 0 ? "win" : "loss") : ""}" style="--ix:${IXC[ix]}" role="button" tabindex="0" ${t ? `data-trade="${esc(t.id)}"` : `data-ix="${ix}"`} aria-label="${esc(name)}${t ? " trade details" : " details"}">
@@ -995,7 +1059,9 @@ document.addEventListener("click", e => {
   const b = e.target.closest && e.target.closest("[data-ix]");
   if (b) { e.stopPropagation(); e.preventDefault(); openIx(b.dataset.ix); return; }
   const pb = e.target.closest && e.target.closest("[data-per]");
-  if (pb) { PER = pb.dataset.per; try { localStorage.setItem("period", PER); } catch (er) {} const y = window.scrollY; renderAll(); show("today"); window.scrollTo(0, y); decorate(); }
+  if (pb) { PER = pb.dataset.per; try { localStorage.setItem("period", PER); } catch (er) {} rerenderHome(); return; }
+  const bv = e.target.closest && e.target.closest("[data-bv]");
+  if (bv) { BVIEW = bv.dataset.bv; try { localStorage.setItem("boardView", BVIEW); } catch (er) {} rerenderHome(); }
 }, true);
 
 // ---------- REELS: every daily video, newest first (stored in the repository's "reels" release)
@@ -1017,7 +1083,7 @@ async function loadReels() {
       <div class="row" style="margin-top:4px"><span class="ind">${x.trades} trade${x.trades === 1 ? "" : "s"} · ${x.won} won · ${x.lost} lost</span>
       <a class="linkbtn" href="${esc(reelUrl(x.file))}" target="_blank" rel="noopener">Open ↗</a></div></div>`).join("") + `</div>` : `<div class="empty">No reels yet.</div>`);
 }
-document.addEventListener("keydown", e => { const t = e.target.closest && e.target.closest(".tile"); if (t && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); t.click(); } });
+document.addEventListener("keydown", e => { const t = e.target.closest && e.target.closest(".tile, .brow"); if (t && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); t.click(); } });
 
 // ---------- BACKTEST extras: P&L calendar (one year) and weekday table, from the same backtest file
 function drawCalendar() {
@@ -1150,7 +1216,7 @@ const PREV = {};
 function parseRs(txt) { const m = String(txt).replace(/[,\s]/g, "").match(/([+−-]?)₹([\d.]+)/); return m ? (m[1] === "−" || m[1] === "-" ? -1 : 1) * parseFloat(m[2]) : null; }
 function fmtRs(v, signed) { return (signed ? (v > 0 ? "+" : v < 0 ? "−" : "") : "") + "₹" + Math.abs(Math.round(v)).toLocaleString("en-IN"); }
 function decorate(root) {
-  (root || document).querySelectorAll(".pnl, .tile .pl, .sumbar .v, .kpi .v").forEach((el, i) => {
+  (root || document).querySelectorAll(".pnl, .tile .pl, .brow .bpl, .sumbar .v, .kpi .v").forEach((el, i) => {
     if (el.dataset.dec) return;
     el.dataset.dec = "1";
     const txt = el.textContent.trim();
